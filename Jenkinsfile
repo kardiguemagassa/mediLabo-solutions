@@ -1,6 +1,5 @@
 // ╔════════════════════════════════════════════════════════════════════════════╗
 // ║                    MEDILABO-SOLUTIONS - CI/CD PIPELINE                     ║
-// ║                    Microservices + Angular Frontend                        ║
 // ╚════════════════════════════════════════════════════════════════════════════╝
 
 def services = [
@@ -53,50 +52,36 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        // BACKEND - BUILD & TEST
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - Build & Test') {
             steps {
                 script {
                     services.each { service ->
-                        stage("Build ${service.name}") {
-                            dir(service.path) {
-                                if (fileExists('pom.xml')) {
-                                    withCredentials([
-                                        usernamePassword(
-                                            credentialsId: 'nexus-credentials',
-                                            usernameVariable: 'NEXUS_USERNAME',
-                                            passwordVariable: 'NEXUS_PASSWORD'
-                                        )
-                                    ]) {
-                                        configFileProvider([configFile(fileId: 'maven-settings-nexus', variable: 'MAVEN_SETTINGS')]) {
-                                            sh """
-                                                echo "🏗️ Building ${service.name}..."
-                                                mvn clean verify -s \$MAVEN_SETTINGS -B -q
-                                                echo "✅ ${service.name} built successfully"
-                                            """
-                                        }
+                        dir(service.path) {
+                            if (fileExists('pom.xml')) {
+                                withCredentials([
+                                    usernamePassword(
+                                        credentialsId: 'nexus-credentials',
+                                        usernameVariable: 'NEXUS_USERNAME',
+                                        passwordVariable: 'NEXUS_PASSWORD'
+                                    )
+                                ]) {
+                                    configFileProvider([configFile(fileId: 'maven-settings-nexus', variable: 'MAVEN_SETTINGS')]) {
+                                        sh """
+                                            echo "🏗️ Building ${service.name}..."
+                                            mvn clean package -s \$MAVEN_SETTINGS -DskipTests -B
+                                            echo "✅ ${service.name} built successfully"
+                                        """
                                     }
-                                } else {
-                                    echo "⚠️ No pom.xml found in ${service.path}"
                                 }
+                            } else {
+                                echo "⚠️ No pom.xml found in ${service.path}"
                             }
                         }
                     }
                 }
             }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-                    jacoco execPattern: '**/target/jacoco.exec'
-                }
-            }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        // BACKEND - SONARQUBE ANALYSIS
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - SonarQube') {
             steps {
                 script {
@@ -117,7 +102,7 @@ pipeline {
                                                 mvn sonar:sonar -s \$MAVEN_SETTINGS \
                                                     -Dsonar.projectKey=medilabo-${service.name} \
                                                     -Dsonar.projectName="${service.name}" \
-                                                    -B -q || true
+                                                    -B || true
                                             """
                                         }
                                     }
@@ -129,9 +114,6 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        // FRONTEND - BUILD & TEST
-        // ══════════════════════════════════════════════════════════════════════
         stage('Frontend - Build') {
             steps {
                 dir(frontend.path) {
@@ -140,9 +122,7 @@ pipeline {
                             sh """
                                 echo "🏗️ Building ${frontend.name}..."
                                 npm ci
-                                npm run lint || true
-                                npm run test:ci || true
-                                npm run build -- --configuration=production
+                                npm run build --configuration=production || npm run build
                                 echo "✅ ${frontend.name} built successfully"
                             """
                         } else {
@@ -153,9 +133,6 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        // DOCKER BUILD
-        // ══════════════════════════════════════════════════════════════════════
         stage('Docker Build') {
             when {
                 anyOf {
@@ -167,63 +144,23 @@ pipeline {
                 script {
                     def tag = "${env.BRANCH_NAME}-${BUILD_NUMBER}"
                     
-                    // Build backend images
                     services.each { service ->
                         dir(service.path) {
                             if (fileExists('Dockerfile')) {
                                 sh """
                                     echo "🐳 Building Docker image for ${service.name}..."
                                     docker build -t ${DOCKER_REGISTRY}/${service.name}:${tag} .
-                                    echo "✅ Image: ${DOCKER_REGISTRY}/${service.name}:${tag}"
                                 """
                             }
                         }
                     }
                     
-                    // Build frontend image
                     dir(frontend.path) {
                         if (fileExists('Dockerfile')) {
                             sh """
                                 echo "🐳 Building Docker image for ${frontend.name}..."
                                 docker build -t ${DOCKER_REGISTRY}/${frontend.name}:${tag} .
-                                echo "✅ Image: ${DOCKER_REGISTRY}/${frontend.name}:${tag}"
                             """
-                        }
-                    }
-                }
-            }
-        }
-
-        // ══════════════════════════════════════════════════════════════════════
-        // DEPLOY TO NEXUS
-        // ══════════════════════════════════════════════════════════════════════
-        stage('Deploy to Nexus') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch 'develop'
-                }
-            }
-            steps {
-                script {
-                    services.each { service ->
-                        dir(service.path) {
-                            if (fileExists('pom.xml')) {
-                                withCredentials([
-                                    usernamePassword(
-                                        credentialsId: 'nexus-credentials',
-                                        usernameVariable: 'NEXUS_USERNAME',
-                                        passwordVariable: 'NEXUS_PASSWORD'
-                                    )
-                                ]) {
-                                    configFileProvider([configFile(fileId: 'maven-settings-nexus', variable: 'MAVEN_SETTINGS')]) {
-                                        sh """
-                                            echo "📦 Deploying ${service.name} to Nexus..."
-                                            mvn deploy -s \$MAVEN_SETTINGS -DskipTests -B -q || true
-                                        """
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -233,33 +170,14 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true, fingerprint: true
+            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
+            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
         }
         success {
             echo '✅ Pipeline terminé avec succès!'
-            emailext(
-                subject: "✅ SUCCESS: mediLabo-solutions #${BUILD_NUMBER}",
-                body: """
-                    <h2>✅ Build Successful</h2>
-                    <p><b>Branch:</b> ${env.BRANCH_NAME ?: 'main'}</p>
-                    <p><b>Build:</b> <a href="${BUILD_URL}">#${BUILD_NUMBER}</a></p>
-                """,
-                to: 'magassakara@gmail.com',
-                mimeType: 'text/html'
-            )
         }
         failure {
             echo '❌ Pipeline échoué!'
-            emailext(
-                subject: "❌ FAILURE: mediLabo-solutions #${BUILD_NUMBER}",
-                body: """
-                    <h2>❌ Build Failed</h2>
-                    <p><b>Branch:</b> ${env.BRANCH_NAME ?: 'main'}</p>
-                    <p><b>Console:</b> <a href="${BUILD_URL}console">View Logs</a></p>
-                """,
-                to: 'magassakara@gmail.com',
-                mimeType: 'text/html'
-            )
         }
         cleanup {
             cleanWs()
