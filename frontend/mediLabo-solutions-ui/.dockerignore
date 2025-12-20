@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+.angular/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Tests
+coverage/
+e2e/
