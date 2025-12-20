@@ -25,7 +25,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_REGISTRY = 'medilabo'
+        DOCKER_REGISTRY = 'host.docker.internal:8186'
         NEXUS_URL = 'http://host.docker.internal:8185'
         SONAR_URL = 'http://host.docker.internal:9000'
     }
@@ -169,9 +169,9 @@ pipeline {
                             if (fileExists('Dockerfile')) {
                                 sh """
                                     echo "🐳 Building Docker image for ${service.name}..."
-                                    docker build -t ${DOCKER_REGISTRY}/${service.name}:${tag} .
-                                    docker tag ${DOCKER_REGISTRY}/${service.name}:${tag} ${DOCKER_REGISTRY}/${service.name}:latest
-                                    echo "✅ Image: ${DOCKER_REGISTRY}/${service.name}:${tag}"
+                                    docker build -t ${DOCKER_REGISTRY}/medilabo/${service.name}:${tag} .
+                                    docker tag ${DOCKER_REGISTRY}/medilabo/${service.name}:${tag} ${DOCKER_REGISTRY}/medilabo/${service.name}:latest
+                                    echo "✅ Image: ${DOCKER_REGISTRY}/medilabo/${service.name}:${tag}"
                                 """
                             } else {
                                 echo "⚠️ No Dockerfile for ${service.name}"
@@ -183,16 +183,61 @@ pipeline {
                         if (fileExists('Dockerfile')) {
                             sh """
                                 echo "🐳 Building Docker image for ${frontend.name}..."
-                                docker build -t ${DOCKER_REGISTRY}/${frontend.name}:${tag} .
-                                docker tag ${DOCKER_REGISTRY}/${frontend.name}:${tag} ${DOCKER_REGISTRY}/${frontend.name}:latest
-                                echo "✅ Image: ${DOCKER_REGISTRY}/${frontend.name}:${tag}"
+                                docker build -t ${DOCKER_REGISTRY}/medilabo/${frontend.name}:${tag} .
+                                docker tag ${DOCKER_REGISTRY}/medilabo/${frontend.name}:${tag} ${DOCKER_REGISTRY}/medilabo/${frontend.name}:latest
+                                echo "✅ Image: ${DOCKER_REGISTRY}/medilabo/${frontend.name}:${tag}"
                             """
                         } else {
                             echo "⚠️ No Dockerfile for ${frontend.name}"
                         }
                     }
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'develop'
+                }
+            }
+            steps {
+                script {
+                    def tag = "${env.BRANCH_NAME}-${BUILD_NUMBER}"
                     
-                    sh "docker images | grep ${DOCKER_REGISTRY} || true"
+                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh """
+                            echo "🔐 Logging into Nexus Docker Registry..."
+                            echo \$DOCKER_PASS | docker login ${DOCKER_REGISTRY} -u \$DOCKER_USER --password-stdin
+                        """
+                        
+                        // Push backend images
+                        services.each { service ->
+                            dir(service.path) {
+                                if (fileExists('Dockerfile')) {
+                                    sh """
+                                        echo "📤 Pushing ${service.name}..."
+                                        docker push ${DOCKER_REGISTRY}/medilabo/${service.name}:${tag}
+                                        docker push ${DOCKER_REGISTRY}/medilabo/${service.name}:latest
+                                    """
+                                }
+                            }
+                        }
+                        
+                        // Push frontend image
+                        dir(frontend.path) {
+                            if (fileExists('Dockerfile')) {
+                                sh """
+                                    echo "📤 Pushing ${frontend.name}..."
+                                    docker push ${DOCKER_REGISTRY}/medilabo/${frontend.name}:${tag}
+                                    docker push ${DOCKER_REGISTRY}/medilabo/${frontend.name}:latest
+                                """
+                            }
+                        }
+                        
+                        sh "docker logout ${DOCKER_REGISTRY}"
+                    }
                 }
             }
         }
@@ -204,7 +249,18 @@ pipeline {
             junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
         }
         success {
-            echo '✅ Pipeline terminé avec succès!'
+            echo """
+            ════════════════════════════════════════════════════════════
+            ✅ PIPELINE SUCCESS
+            ════════════════════════════════════════════════════════════
+            
+            📦 Images pushed to: ${DOCKER_REGISTRY}/medilabo/
+            🔍 SonarQube: http://localhost:9000
+            📦 Nexus: http://localhost:8185
+            🐳 Docker Registry: http://localhost:8186
+            
+            ════════════════════════════════════════════════════════════
+            """
         }
         failure {
             echo '❌ Pipeline échoué!'
