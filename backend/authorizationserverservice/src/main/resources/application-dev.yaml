@@ -1,0 +1,17 @@
+ACTIVE_PROFILE: dev
+
+PRIVATE_KEY:
+PUBLIC_KEY:
+
+POSTGRES_HOST: localhost
+POSTGRES_PORT: 5432
+POSTGRES_USER: kara
+POSTGRES_PASSWORD: mhd02042017
+POSTGRES_DATABASE: openclassrooms_medical_microservice
+
+USER_NAME: admin
+PASSWORD: kara
+ROLES: EUREKA_CLIENT
+
+server: 8080
+UI_APP_URL: http://localhost:4200
