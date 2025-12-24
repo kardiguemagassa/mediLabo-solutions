@@ -1,3 +1,8 @@
 spring:
   application:
     name: authorizationserverservice
+  profiles:
+    active: ${ACTIVE_PROFILE:dev}
+
+server:
+  port: 8080

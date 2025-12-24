@@ -13,3 +13,9 @@ dist/
 # OS
 .DS_Store
 
+# Env / Secrets
+.env
+.env.*
+.keys
+*.key
+*.pem

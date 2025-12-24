@@ -15,3 +15,23 @@ ROLES: EUREKA_CLIENT
 
 server: 8080
 UI_APP_URL: http://localhost:4200
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+security:
+  admin:
+    username: ${ADMIN_USERNAME}
+    password: ${ADMIN_PASSWORD}
+    roles: ${ADMIN_ROLES}
+
+keys:
+  private-path: ${PRIVATE_KEY_PATH}
+  public-path: ${PUBLIC_KEY_PATH}
+
+ui:
+  app:
+    url: ${UI_APP_URL}
