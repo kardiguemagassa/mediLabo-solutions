@@ -1,0 +1,42 @@
+# ════════════════════════════════════════════════════════════
+# Authorization Server Service - Development Profile
+# ════════════════════════════════════════════════════════════
+
+spring:
+  # ─── Database Configuration ───
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DATABASE:openclassrooms_medical_microservice}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# ─── Security Configuration ───
+security:
+  admin:
+    username: ${ADMIN_USERNAME}
+    password: ${ADMIN_PASSWORD}
+    roles: ${ADMIN_ROLES:ADMIN,EUREKA_CLIENT}
+
+# ─── RSA Keys for JWT ───
+keys:
+  private-path: ${PRIVATE_KEY_PATH:.keys/private.key}
+  public-path: ${PUBLIC_KEY_PATH:.keys/public.key}
+
+# ─── UI Application URL (CORS) ───
+ui:
+  app:
+    url: ${UI_APP_URL:http://localhost:4200}
+
+# ─── Debug Logging ───
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.security: DEBUG

@@ -1,0 +1,248 @@
+# ════════════════════════════════════════════════════════════
+# MediLabo Solutions - Application Stack
+# ════════════════════════════════════════════════════════════
+
+services:
+  # ══════════════════════════════════════════════════════════
+  # Databases
+  # ══════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:15-alpine
+    container_name: medilabo-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kara}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mhd02042017}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-openclassrooms_medical_microservice}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - medilabo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kara}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: medilabo-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-kara}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mhd02042017}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-medilabo_notes}
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - medilabo-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ══════════════════════════════════════════════════════════
+  # Infrastructure Services
+  # ══════════════════════════════════════════════════════════
+  discovery-server:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/discoveryserverservice:${TAG:-latest}
+    container_name: medilabo-discovery
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
+      SERVER_PORT: 8761
+    ports:
+      - "8761:8761"
+    networks:
+      - medilabo-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  gateway:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/gatewayserverservice:${TAG:-latest}
+    container_name: medilabo-gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
+      SERVER_PORT: 8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    ports:
+      - "8080:8080"
+    networks:
+      - medilabo-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # ══════════════════════════════════════════════════════════
+  # Application Services
+  # ══════════════════════════════════════════════════════════
+  authorization-server:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/authorizationserverservice:${TAG:-latest}
+    container_name: medilabo-auth
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
+      SERVER_PORT: 9000
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-kara}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mhd02042017}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE:-openclassrooms_medical_microservice}
+    ports:
+      - "9000:9000"
+    networks:
+      - medilabo-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  patient-service:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/patientservice:${TAG:-latest}
+    container_name: medilabo-patient
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
+      SERVER_PORT: 8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-kara}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mhd02042017}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE:-openclassrooms_medical_microservice}
+    ports:
+      - "8081:8081"
+    networks:
+      - medilabo-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  notes-service:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/notesservice:${TAG:-latest}
+    container_name: medilabo-notes
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
+      SERVER_PORT: 8082
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_USER: ${MONGO_USER:-kara}
+      MONGO_PASSWORD: ${MONGO_PASSWORD:-mhd02042017}
+      MONGO_DATABASE: ${MONGO_DATABASE:-medilabo_notes}
+    ports:
+      - "8082:8082"
+    networks:
+      - medilabo-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  assessment-service:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/assessmentservice:${TAG:-latest}
+    container_name: medilabo-assessment
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
+      SERVER_PORT: 8083
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    ports:
+      - "8083:8083"
+    networks:
+      - medilabo-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  notification-service:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/notificationservice:${TAG:-latest}
+    container_name: medilabo-notification
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
+      SERVER_PORT: 8084
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    ports:
+      - "8084:8084"
+    networks:
+      - medilabo-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # ══════════════════════════════════════════════════════════
+  # Frontend
+  # ══════════════════════════════════════════════════════════
+  frontend:
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/medilabo-frontend:${TAG:-latest}
+    container_name: medilabo-frontend
+    ports:
+      - "80:80"
+    networks:
+      - medilabo-network
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+# ══════════════════════════════════════════════════════════
+# Volumes
+# ══════════════════════════════════════════════════════════
+volumes:
+  postgres_data:
+    name: medilabo-postgres-data
+  mongodb_data:
+    name: medilabo-mongodb-data
+
+# ══════════════════════════════════════════════════════════
+# Networks
+# ══════════════════════════════════════════════════════════
+networks:
+  medilabo-network:
+    name: medilabo-network
+    driver: bridge
