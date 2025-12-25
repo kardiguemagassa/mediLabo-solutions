@@ -25,7 +25,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_REGISTRY = 'host.docker.internal:8186'
+        DOCKER_REGISTRY = 'localhost:8186'
         NEXUS_URL = 'http://host.docker.internal:8185'
         SONAR_URL = 'http://host.docker.internal:9000'
     }
