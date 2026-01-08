@@ -1,50 +1,109 @@
-# ════════════════════════════════════════════════════════════
-# Authorization Server Service - Common Configuration
-# ════════════════════════════════════════════════════════════
-
+# MediLabo Authorization Server
 spring:
   application:
     name: authorizationserverservice
+  cloud:
+    discovery:
+      enabled: true
   profiles:
     active: ${ACTIVE_PROFILE:dev}
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    hikari:
+      connection-test-query: SELECT 1
+      maximum-pool-size: 10
 
-server:
-  port: ${SERVER_PORT:9000}
+  jpa:
+    database: POSTGRESQL
+    open-in-view: false
+    #database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+    generate-ddl: true
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+        #dialect: org.hibernate.dialect.PostgreSQL9Dialect
+        format_sql: true
+        default_schema: ${POSTGRES_DATABASE}
 
-# ════════════════════════════════════════════════════════════
-# Eureka Client Configuration
-# ════════════════════════════════════════════════════════════
+  # ─── SQL Init ───
+  sql:
+    init:
+      platform: postgres
+      mode: NEVER
+      continue-on-error: false
+      schema-locations:
+        - classpath:/data/schema.sql
+      data-locations:
+        - classpath:/data/data.sql
+  session:
+    jdbc:
+      initialize-schema: NEVER
+      table-name: SPRING_SESSION
+    timeout: 300
+
+# Eureka (activé par défaut, désactivé en dev/test)
 eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
-    register-with-eureka: true
-    fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${server.port}
+  client:
+    serviceUrl:
+      defaultZone: http://${USER_NAME}:${PASSWORD}@localhost:8761/eureka/
 
-# ════════════════════════════════════════════════════════════
-# Actuator & Prometheus Monitoring
-# ════════════════════════════════════════════════════════════
+# RSA Keys
+keys:
+  private: ${PRIVATE_KEY}
+  public: ${PUBLIC_KEY}
+
+# Logging DEBUG en dev
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.openclassrooms: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.springframework.security.oauth2: ${LOG_LEVEL_OAUTH2:WARN}
+
+# Server
+server:
+  port: ${SERVER_PORT:9000}
+  error:
+    path: /error
+    whitelabel:
+      enabled: false
+  servlet:
+    session:
+      persistent: false
+      timeout: 0
+
+# UI Application
+ui:
+  app:
+    url: ${UI_APP_URL}
+
+# Application Settings
+app:
+  security:
+    issuer-uri: ${ISSUER_URI:http://localhost:9000}
+    token:
+      access-token-validity: ${ACCESS_TOKEN_VALIDITY:30}
+      refresh-token-validity: ${REFRESH_TOKEN_VALIDITY:7}
+    keys:
+      directory: ${KEYS_DIRECTORY:src/main/resources/keys}
+      private: ${PRIVATE_KEY:private.key}
+      public: ${PUBLIC_KEY:public.key}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+
+# Actuator
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info
   endpoint:
     health:
-      show-details: always
-  metrics:
-    tags:
-      application: ${spring.application.name}
-
-# ════════════════════════════════════════════════════════════
-# Logging Configuration
-# ════════════════════════════════════════════════════════════
-logging:
-  level:
-    root: INFO
-    com.openclassrooms: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+      show-details: when_authorized
