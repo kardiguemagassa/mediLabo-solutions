@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr" class="bg-gray-100">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="MediLabo Solutions - Déconnexion">
+    <title>MediLabo | Déconnexion</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="bg-indigo-900 fixed w-full top-0 left-0 z-40">
+    <div class="container h-16 mx-auto px-4">
+        <div class="relative h-16 flex items-center justify-between">
+            <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <a th:href="@{http://localhost:4200}" class="flex items-center cursor-pointer">
+                    <img class="h-8 w-auto" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+                    <span class="ml-2 text-white font-bold text-xl">MediLabo</span>
+                </a>
+            </div>
+            <div class="flex items-center">
+                <a th:href="@{/login}"
+                   class="bg-indigo-700 p-1 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center mr-3">
+                    Connexion
+                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenu principal -->
+<div class="mt-16">
+    <div class="container mx-auto pt-10 px-4">
+        <div class="mt-4 flex flex-col items-center">
+            <div class="bg-indigo-600 p-4 rounded-full">
+                <img class="h-16 w-16" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+            </div>
+            <h2 class="mt-5 text-2xl font-semibold text-gray-800">Terminer la session</h2>
+            <p class="mt-2 text-gray-500">Êtes-vous sûr de vouloir vous déconnecter ?</p>
+        </div>
+
+        <div class="mt-6 flex flex-col items-center">
+            <div class="w-full max-w-md p-6 rounded-lg border border-gray-200 bg-white shadow-lg">
+                <form method="post" th:action="@{/logout}">
+                    <button type="submit"
+                            class="w-full text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition duration-200">
+                        Terminer la session
+                    </button>
+                </form>
+
+                <div class="mt-4 flex items-center justify-center">
+                    <a th:href="@{http://localhost:4200}"
+                       class="inline-flex items-center bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md text-gray-700 text-sm font-medium transition duration-200">
+                        Retour à l'application
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+</body>
+</html>
