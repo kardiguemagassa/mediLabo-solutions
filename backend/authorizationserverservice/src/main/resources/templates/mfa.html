@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr" class="bg-gray-100">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="MediLabo Solutions - Vérification MFA">
+    <title>MediLabo | Vérification à deux facteurs</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="bg-indigo-900 fixed w-full top-0 left-0 z-40">
+    <div class="container h-16 mx-auto px-4">
+        <div class="relative h-16 flex items-center justify-between">
+            <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <a th:href="@{http://localhost:4200}" class="flex items-center cursor-pointer">
+                    <img class="h-8 w-auto" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+                    <span class="ml-2 text-white font-bold text-xl">MediLabo</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenu principal -->
+<div class="mt-16">
+    <div class="container mx-auto pt-10 px-4">
+        <div class="mt-4 flex flex-col items-center">
+            <div class="bg-indigo-600 p-4 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <h2 class="mt-5 text-2xl font-semibold text-gray-800">Vérification à deux facteurs</h2>
+            <p class="mt-2 text-gray-500">Entrez le code de votre application d'authentification</p>
+        </div>
+
+        <div class="mt-6 flex flex-col items-center">
+            <div class="w-full max-w-md p-6 rounded-lg border border-gray-200 bg-white shadow-lg">
+
+                <!-- Message d'erreur -->
+                <div th:if="${param.error}" class="flex items-center p-4 mb-4 text-red-800 rounded-lg bg-red-50" role="alert">
+                    <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                    </svg>
+                    <span class="ml-3 text-sm font-medium">Code invalide. Veuillez réessayer.</span>
+                </div>
+
+                <!-- Formulaire MFA -->
+                <form method="post" th:action="@{/mfa}">
+                    <div class="space-y-5">
+                        <div>
+                            <label for="code" class="block mb-2 text-sm font-medium text-gray-800">
+                                Code de vérification
+                                <span th:if="${email}" th:text="' pour ' + ${email}" class="text-indigo-600"></span>
+                            </label>
+                            <input type="text"
+                                   name="code"
+                                   id="code"
+                                   class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-3 text-center text-2xl tracking-widest"
+                                   placeholder="000000"
+                                   maxlength="6"
+                                   pattern="[0-9]{6}"
+                                   required
+                                   autofocus>
+                            <p class="mt-2 text-xs text-gray-500">Entrez le code à 6 chiffres de votre application (Google Authenticator, Authy, etc.)</p>
+                        </div>
+                        <button type="submit"
+                                class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition duration-200">
+                            Vérifier le code
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Liens -->
+                <div class="mt-6 space-y-3 pt-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-500 text-center">Problèmes d'accès ?</p>
+                    <div class="flex items-center justify-center space-x-4">
+                        <a th:href="@{/login}"
+                           class="text-sm text-indigo-600 hover:underline">
+                            Retour à la connexion
+                        </a>
+                        <span class="text-gray-300">|</span>
+                        <a th:href="@{http://localhost:4200/help}"
+                           class="text-sm text-indigo-600 hover:underline">
+                            Aide
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+</body>
+</html>

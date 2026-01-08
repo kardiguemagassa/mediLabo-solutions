@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr" class="bg-gray-100">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="MediLabo Solutions - Connexion sécurisée">
+    <meta name="author" content="MediLabo">
+    <title>MediLabo | Connexion</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="bg-indigo-900 fixed w-full top-0 left-0 z-40">
+    <div class="container h-16 mx-auto px-4">
+        <div class="relative h-16 flex items-center justify-between">
+            <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <a th:href="@{http://localhost:4200}" class="flex items-center cursor-pointer">
+                    <img class="h-8 w-auto" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+                    <span class="ml-2 text-white font-bold text-xl">MediLabo</span>
+                </a>
+            </div>
+            <div class="flex items-center">
+                <a th:href="@{http://localhost:4200/register}"
+                   class="hover:bg-indigo-700 relative p-1 text-white hover:text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center mr-3">
+                    Créer un compte
+                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenu principal -->
+<div class="mt-16">
+    <div class="container mx-auto pt-10 px-4">
+        <div class="mt-4 flex flex-col items-center">
+            <div class="bg-indigo-600 p-4 rounded-full">
+                <img class="h-16 w-16" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+            </div>
+            <h2 class="mt-5 text-2xl font-semibold text-gray-800">Connexion à MediLabo</h2>
+            <p class="mt-2 text-gray-500">Solutions médicales sécurisées</p>
+        </div>
+
+        <div class="mt-6 flex flex-col items-center">
+            <div class="w-full max-w-md p-6 rounded-lg border border-gray-200 bg-white shadow-lg">
+
+                <!-- Message d'erreur -->
+                <div th:if="${param.error}" class="flex items-center p-4 mb-4 text-red-800 rounded-lg bg-red-50" role="alert">
+                    <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                    </svg>
+                    <span class="ml-3 text-sm font-medium">Email ou mot de passe incorrect. Veuillez réessayer.</span>
+                </div>
+
+                <!-- Message de déconnexion -->
+                <div th:if="${param.logout}" class="flex items-center p-4 mb-4 text-green-800 rounded-lg bg-green-50" role="alert">
+                    <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+                    </svg>
+                    <span class="ml-3 text-sm font-medium">Vous avez été déconnecté avec succès.</span>
+                </div>
+
+                <!-- Formulaire de connexion -->
+                <form method="post" th:action="@{/login}">
+                    <div class="space-y-5">
+                        <div>
+                            <label for="username" class="block mb-2 text-sm font-medium text-gray-800">Adresse email</label>
+                            <input type="email"
+                                   name="username"
+                                   id="username"
+                                   class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-3"
+                                   placeholder="votre@email.com"
+                                   required
+                                   autofocus>
+                        </div>
+                        <div>
+                            <label for="password" class="block mb-2 text-sm font-medium text-gray-800">Mot de passe</label>
+                            <input type="password"
+                                   name="password"
+                                   id="password"
+                                   placeholder="••••••••"
+                                   autocomplete="current-password"
+                                   class="border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-3"
+                                   required>
+                        </div>
+                        <button type="submit"
+                                class="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-3 text-center transition duration-200">
+                            Se connecter
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Liens -->
+                <div class="mt-6 space-y-3">
+                    <a th:href="@{http://localhost:4200/forgot-password}"
+                       class="block text-sm text-indigo-600 hover:underline text-center">
+                        Mot de passe oublié ?
+                    </a>
+                    <div class="flex items-center justify-center space-x-4 pt-4 border-t border-gray-200">
+                        <span class="text-sm text-gray-500">Pas encore de compte ?</span>
+                        <a th:href="@{http://localhost:4200/register}"
+                           class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md text-white text-sm font-medium transition duration-200">
+                            S'inscrire
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>© 2024 MediLabo Solutions. Tous droits réservés.</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+</body>
+</html>
