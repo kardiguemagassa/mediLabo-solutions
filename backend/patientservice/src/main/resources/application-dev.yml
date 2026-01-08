@@ -1,0 +1,20 @@
+ACTIVE_PROFILE: dev
+
+PRIVATE_KEY: "private.key"
+PUBLIC_KEY: "public.key"
+
+POSTGRES_USERNAME: kara
+POSTGRES_PASSWORD: mhd02042017
+POSTGRES_HOST: 127.0.0.1
+POSTGRES_PORT: 5432
+POSTGRES_DATABASE: microservice_french_localdb
+
+USER_NAME: admin
+PASSWORD: kara
+
+SERVER_PORT: 8085
+UI_APP_URL: http://localhost:3000
+
+JWKS_URI: http://localhost:8080/oauth2/jwks
+
+KAFKA_SERVER_URL: http://127.0.0.1:9092

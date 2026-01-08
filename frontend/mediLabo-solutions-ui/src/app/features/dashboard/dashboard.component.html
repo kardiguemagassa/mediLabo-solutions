@@ -1,0 +1,95 @@
+<div class="space-y-8">
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    @for (stat of stats; track stat.label) {
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-slate-200 transition-all duration-300 group">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-slate-500 text-sm font-medium">{{ stat.label }}</p>
+            <p class="text-3xl font-bold text-slate-800 mt-2 tracking-tight">{{ stat.value }}</p>
+            <p class="text-sm mt-2 font-semibold" [class.text-emerald-600]="stat.positive" [class.text-rose-600]="!stat.positive">
+              {{ stat.change }} vs mois dernier
+            </p>
+          </div>
+          <div class="w-14 h-14 bg-gradient-to-br {{ stat.color }} rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform">
+            {{ stat.icon }}
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Risk Distribution -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+      <h3 class="font-bold text-slate-800 mb-6">Distribution des risques</h3>
+      <div class="space-y-4">
+        @for (risk of riskDistribution; track risk.label) {
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-600 font-medium">{{ risk.label }}</span>
+              <span class="text-slate-800 font-bold">{{ risk.percent }}%</span>
+            </div>
+            <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full {{ risk.color }} rounded-full transition-all duration-1000" [style.width.%]="risk.percent"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="font-bold text-slate-800">Activité récente</h3>
+        <a routerLink="/app/patients" class="text-cyan-600 hover:text-cyan-700 font-medium text-sm transition-colors">Voir tout</a>
+      </div>
+      <div class="space-y-4">
+        @for (activity of recentActivity; track activity.patient) {
+          <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm">
+              {{ activity.icon }}
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-slate-800">{{ activity.action }}</p>
+              <p class="text-sm text-slate-500">{{ activity.patient }}</p>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">{{ activity.time }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <a routerLink="/app/patients" class="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-6 text-white hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">👥</div>
+        <div>
+          <h4 class="font-bold text-lg">Ajouter un patient</h4>
+          <p class="text-white/80 text-sm">Enregistrer un nouveau patient</p>
+        </div>
+      </div>
+    </a>
+    <a routerLink="/app/notes" class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-6 text-white hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">📝</div>
+        <div>
+          <h4 class="font-bold text-lg">Nouvelle note</h4>
+          <p class="text-white/80 text-sm">Ajouter une note médicale</p>
+        </div>
+      </div>
+    </a>
+    <a routerLink="/app/assessment" class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">⚕️</div>
+        <div>
+          <h4 class="font-bold text-lg">Évaluer un risque</h4>
+          <p class="text-white/80 text-sm">Analyser un patient</p>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>

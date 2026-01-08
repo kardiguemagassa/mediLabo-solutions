@@ -1,3 +1,156 @@
 spring:
   application:
     name: gatewayserverservice
+  profiles:
+    active: dev
+
+  cloud:
+    gateway:
+      # STANDARD Spring Cloud 2023.0.x
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      # Configuration des routes
+      routes:
+        # AUTHORIZATION SERVER
+        - id: authorization-server
+          uri: lb://authorizationserverservice
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+
+        # PATIENT SERVICE
+        - id: patient-service
+          uri: lb://patientservice
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: patientServiceCircuitBreaker
+                fallbackUri: forward:/fallback/patients
+
+        # NOTES SERVICE
+        - id: notes-service
+          uri: lb://notesservice
+          predicates:
+            - Path=/api/notes/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notesServiceCircuitBreaker
+                fallbackUri: forward:/fallback/notes
+
+        # ASSESSMENT SERVICE
+        - id: assessment-service
+          uri: lb://assessmentservice
+          predicates:
+            - Path=/api/assessments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: assessmentServiceCircuitBreaker
+                fallbackUri: forward:/fallback/assessments
+
+        # NOTIFICATION SERVICE
+        - id: notification-service
+          uri: lb://notificationservice
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/notifications
+
+      # Configuration CORS globale
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+  # SECURITY - OAuth2 Resource Server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${jwks.uri}
+
+# EUREKA CLIENT - Port Standard
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+  client:
+    service-url:
+      defaultZone: http://${USER_NAME}:${PASSWORD}@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+
+# SERVER - Port Standard Gateway 8080
+server:
+  port: ${SERVER_PORT}
+
+jwks:
+  uri: ${JWKS_URI}
+
+# ACTUATOR (Monitoring)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+# LOGGING
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+    com.openclassrooms: INFO
+
+# RESILIENCE4J - Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 100
+        slow-call-duration-threshold: 3s
+    instances:
+      patientServiceCircuitBreaker:
+        base-config: default
+      notesServiceCircuitBreaker:
+        base-config: default
+      assessmentServiceCircuitBreaker:
+        base-config: default
+      notificationServiceCircuitBreaker:
+        base-config: default
+
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 5s

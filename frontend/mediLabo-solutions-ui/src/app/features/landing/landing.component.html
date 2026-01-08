@@ -1,0 +1,241 @@
+<!-- Navigation -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200/50">
+  <div class="max-w-7xl mx-auto px-6 py-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-cyan-500/30">M</div>
+        <span class="font-bold text-xl text-slate-800">MediLabo</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#features" class="text-slate-600 hover:text-slate-900 font-medium transition-colors">Fonctionnalités</a>
+        <a href="#how-it-works" class="text-slate-600 hover:text-slate-900 font-medium transition-colors">Comment ça marche</a>
+        <a href="#testimonials" class="text-slate-600 hover:text-slate-900 font-medium transition-colors">Témoignages</a>
+      </div>
+      <div class="flex items-center gap-4">
+        <a routerLink="/login" class="text-slate-600 hover:text-slate-900 font-semibold transition-colors">Connexion</a>
+        <a routerLink="/register" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all">Commencer</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="pt-32 pb-20 px-6 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-50" style="background-image: radial-gradient(circle at 1px 1px, rgb(226 232 240) 1px, transparent 0); background-size: 40px 40px;"></div>
+  <div class="absolute top-20 right-0 w-[600px] h-[600px] bg-gradient-to-br from-cyan-200/40 to-blue-200/40 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-br from-violet-200/30 to-purple-200/30 rounded-full blur-3xl"></div>
+
+  <div class="max-w-7xl mx-auto relative">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-cyan-50 text-cyan-700 px-4 py-2 rounded-full text-sm font-semibold mb-6">
+          <span class="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
+          Nouveau : Évaluation du risque diabète
+        </div>
+        <h1 class="text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight mb-6">
+          Gérez vos patients,<br>
+          <span class="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">évaluez les risques</span>
+        </h1>
+        <p class="text-xl text-slate-600 mb-8 leading-relaxed">
+          MediLabo Solutions est la plateforme médicale intelligente qui vous aide à suivre vos patients et à détecter précocement les risques de diabète.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a routerLink="/register" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:-translate-y-1 transition-all">
+            Commencer gratuitement
+          </a>
+          <button class="flex items-center gap-2 bg-white text-slate-700 px-8 py-4 rounded-xl font-semibold text-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Voir la démo
+          </button>
+        </div>
+        <div class="flex items-center gap-8 mt-10 pt-10 border-t border-slate-200">
+          <div>
+            <p class="text-3xl font-bold text-slate-900">1,200+</p>
+            <p class="text-slate-500">Praticiens actifs</p>
+          </div>
+          <div>
+            <p class="text-3xl font-bold text-slate-900">50,000+</p>
+            <p class="text-slate-500">Patients suivis</p>
+          </div>
+          <div>
+            <p class="text-3xl font-bold text-slate-900">99.9%</p>
+            <p class="text-slate-500">Disponibilité</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Image -->
+      <div class="relative">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+          <div class="bg-slate-100 px-4 py-3 flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold">M</div>
+              <div>
+                <p class="font-semibold text-slate-800">Tableau de bord</p>
+                <p class="text-sm text-slate-500">Dr. Rousseau</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div class="bg-gradient-to-br from-cyan-50 to-blue-50 p-4 rounded-xl">
+                <p class="text-2xl font-bold text-slate-800">247</p>
+                <p class="text-sm text-slate-600">Patients</p>
+              </div>
+              <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl">
+                <p class="text-2xl font-bold text-slate-800">12</p>
+                <p class="text-sm text-slate-600">Consultations</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">JD</div>
+                <div class="flex-1">
+                  <p class="font-medium text-slate-800">Jean Dupont</p>
+                  <p class="text-xs text-slate-500">Dernière visite: Aujourd'hui</p>
+                </div>
+                <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">None</span>
+              </div>
+              <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">MM</div>
+                <div class="flex-1">
+                  <p class="font-medium text-slate-800">Marie Martin</p>
+                  <p class="text-xs text-slate-500">Dernière visite: Hier</p>
+                </div>
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">Borderline</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-20 px-6 bg-slate-50">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-slate-900 mb-4">Tout ce dont vous avez besoin</h2>
+      <p class="text-xl text-slate-600 max-w-2xl mx-auto">Une plateforme complète pour gérer vos patients et évaluer les risques de diabète.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      @for (feature of features; track feature.title) {
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:border-slate-200 hover:-translate-y-2 transition-all duration-300 group">
+          <div class="w-14 h-14 bg-gradient-to-br {{ feature.color }} rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-lg group-hover:scale-110 transition-transform">
+            {{ feature.icon }}
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-3">{{ feature.title }}</h3>
+          <p class="text-slate-600 leading-relaxed">{{ feature.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- How it Works -->
+<section id="how-it-works" class="py-20 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-slate-900 mb-4">Comment ça marche ?</h2>
+      <p class="text-xl text-slate-600 max-w-2xl mx-auto">Trois étapes simples pour commencer.</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      @for (step of steps; track step.title; let i = $index) {
+        <div class="relative">
+          <div class="text-8xl font-bold text-slate-100 absolute -top-6 left-0">{{ i + 1 }}</div>
+          <div class="relative bg-white rounded-2xl p-8 border border-slate-100">
+            <div class="w-16 h-16 bg-cyan-100 rounded-2xl flex items-center justify-center text-3xl mb-6">{{ step.icon }}</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-3">{{ step.title }}</h3>
+            <p class="text-slate-600">{{ step.description }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Risk Levels -->
+<section class="py-20 px-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold mb-4">Niveaux de risque diabète</h2>
+      <p class="text-xl text-slate-400 max-w-2xl mx-auto">Notre algorithme analyse 12 déclencheurs cliniques.</p>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-6">
+      @for (level of riskLevels; track level.name) {
+        <div class="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all">
+          <div class="w-12 h-12 bg-{{ level.color }}-500/20 rounded-xl flex items-center justify-center text-2xl mb-4">{{ level.icon }}</div>
+          <h3 class="text-lg font-bold text-{{ level.color }}-400 mb-2">{{ level.name }}</h3>
+          <p class="text-slate-400 text-sm">{{ level.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section id="testimonials" class="py-20 px-6 bg-slate-50">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-slate-900 mb-4">Ce que disent nos utilisateurs</h2>
+      <p class="text-xl text-slate-600">Découvrez pourquoi les professionnels font confiance à MediLabo.</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      @for (testimonial of testimonials; track testimonial.name) {
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+          <div class="flex items-center gap-1 text-amber-400 mb-4">★★★★★</div>
+          <p class="text-slate-600 mb-6 leading-relaxed">"{{ testimonial.text }}"</p>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br {{ testimonial.color }} rounded-full flex items-center justify-center text-white font-bold">{{ testimonial.initials }}</div>
+            <div>
+              <p class="font-semibold text-slate-800">{{ testimonial.name }}</p>
+              <p class="text-sm text-slate-500">{{ testimonial.role }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-20 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <h2 class="text-4xl font-bold text-slate-900 mb-6">Prêt à moderniser votre pratique ?</h2>
+    <p class="text-xl text-slate-600 mb-10">Rejoignez plus de 1,200 praticiens qui utilisent déjà MediLabo.</p>
+    <div class="flex flex-wrap justify-center gap-4">
+      <a routerLink="/register" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:-translate-y-1 transition-all">
+        Créer un compte gratuit
+      </a>
+      <a routerLink="/login" class="bg-white text-slate-700 px-10 py-4 rounded-xl font-semibold text-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
+        J'ai déjà un compte
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-slate-900 text-white py-12 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center font-bold text-lg">M</div>
+        <span class="font-bold text-xl">MediLabo Solutions</span>
+      </div>
+      <div class="flex items-center gap-8 text-slate-400">
+        <a href="#" class="hover:text-white transition-colors">Confidentialité</a>
+        <a href="#" class="hover:text-white transition-colors">CGU</a>
+        <a href="#" class="hover:text-white transition-colors">Contact</a>
+      </div>
+      <p class="text-slate-500">© 2024 MediLabo Solutions</p>
+    </div>
+  </div>
+</footer>
