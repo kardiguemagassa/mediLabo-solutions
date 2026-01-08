@@ -1,0 +1,308 @@
+<div class="space-y-6">
+  <!-- Header avec recherche et filtres -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <!-- Recherche -->
+      <div class="relative">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery"
+          placeholder="Rechercher un patient..." 
+          class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl w-64 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+        <svg class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+      
+      <!-- Filtre risque -->
+      <select 
+        [(ngModel)]="riskFilter"
+        class="px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 text-slate-600 outline-none">
+        <option value="">Tous les risques</option>
+        <option value="None">None</option>
+        <option value="Borderline">Borderline</option>
+        <option value="In Danger">In Danger</option>
+        <option value="Early Onset">Early Onset</option>
+      </select>
+      
+      <!-- Filtre genre -->
+      <select 
+        [(ngModel)]="genderFilter"
+        class="px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 text-slate-600 outline-none">
+        <option value="">Tous les genres</option>
+        <option value="M">Masculin</option>
+        <option value="F">Féminin</option>
+      </select>
+    </div>
+    
+    <!-- Bouton ajouter -->
+    <button 
+      (click)="openAddModal()"
+      class="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      Nouveau Patient
+    </button>
+  </div>
+
+  <!-- Compteur de résultats -->
+  <p class="text-sm text-slate-500">{{ filteredPatients.length }} patient(s) trouvé(s)</p>
+
+  <!-- Table des patients -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-100">
+            <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Patient</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Âge</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Genre</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Téléphone</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Risque</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (patient of filteredPatients; track patient.id) {
+            <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4">
+                <a [routerLink]="['/app/patients', patient.id]" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white bg-gradient-to-br {{ getAvatarClass(patient.gender) }}">
+                    {{ patient.firstName.charAt(0) }}{{ patient.lastName.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-800">{{ patient.firstName }} {{ patient.lastName }}</p>
+                    <p class="text-sm text-slate-400">ID: {{ patient.id }}</p>
+                  </div>
+                </a>
+              </td>
+              <td class="px-6 py-4 text-slate-600">{{ calculateAge(patient.birthDate) }} ans</td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold {{ getGenderClass(patient.gender) }}">
+                  {{ patient.gender === 'M' ? '♂ Masculin' : '♀ Féminin' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-slate-600">{{ patient.phone || '-' }}</td>
+              <td class="px-6 py-4">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold border {{ getRiskClass(patient.risk) }}">
+                  {{ patient.risk || 'None' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-1">
+                  <a [routerLink]="['/app/patients', patient.id]" 
+                     class="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-cyan-600"
+                     title="Voir">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                  </a>
+                  <button 
+                    (click)="openEditModal(patient)"
+                    class="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-blue-600"
+                    title="Modifier">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </button>
+                  <button 
+                    (click)="openDeleteModal(patient)"
+                    class="p-2 hover:bg-rose-50 rounded-lg transition-colors text-slate-500 hover:text-rose-600"
+                    title="Supprimer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                <div class="flex flex-col items-center gap-2">
+                  <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <p>Aucun patient trouvé</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ajouter Patient -->
+@if (showAddModal()) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-slate-800">Nouveau Patient</h3>
+        <button (click)="closeAddModal()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <form (ngSubmit)="addPatient()" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Prénom *</label>
+            <input type="text" [(ngModel)]="newPatient.firstName" name="firstName" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Nom *</label>
+            <input type="text" [(ngModel)]="newPatient.lastName" name="lastName" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Date de naissance *</label>
+            <input type="date" [(ngModel)]="newPatient.birthDate" name="birthDate" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Genre *</label>
+            <select [(ngModel)]="newPatient.gender" name="gender" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+            </select>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Téléphone</label>
+          <input type="tel" [(ngModel)]="newPatient.phone" name="phone"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"
+            placeholder="06 12 34 56 78">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Adresse</label>
+          <input type="text" [(ngModel)]="newPatient.address" name="address"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"
+            placeholder="15 Rue de la Paix, Paris">
+        </div>
+        
+        <div class="flex gap-4 pt-4">
+          <button type="button" (click)="closeAddModal()" 
+            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+            Annuler
+          </button>
+          <button type="submit" 
+            class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl transition-all">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Modifier Patient -->
+@if (showEditModal() && selectedPatient()) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-slate-800">Modifier Patient</h3>
+        <button (click)="closeEditModal()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <form (ngSubmit)="updatePatient()" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Prénom *</label>
+            <input type="text" [(ngModel)]="selectedPatient()!.firstName" name="firstName" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Nom *</label>
+            <input type="text" [(ngModel)]="selectedPatient()!.lastName" name="lastName" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Date de naissance *</label>
+            <input type="date" [(ngModel)]="selectedPatient()!.birthDate" name="birthDate" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Genre *</label>
+            <select [(ngModel)]="selectedPatient()!.gender" name="gender" required
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+            </select>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Téléphone</label>
+          <input type="tel" [(ngModel)]="selectedPatient()!.phone" name="phone"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Adresse</label>
+          <input type="text" [(ngModel)]="selectedPatient()!.address" name="address"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+        </div>
+        
+        <div class="flex gap-4 pt-4">
+          <button type="button" (click)="closeEditModal()" 
+            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+            Annuler
+          </button>
+          <button type="submit" 
+            class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl transition-all">
+            Mettre à jour
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Supprimer Patient -->
+@if (showDeleteModal() && selectedPatient()) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Supprimer le patient ?</h3>
+        <p class="text-slate-500 mb-6">
+          Êtes-vous sûr de vouloir supprimer <strong>{{ selectedPatient()!.firstName }} {{ selectedPatient()!.lastName }}</strong> ? Cette action est irréversible.
+        </p>
+        <div class="flex gap-4">
+          <button (click)="closeDeleteModal()" 
+            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+            Annuler
+          </button>
+          <button (click)="deletePatient()" 
+            class="flex-1 bg-rose-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-rose-700 transition-colors">
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

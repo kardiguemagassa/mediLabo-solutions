@@ -1,0 +1,398 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Paramètres</h1>
+    <p class="text-slate-500 mt-1">Gérez votre compte et vos préférences</p>
+  </div>
+
+  <!-- Message de succès -->
+  @if (successMessage()) {
+    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 flex items-center gap-3">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+      {{ successMessage() }}
+    </div>
+  }
+
+  <div class="flex flex-col lg:flex-row gap-6">
+    <!-- Onglets latéraux -->
+    <div class="lg:w-64">
+      <nav class="bg-white rounded-2xl p-2 shadow-sm border border-slate-100">
+        <button
+          (click)="setActiveTab('profile')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
+          [class.bg-gradient-to-r]="activeTab() === 'profile'"
+          [class.from-cyan-500]="activeTab() === 'profile'"
+          [class.to-blue-600]="activeTab() === 'profile'"
+          [class.text-white]="activeTab() === 'profile'"
+          [class.text-slate-600]="activeTab() !== 'profile'"
+          [class.hover:bg-slate-50]="activeTab() !== 'profile'">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+          <span class="font-medium">Profil</span>
+        </button>
+
+        <button
+          (click)="setActiveTab('security')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left mt-1"
+          [class.bg-gradient-to-r]="activeTab() === 'security'"
+          [class.from-cyan-500]="activeTab() === 'security'"
+          [class.to-blue-600]="activeTab() === 'security'"
+          [class.text-white]="activeTab() === 'security'"
+          [class.text-slate-600]="activeTab() !== 'security'"
+          [class.hover:bg-slate-50]="activeTab() !== 'security'">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <span class="font-medium">Sécurité</span>
+        </button>
+
+        <button
+          (click)="setActiveTab('preferences')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left mt-1"
+          [class.bg-gradient-to-r]="activeTab() === 'preferences'"
+          [class.from-cyan-500]="activeTab() === 'preferences'"
+          [class.to-blue-600]="activeTab() === 'preferences'"
+          [class.text-white]="activeTab() === 'preferences'"
+          [class.text-slate-600]="activeTab() !== 'preferences'"
+          [class.hover:bg-slate-50]="activeTab() !== 'preferences'">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <span class="font-medium">Préférences</span>
+        </button>
+
+        <button
+          (click)="setActiveTab('about')"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left mt-1"
+          [class.bg-gradient-to-r]="activeTab() === 'about'"
+          [class.from-cyan-500]="activeTab() === 'about'"
+          [class.to-blue-600]="activeTab() === 'about'"
+          [class.text-white]="activeTab() === 'about'"
+          [class.text-slate-600]="activeTab() !== 'about'"
+          [class.hover:bg-slate-50]="activeTab() !== 'about'">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="font-medium">À propos</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="flex-1">
+      <!-- Profil -->
+      @if (activeTab() === 'profile') {
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+          <h2 class="text-xl font-bold text-slate-800 mb-6">Informations du profil</h2>
+
+          <form (ngSubmit)="saveProfile()" class="space-y-6">
+            <div class="flex items-center gap-6 pb-6 border-b border-slate-100">
+              <div class="w-20 h-20 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold">
+                {{ profile.firstName.charAt(0) }}{{ profile.lastName.charAt(0) }}
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800">Photo de profil</h3>
+                <p class="text-sm text-slate-500 mb-2">Avatar généré automatiquement</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Prénom</label>
+                <input
+                  type="text"
+                  [(ngModel)]="profile.firstName"
+                  name="firstName"
+                  class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Nom</label>
+                <input
+                  type="text"
+                  [(ngModel)]="profile.lastName"
+                  name="lastName"
+                  class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
+              <input
+                type="email"
+                [(ngModel)]="profile.email"
+                name="email"
+                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none bg-slate-50"
+                readonly>
+              <p class="text-xs text-slate-500 mt-1">L'email ne peut pas être modifié</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Spécialité</label>
+              <select
+                [(ngModel)]="profile.specialty"
+                name="specialty"
+                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+                @for (specialty of specialties; track specialty.value) {
+                  <option [value]="specialty.value">{{ specialty.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                [disabled]="isSaving()"
+                class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                @if (isSaving()) {
+                  <span class="flex items-center gap-2">
+                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Enregistrement...
+                  </span>
+                } @else {
+                  Enregistrer les modifications
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Sécurité -->
+      @if (activeTab() === 'security') {
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+          <h2 class="text-xl font-bold text-slate-800 mb-6">Changer le mot de passe</h2>
+
+          <form (ngSubmit)="changePassword()" class="space-y-6 max-w-md">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Mot de passe actuel</label>
+              <div class="relative">
+                <input
+                  [type]="showCurrentPassword() ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.currentPassword"
+                  name="currentPassword"
+                  class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+                <button
+                  type="button"
+                  (click)="showCurrentPassword.set(!showCurrentPassword())"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  @if (showCurrentPassword()) {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                  }
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Nouveau mot de passe</label>
+              <div class="relative">
+                <input
+                  [type]="showNewPassword() ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.newPassword"
+                  name="newPassword"
+                  class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+                <button
+                  type="button"
+                  (click)="showNewPassword.set(!showNewPassword())"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  @if (showNewPassword()) {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                  }
+                </button>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">Minimum 8 caractères</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Confirmer le nouveau mot de passe</label>
+              <div class="relative">
+                <input
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.confirmPassword"
+                  name="confirmPassword"
+                  class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+                <button
+                  type="button"
+                  (click)="showConfirmPassword.set(!showConfirmPassword())"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  @if (showConfirmPassword()) {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                  }
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="isSaving() || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword"
+              class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (isSaving()) {
+                Modification...
+              } @else {
+                Changer le mot de passe
+              }
+            </button>
+          </form>
+        </div>
+      }
+
+      <!-- Préférences -->
+      @if (activeTab() === 'preferences') {
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+          <h2 class="text-xl font-bold text-slate-800 mb-6">Préférences</h2>
+
+          <form (ngSubmit)="savePreferences()" class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Thème</label>
+              <select
+                [(ngModel)]="preferences.theme"
+                name="theme"
+                class="w-full max-w-xs px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+                <option value="light">Clair</option>
+                <option value="dark">Sombre</option>
+                <option value="auto">Automatique</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Langue</label>
+              <select
+                [(ngModel)]="preferences.language"
+                name="language"
+                class="w-full max-w-xs px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+
+            <div class="border-t border-slate-100 pt-6">
+              <h3 class="font-semibold text-slate-800 mb-4">Notifications</h3>
+
+              <div class="space-y-4">
+                <label class="flex items-center justify-between p-4 bg-slate-50 rounded-xl cursor-pointer">
+                  <div>
+                    <p class="font-medium text-slate-800">Notifications par email</p>
+                    <p class="text-sm text-slate-500">Recevoir les mises à jour par email</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="preferences.emailNotifications"
+                    name="emailNotifications"
+                    class="w-5 h-5 rounded text-cyan-500 focus:ring-cyan-500">
+                </label>
+
+                <label class="flex items-center justify-between p-4 bg-slate-50 rounded-xl cursor-pointer">
+                  <div>
+                    <p class="font-medium text-slate-800">Alertes de risque</p>
+                    <p class="text-sm text-slate-500">Être notifié des changements de niveau de risque</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="preferences.riskAlerts"
+                    name="riskAlerts"
+                    class="w-5 h-5 rounded text-cyan-500 focus:ring-cyan-500">
+                </label>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                [disabled]="isSaving()"
+                class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                @if (isSaving()) {
+                  Enregistrement...
+                } @else {
+                  Enregistrer les préférences
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- À propos -->
+      @if (activeTab() === 'about') {
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+          <h2 class="text-xl font-bold text-slate-800 mb-6">À propos</h2>
+
+          <div class="space-y-6">
+            <!-- Logo et version -->
+            <div class="flex items-center gap-4 pb-6 border-b border-slate-100">
+              <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center font-bold text-2xl text-white shadow-lg shadow-cyan-500/30">
+                M
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-slate-800">MediLabo Solutions</h3>
+                <p class="text-slate-500">Version 1.0.0</p>
+              </div>
+            </div>
+
+            <!-- Infos -->
+            <div class="space-y-4">
+              <div class="p-4 bg-slate-50 rounded-xl">
+                <p class="text-sm text-slate-500">Description</p>
+                <p class="font-medium text-slate-800">Plateforme médicale intelligente pour la gestion des patients et l'évaluation des risques de diabète.</p>
+              </div>
+
+              <div class="p-4 bg-slate-50 rounded-xl">
+                <p class="text-sm text-slate-500">Développé par</p>
+                <p class="font-medium text-slate-800">OpenClassrooms - Projet 9</p>
+              </div>
+
+              <div class="p-4 bg-slate-50 rounded-xl">
+                <p class="text-sm text-slate-500">Technologies</p>
+                <div class="flex flex-wrap gap-2 mt-2">
+                  <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-slate-700 border border-slate-200">Angular 17</span>
+                  <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-slate-700 border border-slate-200">Tailwind CSS</span>
+                  <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-slate-700 border border-slate-200">Spring Boot</span>
+                  <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-slate-700 border border-slate-200">PostgreSQL</span>
+                  <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-slate-700 border border-slate-200">MongoDB</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="pt-6 border-t border-slate-100">
+              <h3 class="font-semibold text-slate-800 mb-4">Support</h3>
+              <p class="text-slate-600 mb-4">Besoin d'aide ? Contactez notre équipe de support.</p>
+              <a href="mailto:support%40medilabo.fr" class="inline-flex items-center gap-2 text-cyan-600 hover:text-cyan-700 font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                support[at]medilabo.fr
+              </a>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,8 +1,11 @@
+# MediLabo Discovery Server Eureka - Configuration Standard
 spring:
   application:
-    name: discoveryservice
+    name: discoveryserverservice
   profiles:
     active: ${ACTIVE_PROFILE:dev}
+
+  # ─── Database (même que Authorization Server) ───
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
     username: ${POSTGRES_USERNAME}
@@ -23,6 +26,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQL82Dialect
         format_sql: true
 
+# Eureka Server Configuration
 eureka:
   instance:
     prefer-ip-address: true
@@ -39,5 +43,24 @@ eureka:
     wait-time-in-ms-when-sync-empty: 0
     peer-node-read-timeout-ms: 30000
 
+# Server - Port Standard 8761
 server:
   port: ${SERVER_PORT}
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: DEBUG
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
