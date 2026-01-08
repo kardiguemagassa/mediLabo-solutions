@@ -1,3 +1,79 @@
+# ════════════════════════════════════════════════════════════════════════════
+# MediLabo Patient Service - Configuration Standard
+# ════════════════════════════════════════════════════════════════════════════
+
 spring:
   application:
     name: patientservice
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # ─── Database Configuration ───
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DATABASE:medilabo_patients}
+    username: ${POSTGRES_USERNAME:kara}
+    password: ${POSTGRES_PASSWORD:mhd02042017}
+    driver-class-name: org.postgresql.Driver
+
+  # ─── JPA/Hibernate Configuration ───
+  jpa:
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL_AUTO:validate}  # validate, update, create, create-drop
+    show-sql: ${HIBERNATE_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  # ─── Security - OAuth2 Resource Server ───
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://localhost:9000/oauth2/jwks}
+
+# ════════════════════════════════════════════════════════════════════════════
+# Server Configuration
+# ════════════════════════════════════════════════════════════════════════════
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: /
+
+# ════════════════════════════════════════════════════════════════════════════
+# Eureka Client Configuration
+# ════════════════════════════════════════════════════════════════════════════
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+    hostname: ${EUREKA_HOSTNAME:localhost}
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+
+# ════════════════════════════════════════════════════════════════════════════
+# Actuator Configuration
+# ════════════════════════════════════════════════════════════════════════════
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ════════════════════════════════════════════════════════════════════════════
+# Logging Configuration
+# ════════════════════════════════════════════════════════════════════════════
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: ${HIBERNATE_SHOW_SQL:false}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${HIBERNATE_SHOW_SQL:false}

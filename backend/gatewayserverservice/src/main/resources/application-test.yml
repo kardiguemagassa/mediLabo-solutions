@@ -1,0 +1,9 @@
+ACTIVE_PROFILE: test
+
+USER_NAME: admin
+PASSWORD: kara
+ROLES: EUREKA_CLIENT
+
+SERVER_PORT: 8000
+
+JWKS_URI: http://localhost:9000/oauth2/jwks
