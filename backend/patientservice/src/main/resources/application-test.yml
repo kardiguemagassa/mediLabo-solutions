@@ -1,0 +1,45 @@
+# MediLabo Authorization Server - TEST Profile
+ACTIVE_PROFILE: test
+spring:
+  # ─── H2 In-Memory ───
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    database: H2
+    hibernate:
+      ddl-auto: create-drop
+
+  sql:
+    init:
+      mode: never
+
+  h2:
+    console:
+      enabled: true
+
+# Eureka - DÉSACTIVÉ en test
+eureka:
+  client:
+    enabled: false
+
+# Application Settings
+app:
+  security:
+    issuer-uri: http://localhost:9000
+    token:
+      access-token-validity: 5
+      refresh-token-validity: 1
+    keys:
+      directory: src/test/resources/keys
+  cors:
+    allowed-origins: http://localhost:4200
+
+# Logging
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.security: WARN
