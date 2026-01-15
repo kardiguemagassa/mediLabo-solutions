@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dtorequest;
+package com.openclassrooms.authorizationserverservice.dtorequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,12 +16,12 @@ import lombok.Setter;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResetPasswordRequest {
-    @NotEmpty(message = "User ID cannot be empty or null")
+    @NotEmpty(message = "L'identifiant utilisateur est obligatoire.")
     private String userUuid;
-    @NotEmpty(message = "Token cannot be empty or null")
+    @NotEmpty(message = "Le token est obligatoire.")
     private String token;
-    @NotEmpty(message = "Password cannot be empty or null")
+    @NotEmpty(message = "Le mot de passe est obligatoire.")
     private String password;
-    @NotEmpty(message = "Confirm password cannot be empty or null")
+    @NotEmpty(message = "La confirmation du mot de passe est obligatoire.")
     private String confirmPassword;
 }

@@ -4,6 +4,6 @@ USER_NAME: admin
 PASSWORD: kara
 ROLES: EUREKA_CLIENT
 
-SERVER_PORT: 8000
+SERVER_PORT: 8080
 
-JWKS_URI: http://localhost:9000/oauth2/jwks
+JWKS_URI: http://localhost:9001/oauth2/jwks

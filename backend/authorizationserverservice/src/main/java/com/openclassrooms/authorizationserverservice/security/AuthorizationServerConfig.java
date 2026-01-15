@@ -1,17 +1,22 @@
 package com.openclassrooms.authorizationserverservice.security;
 
+import com.openclassrooms.authorizationserverservice.handler.CustomAccessDeniedHandler;
+import com.openclassrooms.authorizationserverservice.handler.CustomAuthenticationEntryPoint;
 import com.openclassrooms.authorizationserverservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.OAuth2Token;
@@ -47,24 +52,68 @@ import static org.springframework.http.HttpMethod.OPTIONS;
 import static org.springframework.security.oauth2.server.authorization.OAuth2TokenType.ACCESS_TOKEN;
 
 /**
- * Configuration de l'Authorization Server OAuth2
+ * Configuration de sécurité pour l'Authorization Server et les endpoints REST.
+ * <p>
+ * Cette classe configure :
+ * <ul>
+ *     <li>Le serveur d'autorisation OAuth2 (génération de tokens, clients, scopes, etc.)</li>
+ *     <li>La sécurité des formulaires (login, MFA, logout)</li>
+ *     <li>La sécurité des API REST avec JWT et validation des tokens</li>
+ *     <li>Les règles CORS et les filtres HTTP personnalisés</li>
+ * </ul>
+ * <p>
+ * Deux SecurityFilterChain sont définis avec des ordres différents :
+ * <ol>
+ *     <li>Ordre 1 : OAuth2 Authorization Server</li>
+ *     <li>Ordre 2 : Formulaires MFA + API REST</li>
+ * </ol>
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassakara@gmail.com
  * @since 2026-05-01
  */
 
+@EnableMethodSecurity
 @Configuration
 @Slf4j
 @RequiredArgsConstructor
 @EnableWebSecurity
 public class AuthorizationServerConfig {
 
+    /**
+     * Configuration des JWT (clé publique/privée, algorithme, etc.)
+     */
     private final JwtConfiguration configuration;
 
+    /**
+     * URI du JWK Set utilisé pour valider les JWT côté Resource Server.
+     */
+    @Value("${jwks.uri}")
+    private String jwkSetUri;
+
+    // SECURITY FILTER CHAIN 1
+
+    /**
+     * SecurityFilterChain pour le serveur d'autorisation OAuth2.
+     * <p>
+     * Cette configuration :
+     * <ul>
+     *     <li>Active les endpoints OAuth2 (/oauth2/token, /oauth2/authorize, etc.)</li>
+     *     <li>Configure les clients enregistrés via {@link RegisteredClientRepository}</li>
+     *     <li>Configure la génération de tokens (JWT + refresh token)</li>
+     *     <li>Applique une authentification obligatoire sur tous les endpoints OAuth2</li>
+     * </ul>
+     *
+     * @param http configuration HttpSecurity
+     * @param registeredClientRepository repository des clients OAuth2
+     * @param userService service utilisateur pour récupération des infos
+     * @return SecurityFilterChain appliquée aux endpoints OAuth2
+     * @throws Exception en cas d'erreur de configuration
+     */
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, RegisteredClientRepository registeredClientRepository, UserService userService) throws Exception {
+        log.info("CONFIGURING OAUTH2 AUTHORIZATION SERVER SECURITY FILTER CHAIN");
         http.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()));
         OAuth2AuthorizationServerConfigurer authorizationConfig =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
@@ -87,44 +136,131 @@ public class AuthorizationServerConfig {
         return http.build();
     }
 
+
+    // SECURITY FILTER CHAIN 2
+
+    /**
+     * SecurityFilterChain pour la sécurité des formulaires et des API REST.
+     * <p>
+     * Cette configuration :
+     * <ul>
+     *     <li>Désactive le CSRF pour les API REST</li>
+     *     <li>Configure les endpoints publics (/login, /user/register, /user/resetpassword, etc.)</li>
+     *     <li>Exige l'authentification pour tous les autres endpoints</li>
+     *     <li>Gère la MFA via l'autorité "MFA_REQUIRED"</li>
+     *     <li>Configure les formulaires de login et logout</li>
+     *     <li>Configure la validation des JWT pour les API REST</li>
+     * </ul>
+     *
+     * @param http configuration HttpSecurity
+     * @return SecurityFilterChain appliquée aux formulaires et aux API REST
+     * @throws Exception en cas d'erreur de configuration
+     */
     @Bean
     @Order(2)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(configurer -> configurer.configurationSource(corsConfigurationSource()));
-        http.authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/error").permitAll()
-                        .requestMatchers(POST,"/logout").permitAll()
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+
+        log.info("Configuring Default Security Filter Chain (Forms + API)");
+
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(authorize -> authorize
+                        // Endpoints Publics
+                        .requestMatchers(
+                                "/login",
+                                "/error",
+                                "/user/register/**",
+                                "/user/verify/account/**",
+                                "/user/verify/password/**",
+                                "/user/resetpassword/**",
+                                "/user/image/**",
+                                "/actuator/health",
+                                "/actuator/info"
+                        ).permitAll()
+                        .requestMatchers(POST, "/logout").permitAll()
+                        // MFA Required
                         .requestMatchers("/mfa").hasAuthority("MFA_REQUIRED")
+                        // Tous les autres endpoints → Authentification requise
                         .anyRequest().authenticated())
                 .anonymous(anonymous -> anonymous
                         .authorities("MFA_REQUIRED"));
-        http.formLogin(login -> login
-                .loginPage("/login")
-                .successHandler(new MfaAuthenticationHandler("/mfa", "MFA_REQUIRED"))
-                .failureHandler(new SimpleUrlAuthenticationFailureHandler("/login?error")));
-        http.logout(logout -> logout.logoutSuccessUrl("http://localhost:3000")
-                .addLogoutHandler(new CookieClearingLogoutHandler("JSESSIONID")));
+
+        // Configuration Formulaires (Login, Logout)
+        http
+                .formLogin(login -> login
+                        .loginPage("/login")
+                        .successHandler(new MfaAuthenticationHandler("/mfa", "MFA_REQUIRED"))
+                        .failureHandler(new SimpleUrlAuthenticationFailureHandler("/login?error")))
+                .logout(logout -> logout
+                        .logoutSuccessUrl("http://localhost:3000")
+                        .addLogoutHandler(new CookieClearingLogoutHandler("JSESSIONID")));
+
+        // Configuration OAuth2 Resource Server (Validation JWT pour API REST)
+        http
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .accessDeniedHandler(new CustomAccessDeniedHandler())
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+                        .jwt(jwt -> jwt
+                                .jwkSetUri(jwkSetUri)
+                                .jwtAuthenticationConverter(new JwtConverter())));
+
         return http.build();
     }
 
     // 1. REGISTERED CLIENT REPOSITORY
+
+    /**
+     * Bean pour gérer les clients OAuth2 enregistrés.
+     * <p>
+     * Utilise JDBC pour persister les clients dans la base de données.
+     *
+     * @param jdbcOperations template JDBC
+     * @return repository des clients OAuth2
+     */
     @Bean
     public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcOperations) {
         return new JdbcRegisteredClientRepository(jdbcOperations);
     }
 
     // AUTHENTICATION_SUCCESS_HANDLER
+
+    /**
+     * Gestionnaire de succès après authentification.
+     * <p>
+     * Redirige automatiquement l'utilisateur vers la page demandée avant login.
+     *
+     * @return AuthenticationSuccessHandler
+     */
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return new SavedRequestAwareAuthenticationSuccessHandler();
     }
 
     // AUTHORIZATION SERVER SETTINGS
+
+    /**
+     * Paramètres du serveur d’autorisation OAuth2.
+     * <p>
+     * Permet de configurer l'URL des endpoints (token, authorize, introspection, etc.).
+     * Ici, on utilise les paramètres par défaut.
+     *
+     * @return AuthorizationServerSettings
+     */
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder().build();
     }
 
+    // CUSTOM JWT TOKEN
+
+    /**
+     * Personnalise le contenu du JWT access token.
+     * <p>
+     * Ajoute la liste des autorités de l'utilisateur dans le token.
+     *
+     * @return OAuth2TokenCustomizer
+     */
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> customizer() {
         return (context) -> {
@@ -135,6 +271,18 @@ public class AuthorizationServerConfig {
     }
 
     // TOKEN GENERATOR
+
+    /**
+     * Générateur de tokens OAuth2.
+     * <p>
+     * Combine :
+     * <ul>
+     *     <li>JWT pour l'access token</li>
+     *     <li>Refresh token pour renouveler les access tokens</li>
+     * </ul>
+     *
+     * @return OAuth2TokenGenerator
+     */
     @Bean
     public OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator() {
         var jwtGenerator = UserJwtGenerator.init(new NimbusJwtEncoder(configuration.jwkSource())); // access token
@@ -144,15 +292,34 @@ public class AuthorizationServerConfig {
     }
 
     // RETRIEVE AUTHORITIES
+
+    /**
+     * Récupère les autorités de l'utilisateur en tant que chaîne séparée par des virgules.
+     *
+     * @param context contexte JWT
+     * @return chaîne des autorités
+     */
     private String getAuthorities(JwtEncodingContext context) {
         return context.getPrincipal().getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(joining(","));
     }
 
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer(HttpFirewall httpFirewall) {
-        return (web) -> web.httpFirewall(httpFirewall);
-    }
+    // HTTP FIREWALL
 
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer(HttpFirewall httpFirewall) {
+//        return (web) -> web.httpFirewall(httpFirewall);
+//    }
+
+    /**
+     * Bean pour configurer le firewall HTTP.
+     * <p>
+     *  protéger l'application contre les URL malveillantes ou suspectes.
+     *  Par défaut, Spring Security bloque certaines requêtes considérées comme dangereuses,
+     *  Autorise certains caractères dans l’URL comme ";" et "\\".
+     * </p>
+     *
+     * @return HttpFirewall
+     */
     @Bean
     public HttpFirewall getHttpFirewall() {
         StrictHttpFirewall strictHttpFirewall = new StrictHttpFirewall();
@@ -161,6 +328,16 @@ public class AuthorizationServerConfig {
         return strictHttpFirewall;
     }
 
+    // CORS CONFIGURATION
+
+    /**
+     * Source de configuration CORS.
+     * <p>
+     * Autorise l'accès aux API depuis les frontends Angular (4200) et React (3000).
+     * Définit les méthodes HTTP autorisées, les headers, et la durée maximale de mise en cache des règles.
+     *
+     * @return CorsConfigurationSource
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var corsConfiguration = new CorsConfiguration();

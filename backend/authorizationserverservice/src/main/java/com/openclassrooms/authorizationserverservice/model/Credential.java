@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.model;
+package com.openclassrooms.authorizationserverservice.model;
 
 import lombok.*;
 
