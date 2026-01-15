@@ -1,6 +1,4 @@
-# ════════════════════════════════════════════════════════════════════════════
 # MediLabo Patient Service - Configuration Standard
-# ════════════════════════════════════════════════════════════════════════════
 
 spring:
   application:
@@ -10,40 +8,66 @@ spring:
 
   # ─── Database Configuration ───
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DATABASE:medilabo_patients}
-    username: ${POSTGRES_USERNAME:***REMOVED_USER***}
-    password: ${POSTGRES_PASSWORD:***REMOVED***}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-test-query: SELECT 1
+      maximum-pool-size: 10
 
-  # ─── JPA/Hibernate Configuration ───
-  jpa:
-    hibernate:
-      ddl-auto: ${HIBERNATE_DDL_AUTO:validate}  # validate, update, create, create-drop
-    show-sql: ${HIBERNATE_SHOW_SQL:false}
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+      jpa:
+        database: POSTGRESQL
+        open-in-view: false
+        #database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+        generate-ddl: true
+        show-sql: true
+        hibernate:
+          ddl-auto: update
+        properties:
+          hibernate:
+            globally_quoted_identifiers: true
+            #dialect: org.hibernate.dialect.PostgreSQL9Dialect
+            format_sql: true
+            default_schema: ${POSTGRES_DATABASE}
+
+      # ─── SQL Init ───
+      sql:
+        init:
+          platform: postgres
+          mode: NEVER
+          continue-on-error: false
+          schema-locations:
+            - classpath:/data/schema.sql
+          data-locations:
+            - classpath:/data/data.sql
+      session:
+        jdbc:
+          initialize-schema: NEVER
+          table-name: SPRING_SESSION
+        timeout: 300
 
   # ─── Security - OAuth2 Resource Server ───
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${JWKS_URI:http://localhost:9000/oauth2/jwks}
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
 
-# ════════════════════════════════════════════════════════════════════════════
+auth:
+  server:
+    service-name: ${AUTH_SERVER_SERVICE_NAME:authorizationserverservice}
+    url: ${AUTH_SERVER_URL:http://localhost:9001}
+    use-eureka: ${AUTH_SERVER_USE_EUREKA:true}
+
+
 # Server Configuration
-# ════════════════════════════════════════════════════════════════════════════
 server:
-  port: ${SERVER_PORT:8081}
+  port: ${SERVER_PORT}
   servlet:
     context-path: /
 
-# ════════════════════════════════════════════════════════════════════════════
 # Eureka Client Configuration
-# ════════════════════════════════════════════════════════════════════════════
 eureka:
   instance:
     prefer-ip-address: true
@@ -51,13 +75,11 @@ eureka:
     hostname: ${EUREKA_HOSTNAME:localhost}
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: http://${USER_NAME}:${PASSWORD}@localhost:8761/eureka/
     fetch-registry: true
     register-with-eureka: true
 
-# ════════════════════════════════════════════════════════════════════════════
 # Actuator Configuration
-# ════════════════════════════════════════════════════════════════════════════
 management:
   endpoints:
     web:
@@ -67,9 +89,7 @@ management:
     health:
       show-details: always
 
-# ════════════════════════════════════════════════════════════════════════════
 # Logging Configuration
-# ════════════════════════════════════════════════════════════════════════════
 logging:
   level:
     root: INFO

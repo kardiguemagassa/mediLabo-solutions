@@ -7,13 +7,7 @@ INSERT INTO roles (role_uuid, name, authority) VALUES ('7d1b82b1-92c7-4fae-b790-
 INSERT INTO roles (role_uuid, name, authority) VALUES ('1a0e13de-4fdf-4db0-8a3d-08fce64cbe8c', 'PRACTITIONER', 'user:read,user:update,patient:read,patient:create,patient:update,note:read,note:create,note:update,assessment:read') ON CONFLICT (name) DO NOTHING;
 INSERT INTO roles (role_uuid, name, authority) VALUES ('894853e1-9238-4c64-b5d8-c0a29bdf1b94', 'ORGANIZER', 'user:read,user:update,patient:read,patient:create,patient:update,patient:delete,note:read,note:create,note:update,note:delete,assessment:read,assessment:create') ON CONFLICT (name) DO NOTHING;
 INSERT INTO roles (role_uuid, name, authority) VALUES ('598e0368-8d8d-43ca-95be-a1b949d368e6', 'ADMIN', 'user:create,user:read,user:update,user:delete,patient:read,patient:create,patient:update,patient:delete,note:read,note:create,note:update,note:delete,assessment:read,assessment:create') ON CONFLICT (name) DO NOTHING;
-INSERT INTO roles (role_uuid, name, authority) 
-VALUES (
-    '838ca5ee-eb15-427a-b380-6cf7bfbd68b7', 
-    'SUPER_ADMIN', 
-    'eureka:read,app:create,app:read,app:update,app:delete,user:create,user:read,user:update,user:delete,patient:read,patient:create,patient:update,patient:delete,note:read,note:create,note:update,note:delete,assessment:read,assessment:create,comment:create,comment:read,comment:update,comment:delete'
-) 
-ON CONFLICT (name) DO NOTHING;
+INSERT INTO roles (role_uuid, name, authority) VALUES ('838ca5ee-eb15-427a-b380-6cf7bfbd68b7','SUPER_ADMIN','eureka:read,app:create,app:read,app:update,app:delete,user:create,user:read,user:update,user:delete,patient:read,patient:create,patient:update,patient:delete,note:read,note:create,note:update,note:delete,assessment:read,assessment:create,comment:create,comment:read,comment:update,comment:delete') ON CONFLICT (name) DO NOTHING;
 
 
 

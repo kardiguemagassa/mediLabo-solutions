@@ -1,455 +1,216 @@
 package com.openclassrooms.patientservice.repository.implementation;
 
 import com.openclassrooms.patientservice.exception.ApiException;
-import com.openclassrooms.patientservice.model.*;
+import com.openclassrooms.patientservice.model.Patient;
 import com.openclassrooms.patientservice.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-import static com.openclassrooms.patientservice.utils.UserUtils.*;
+import static com.openclassrooms.patientservice.query.PatientQuery.*;
 import static java.lang.String.format;
-import static java.sql.Types.VARCHAR;
-import static java.util.Map.of;
 
 /**
+ * Implémentation JdbcClient du repository Patient
+ * Utilise SQL natif au lieu de JPA
+ *
  * @author FirstName LastName
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
- * @since 2026-05-01
+ * @since 2026-01-09
  */
-
 @Slf4j
-@Service
+@Repository
 @RequiredArgsConstructor
-public class UserRepositoryImpl implements PatientRepository {
+public class PatientRepositoryImpl implements PatientRepository {
+
     private final JdbcClient jdbc;
 
     @Override
-    public Patient getUserByEmail(String email) {
+    public Patient save(Patient patient) {
         try {
-            return jdbc.sql(SELECT_USER_BY_EMAIL_QUERY).param("email", email).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException(format("No user found user email %s", email));
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            return jdbc.sql(INSERT_PATIENT_QUERY)
+                    .param("patientUuid", patient.getPatientUuid())
+                    .param("userUuid", patient.getUserUuid())
+                    .param("dateOfBirth", patient.getDateOfBirth())
+                    .param("gender", patient.getGender())
+                    .param("bloodType", patient.getBloodType())
+                    .param("heightCm", patient.getHeightCm())
+                    .param("weightKg", patient.getWeightKg())
+                    .param("allergies", patient.getAllergies())
+                    .param("chronicConditions", patient.getChronicConditions())
+                    .param("currentMedications", patient.getCurrentMedications())
+                    .param("emergencyContactName", patient.getEmergencyContactName())
+                    .param("emergencyContactPhone", patient.getEmergencyContactPhone())
+                    .param("emergencyContactRelationship", patient.getEmergencyContactRelationship())
+                    .param("medicalRecordNumber", patient.getMedicalRecordNumber())
+                    .param("insuranceNumber", patient.getInsuranceNumber())
+                    .param("insuranceProvider", patient.getInsuranceProvider())
+                    .param("active", true)
+                    .query(Patient.class)
+                    .single();
+        } catch (Exception e) {
+            log.error("Error saving patient: {}", e.getMessage(), e);
+            throw new ApiException("Failed to create patient: " + e.getMessage());
         }
     }
 
     @Override
-    public Patient getUserByUuid(String userUuid) {
+    public Patient update(Patient patient) {
         try {
-            return jdbc.sql(SELECT_USER_BY_USER_UUID_QUERY).param("userUuid", userUuid).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException(format("No user found user UUID %s", userUuid));
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            return jdbc.sql(UPDATE_PATIENT_QUERY)
+                    .param("patientUuid", patient.getPatientUuid())
+                    .param("dateOfBirth", patient.getDateOfBirth())
+                    .param("gender", patient.getGender())
+                    .param("bloodType", patient.getBloodType())
+                    .param("heightCm", patient.getHeightCm())
+                    .param("weightKg", patient.getWeightKg())
+                    .param("allergies", patient.getAllergies())
+                    .param("chronicConditions", patient.getChronicConditions())
+                    .param("currentMedications", patient.getCurrentMedications())
+                    .param("emergencyContactName", patient.getEmergencyContactName())
+                    .param("emergencyContactPhone", patient.getEmergencyContactPhone())
+                    .param("emergencyContactRelationship", patient.getEmergencyContactRelationship())
+                    .param("insuranceNumber", patient.getInsuranceNumber())
+                    .param("insuranceProvider", patient.getInsuranceProvider())
+                    .query(Patient.class)
+                    .single();
+        } catch (EmptyResultDataAccessException e) {
+            log.error("Patient not found for update: {}", patient.getPatientUuid());
+            throw new ApiException(format("Patient not found: %s", patient.getPatientUuid()));
+        } catch (Exception e) {
+            log.error("Error updating patient: {}", e.getMessage(), e);
+            throw new ApiException("Failed to update patient: " + e.getMessage());
         }
     }
 
     @Override
-    public Patient getUserById(Long userId) {
+    public Optional<Patient> findByPatientUuid(String patientUuid) {
         try {
-            return jdbc.sql(SELECT_USER_BY_USER_ID_QUERY).param("userId", userId).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException(format("No user found user ID %s", userId));
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            Patient patient = jdbc.sql(SELECT_PATIENT_BY_UUID_QUERY)
+                    .param("patientUuid", patientUuid)
+                    .query(Patient.class)
+                    .single();
+            return Optional.of(patient);
+        } catch (EmptyResultDataAccessException e) {
+            log.debug("Patient not found with UUID: {}", patientUuid);
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("Error finding patient by UUID: {}", e.getMessage(), e);
+            throw new ApiException("Failed to find patient: " + e.getMessage());
         }
     }
 
     @Override
-    public Patient updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address) {
+    public Optional<Patient> findByUserUuid(String userUuid) {
         try {
-            return jdbc.sql(UPDATE_USER_FUNCTION).paramSource(getParamSource(userUuid, firstName, lastName, email, phone, bio, address)).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException(format("No user found user UUID %s", userUuid));
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            Patient patient = jdbc.sql(SELECT_PATIENT_BY_USER_UUID_QUERY)
+                    .param("userUuid", userUuid)
+                    .query(Patient.class)
+                    .single();
+            return Optional.of(patient);
+        } catch (EmptyResultDataAccessException e) {
+            log.debug("Patient not found for user UUID: {}", userUuid);
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("Error finding patient by user UUID: {}", e.getMessage(), e);
+            throw new ApiException("Failed to find patient: " + e.getMessage());
         }
     }
 
     @Override
-    public String createUser(String firstName, String lastName, String email, String username, String password) {
+    public boolean existsByUserUuid(String userUuid) {
         try {
-            var token = randomUUUID.get();
-            jdbc.sql(CREATE_USER_STORED_PROCEDURE).paramSource(getParamSource(firstName, lastName, email, username, password, token)).update();
-            return token;
-        } catch (DuplicateKeyException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Email/username already in use. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            Boolean exists = jdbc.sql(EXISTS_BY_USER_UUID_QUERY)
+                    .param("userUuid", userUuid)
+                    .query(Boolean.class)
+                    .single();
+            return Boolean.TRUE.equals(exists);
+        } catch (Exception e) {
+            log.error("Error checking patient existence: {}", e.getMessage(), e);
+            return false;
         }
     }
 
     @Override
-    public AccountToken getAccountToken(String token) {
+    public List<Patient> findAllByActiveTrue() {
         try {
-            return jdbc.sql(SELECT_ACCOUNT_TOKEN_QUERY).param("token", token).query(AccountToken.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Invalid link. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            return jdbc.sql(SELECT_ALL_ACTIVE_PATIENTS_QUERY)
+                    .query(Patient.class)
+                    .list();
+        } catch (Exception e) {
+            log.error("Error finding all active patients: {}", e.getMessage(), e);
+            throw new ApiException("Failed to retrieve patients: " + e.getMessage());
         }
     }
 
     @Override
-    public Patient verifyPasswordToken(String token) {
-        return null;
-    }
-
-    @Override
-    public Patient enableMfa(String userUuid) {
+    public Optional<Patient> findByMedicalRecordNumber(String medicalRecordNumber) {
         try {
-            return jdbc.sql(ENABLE_USER_MFA_FUNCTION).paramSource(getParamSource(userUuid, qrCodeSecret.get())).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            Patient patient = jdbc.sql(SELECT_PATIENT_BY_MEDICAL_RECORD_NUMBER_QUERY)
+                    .param("medicalRecordNumber", medicalRecordNumber)
+                    .query(Patient.class)
+                    .single();
+            return Optional.of(patient);
+        } catch (EmptyResultDataAccessException e) {
+            log.debug("Patient not found with medical record number: {}", medicalRecordNumber);
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("Error finding patient by medical record number: {}", e.getMessage(), e);
+            throw new ApiException("Failed to find patient: " + e.getMessage());
         }
     }
 
     @Override
-    public Patient disableMfa(String userUuid) {
+    public List<Patient> findAllActivePatientsOrderByCreatedAtDesc() {
+        return findAllByActiveTrue();
+    }
+
+    @Override
+    public long countByActiveTrue() {
         try {
-            return jdbc.sql(DISABLE_USER_MFA_FUNCTION).param("userUuid", userUuid).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            Long count = jdbc.sql(COUNT_ACTIVE_PATIENTS_QUERY)
+                    .query(Long.class)
+                    .single();
+            return count != null ? count : 0L;
+        } catch (Exception e) {
+            log.error("Error counting active patients: {}", e.getMessage(), e);
+            return 0L;
         }
     }
 
     @Override
-    public Patient toggleAccountExpired(String userUuid) {
+    public List<Patient> findByBloodTypeAndActiveTrue(String bloodType) {
         try {
-            return jdbc.sql(TOGGLE_ACCOUNT_EXPIRED_FUNCTION).param("userUuid", userUuid).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            return jdbc.sql(SELECT_PATIENTS_BY_BLOOD_TYPE_QUERY)
+                    .param("bloodType", bloodType)
+                    .query(Patient.class)
+                    .list();
+        } catch (Exception e) {
+            log.error("Error finding patients by blood type: {}", e.getMessage(), e);
+            throw new ApiException("Failed to retrieve patients: " + e.getMessage());
         }
     }
 
     @Override
-    public Patient toggleAccountLocked(String userUuid) {
+    public void softDelete(String patientUuid) {
         try {
-            return jdbc.sql(TOGGLE_ACCOUNT_LOCKED_FUNCTION).param("userUuid", userUuid).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
+            int updated = jdbc.sql(SOFT_DELETE_PATIENT_QUERY)
+                    .param("patientUuid", patientUuid)
+                    .update();
+
+            if (updated == 0) {
+                throw new ApiException(format("Patient not found: %s", patientUuid));
+            }
+
+            log.info("Patient soft deleted: {}", patientUuid);
+        } catch (Exception e) {
+            log.error("Error soft deleting patient: {}", e.getMessage(), e);
+            throw new ApiException("Failed to delete patient: " + e.getMessage());
         }
-    }
-
-    @Override
-    public Patient toggleAccountEnabled(String userUuid) {
-        try {
-            return jdbc.sql(TOGGLE_ACCOUNT_ENABLED_FUNCTION).param("userUuid", userUuid).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public Patient toggleCredentialsExpired(String userUuid) {
-        return null;
-    }
-
-    @Override
-    public void updatePassword(String userUuid, String encodedPassword) {
-        try {
-            jdbc.sql(UPDATE_USER_PASSWORD_QUERY).params(of("userUuid", userUuid, "password", encodedPassword)).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public Patient updateRole(String userUuid, String role) {
-        try {
-            return jdbc.sql(UPDATE_USER_ROLE_FUNCTION).params(of("userUuid", userUuid, "role", role)).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public void resetPassword(String email) {
-
-    }
-
-    @Override
-    public void doResetPassword(String userUuid, String token, String password, String confirmPassword) {
-
-    }
-
-    @Override
-    public List<Patient> getUsers() {
-        try {
-            return jdbc.sql(SELECT_USERS_QUERY).query(Patient.class).list();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Users not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public void deleteAccountToken(String token) {
-        try {
-            jdbc.sql(DELETE_ACCOUNT_TOKEN_QUERY).param("token", token).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Token not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public void deletePasswordToken(String token) {
-        try {
-            jdbc.sql("").param("token", token).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Token not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public void deletePasswordToken(Long userId) {
-        try {
-            jdbc.sql(DELETE_PASSWORD_TOKEN_QUERY).param("userId", userId).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Token not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public Patient getTicketUser(String ticketUuid) {
-        try {
-            return jdbc.sql(SELECT_TICKET_USER_QUERY).params(of("ticketUuid", ticketUuid)).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException(format("No ticket found by UUID %s", ticketUuid));
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public String createPasswordToken(Long userId) {
-        try {
-            var token = randomUUUID.get();
-            jdbc.sql(CREATE_PASSWORD_TOKEN_QUERY).params(of("userId", userId, "token", token)).update();
-            return token;
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public List<Patient> getTechSupports() {
-        try {
-            return jdbc.sql(SELECT_TECH_SUPPORTS_QUERY).query(Patient.class).list();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Users not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public String getPassword(String userUuid) {
-        try {
-            return jdbc.sql(SELECT_USER_PASSWORD_QUERY).param("userUuid", userUuid).query(String.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public void updateImageUrl(String userUuid, String imageUrl) {
-        try {
-            jdbc.sql(UPDATE_USER_IMAGE_URL_QUERY).params(of("userUuid", userUuid, "imageUrl", imageUrl)).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public PasswordToken getPasswordToken(Long userId) {
-        try {
-            return jdbc.sql(SELECT_PASSWORD_TOKEN_BY_USER_ID_QUERY).params(of("userId", userId)).query(PasswordToken.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            //throw new ApiException("Invalid link. Please try again.");
-            return null;
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public PasswordToken getPasswordToken(String token) {
-        try {
-            return jdbc.sql(SELECT_PASSWORD_TOKEN_QUERY).param("token", token).query(PasswordToken.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Invalid link. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public void updateAccountSettings(Long userId) {
-        try {
-            jdbc.sql(UPDATE_ACCOUNT_SETTINGS_QUERY).param("userId", userId).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public Patient getAssignee(String ticketUuid) {
-        try {
-            return jdbc.sql(SELECT_TICKET_ASSIGNEE_QUERY).param("ticketUuid", ticketUuid).query(Patient.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            log.error("Ticket is not assigned.");
-            return Patient.builder().build();
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public Credential getCredential(String userUuid) {
-        try {
-            return jdbc.sql(SELECT_USER_CREDENTIAL_QUERY).param("userUuid", userUuid).query(Credential.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Credential not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    @Override
-    public List<Device> getDevices(String userUuid) {
-        try {
-            return jdbc.sql(SELECT_DEVICES_QUERY).param("userUuid", userUuid).query(Device.class).list();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("User not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("An error occurred. Please try again.");
-        }
-    }
-
-    private SqlParameterSource getParamSource(String userUuid, String qrCodeSecret) {
-        return new MapSqlParameterSource()
-                .addValue("userUuid", userUuid, VARCHAR)
-                .addValue("qrCodeSecret", qrCodeSecret, VARCHAR)
-                .addValue("qrCodeImageUri", qrCodeImageUri.apply(qrCodeSecret), VARCHAR);
-    }
-
-    private SqlParameterSource getParamSource(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address) {
-        return new MapSqlParameterSource()
-                .addValue("userUuid", userUuid, VARCHAR)
-                .addValue("firstName", firstName, VARCHAR)
-                .addValue("lastName", lastName, VARCHAR)
-                .addValue("email", email.trim().toLowerCase(), VARCHAR)
-                .addValue("phone", phone, VARCHAR)
-                .addValue("address", address, VARCHAR)
-                .addValue("bio", bio, VARCHAR);
-    }
-
-    private SqlParameterSource getParamSource(String firstName, String lastName, String email, String username, String password, String token) {
-        return new MapSqlParameterSource()
-                .addValue("userUuid", randomUUUID.get(), VARCHAR)
-                .addValue("firstName", firstName, VARCHAR)
-                .addValue("lastName", lastName, VARCHAR)
-                .addValue("email", email.trim().toLowerCase(), VARCHAR)
-                .addValue("username", username.trim().toLowerCase(), VARCHAR)
-                .addValue("password", password, VARCHAR)
-                .addValue("token", token, VARCHAR)
-                .addValue("credentialUuid", randomUUUID.get(), VARCHAR)
-                .addValue("memberId", memberId.get(), VARCHAR);
     }
 }

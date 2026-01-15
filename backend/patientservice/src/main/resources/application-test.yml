@@ -29,7 +29,7 @@ eureka:
 # Application Settings
 app:
   security:
-    issuer-uri: http://localhost:9000
+    issuer-uri: http://localhost:9001
     token:
       access-token-validity: 5
       refresh-token-validity: 1

@@ -38,10 +38,51 @@ import java.util.UUID;
 import static com.openclassrooms.authorizationserverservice.util.UserUtils.getUser;
 
 /**
- * UserJwtGenerator
+ * Générateur personnalisé de JSON Web Token (JWT) pour les utilisateurs.
+ *
+ * <p>
+ * Cette classe implémente {@link OAuth2TokenGenerator} pour produire des tokens JWT
+ * adaptés aux besoins de l'application, incluant :
+ * <ul>
+ *     <li>Les tokens d'accès OAuth2 (Access Tokens)</li>
+ *     <li>Les tokens d'identité OpenID Connect (ID Tokens)</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * Le générateur configure dynamiquement :
+ * <ul>
+ *     <li>Les informations de l'utilisateur (UUID, subject)</li>
+ *     <li>Le client destinataire (audience)</li>
+ *     <li>La durée de validité du token (issuedAt, expiresAt)</li>
+ *     <li>Les scopes autorisés</li>
+ *     <li>Les claims OIDC (nonce, sid, auth_time) si applicable</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * La signature du JWT est réalisée via {@link JwtEncoder} avec l'algorithme RSA
+ * (par défaut RS256), et peut être personnalisée grâce à un {@link OAuth2TokenCustomizer}.
+ * </p>
+ *
+ * <h2>Utilisation</h2>
+ * <pre>{@code
+ * JwtEncoder encoder = ...;
+ * UserJwtGenerator generator = UserJwtGenerator.init(encoder);
+ * generator.setJwtCustomizer(customizer); // optionnel
+ * Jwt jwt = generator.generate(context);
+ * }</pre>
+ *
+ * <h2>Remarques</h2>
+ * <ul>
+ *     <li>La classe est finale et ne peut pas être héritée.</li>
+ *     <li>Ne gère que les tokens de type {@link OAuth2TokenType#ACCESS_TOKEN}
+ *         et les ID Tokens OIDC.</li>
+ *     <li>Intègre la logique pour gérer les contextes de refresh token et d'authorization code.</li>
+ * </ul>
+ *
  * @author FirstName LastName
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
@@ -54,6 +95,23 @@ public final class UserJwtGenerator implements OAuth2TokenGenerator<Jwt> {
         this.jwtEncoder = jwtEncoder;
     }
 
+    /**
+     * Génère un JWT à partir du contexte OAuth2 fourni.
+     *
+     * <p>
+     * La méthode :
+     * <ul>
+     *     <li>Retourne {@code null} si le type de token n’est pas Access Token ou ID Token OIDC.</li>
+     *     <li>Configure dynamiquement le {@link JwtClaimsSet} avec les informations utilisateur, client et scopes.</li>
+     *     <li>Gère les claims OIDC spécifiques comme <code>nonce</code>, <code>sid</code>, <code>auth_time</code>.</li>
+     *     <li>Applique le {@link OAuth2TokenCustomizer} si défini.</li>
+     *     <li>Encode le JWT via le {@link JwtEncoder} et retourne le token final.</li>
+     * </ul>
+     * </p>
+     *
+     * @param context le contexte du token contenant le client, le principal, les scopes, etc.
+     * @return le {@link Jwt} généré ou {@code null} si le type de token n’est pas pris en charge
+     */
     @Nullable
     @Override
     public Jwt generate(OAuth2TokenContext context) {
@@ -152,11 +210,32 @@ public final class UserJwtGenerator implements OAuth2TokenGenerator<Jwt> {
         return jwt;
     }
 
+    /**
+     * Définit un customizer pour personnaliser le JWT avant l’encodage.
+     *
+     * <p>
+     * Utile pour ajouter des claims spécifiques à l’application (ex : rôles, permissions, métadonnées).
+     * </p>
+     *
+     * @param jwtCustomizer le {@link OAuth2TokenCustomizer} à appliquer
+     * @throws IllegalArgumentException si {@code jwtCustomizer} est null
+     */
     public void setJwtCustomizer(OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer) {
         Assert.notNull(jwtCustomizer, "jwtCustomizer cannot be null");
         this.jwtCustomizer = jwtCustomizer;
     }
 
+    /**
+     * Initialise une instance de {@link UserJwtGenerator} avec le {@link JwtEncoder} fourni.
+     *
+     * <p>
+     * Cette méthode statique facilite la création d'instance et assure que le {@link JwtEncoder}
+     * n’est jamais null.
+     * </p>
+     *
+     * @param jwtEncoder le composant {@link JwtEncoder} utilisé pour signer les JWT
+     * @return une nouvelle instance de {@link UserJwtGenerator}
+     */
     public static UserJwtGenerator init(JwtEncoder jwtEncoder) {
         return new UserJwtGenerator(jwtEncoder);
     }
