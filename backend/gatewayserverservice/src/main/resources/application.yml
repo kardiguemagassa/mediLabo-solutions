@@ -14,17 +14,23 @@ spring:
 
       # Configuration des routes
       routes:
-        # AUTHORIZATION SERVER
+        # AUTHORIZATION SERVER - authorization endpoints
         - id: authorization-server
-          uri: lb://authorizationserverservice
+          uri: lb://AUTHORIZATIONSERVERSERVICE
           predicates:
-            - Path=/auth/**
+            - Path=/authorization/**
           filters:
             - StripPrefix=1
 
+         # AUTHORIZATION SERVER - user endpoints
+        - id: authorization-server-users
+          uri: lb://authorizationserverservice
+          predicates:
+            - Path=/user/**
+
         # PATIENT SERVICE
         - id: patient-service
-          uri: lb://patientservice
+          uri: lb://PATIENTSERVICE
           predicates:
             - Path=/api/patients/**
           filters:
@@ -35,7 +41,7 @@ spring:
 
         # NOTES SERVICE
         - id: notes-service
-          uri: lb://notesservice
+          uri: lb://NOTESSERVICE
           predicates:
             - Path=/api/notes/**
           filters:
@@ -46,7 +52,7 @@ spring:
 
         # ASSESSMENT SERVICE
         - id: assessment-service
-          uri: lb://assessmentservice
+          uri: lb://ASSESSMENTSERVICE
           predicates:
             - Path=/api/assessments/**
           filters:
@@ -57,7 +63,7 @@ spring:
 
         # NOTIFICATION SERVICE
         - id: notification-service
-          uri: lb://notificationservice
+          uri: lb://NOTIFICATIONSERVICE
           predicates:
             - Path=/api/notifications/**
           filters:
@@ -70,7 +76,9 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins: "*"
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "http://localhost:8080"
             allowedMethods:
               - GET
               - POST

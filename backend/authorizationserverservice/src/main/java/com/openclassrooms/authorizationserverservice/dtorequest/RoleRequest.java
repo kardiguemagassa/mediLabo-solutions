@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dtorequest;
+package com.openclassrooms.authorizationserverservice.dtorequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,6 +16,6 @@ import lombok.Setter;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RoleRequest {
-    @NotEmpty(message = "Role cannot be empty or null")
+    @NotEmpty(message = "Le role est obligatoire.")
     private String role;
 }

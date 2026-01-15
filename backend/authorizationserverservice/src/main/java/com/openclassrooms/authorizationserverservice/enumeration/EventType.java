@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.enumeration;
+package com.openclassrooms.authorizationserverservice.enumeration;
 
 /**
  * @author Kardigué MAGASSA

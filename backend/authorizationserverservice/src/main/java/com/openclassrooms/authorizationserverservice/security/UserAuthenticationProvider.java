@@ -20,10 +20,34 @@ import static org.springframework.security.authentication.UsernamePasswordAuthen
 import static org.springframework.security.core.authority.AuthorityUtils.commaSeparatedStringToAuthorityList;
 
 /**
- * Provider d'authentification personnalisé
+ * Implémentation personnalisée de {@link AuthenticationProvider} chargée
+ * de l’authentification des utilisateurs via email et mot de passe.
+ *
+ * <p>
+ * Cette classe constitue le cœur du processus d’authentification utilisateur
+ * dans l’Authorization Server. Elle valide :
+ * </p>
+ * <ul>
+ *     <li>l’existence de l’utilisateur</li>
+ *     <li>l’état du compte (verrouillé, expiré, désactivé)</li>
+ *     <li>la correspondance du mot de passe</li>
+ *     <li>les droits et rôles de l’utilisateur</li>
+ * </ul>
+ *
+ * <p>
+ * En cas de succès, elle produit un {@link UsernamePasswordAuthenticationToken}
+ * authentifié, utilisé ensuite par Spring Security et OAuth2 pour générer
+ * les tokens JWT.
+ * </p>
+ *
+ * <p>
+ * En cas d’échec, elle déclenche des exceptions spécifiques
+ * ({@link BadCredentialsException}, {@link LockedException}, {@link DisabledException})
+ * permettant à l’UI de comprendre précisément la cause du refus.
+ * </p>
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassakara@gmail.com
  * @since 2026-05-01
  */
 
@@ -35,6 +59,23 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Authentifie un utilisateur à partir de son email et de son mot de passe.
+     *
+     * <p>
+     * Le processus est le suivant :
+     * </p>
+     * <ol>
+     *     <li>Recherche de l’utilisateur via {@link UserService}</li>
+     *     <li>Vérification de l’état du compte (verrouillé, expiré, désactivé)</li>
+     *     <li>Vérification du mot de passe avec {@link PasswordEncoder}</li>
+     *     <li>Construction d’un {@link UsernamePasswordAuthenticationToken} authentifié</li>
+     * </ol>
+     *
+     * @param authentication contient l’email (principal) et le mot de passe (credentials)
+     * @return une authentification valide si les informations sont correctes
+     * @throws AuthenticationException si l’authentification échoue
+     */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         try {
@@ -56,11 +97,52 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
         }
     }
 
+    /**
+     * Indique à Spring Security quels types d’objets {@link Authentication}
+     * ce provider est capable de traiter.
+     *
+     * <p>
+     * Cette méthode permet au moteur d’authentification de Spring Security
+     * de savoir si ce {@link AuthenticationProvider} peut gérer un type
+     * spécifique d’authentification.
+     * </p>
+     *
+     * <p>
+     * Ici, on indique que ce provider gère les authentifications de type
+     * {@link UsernamePasswordAuthenticationToken}, c’est-à-dire les connexions
+     * basées sur un email (ou username) et un mot de passe.
+     * </p>
+     *
+     * <p>
+     * Si cette méthode retourne {@code false}, Spring Security ignore ce provider
+     * et passe au provider suivant dans la chaîne.
+     * </p>
+     *
+     * @param authenticationType la classe du token d’authentification à tester
+     * @return {@code true} si ce provider peut traiter ce type d’authentification,
+     *         {@code false} sinon
+     */
     @Override
     public boolean supports(Class<?> authenticationType) {
         return authenticationType.isAssignableFrom(UsernamePasswordAuthenticationToken.class);
     }
 
+    /**
+     * Valide l’état de sécurité du compte utilisateur avant toute vérification du mot de passe.
+     *
+     * <p>
+     * Vérifie que :
+     * </p>
+     * <ul>
+     *     <li>le compte n’est pas verrouillé</li>
+     *     <li>le nombre de tentatives de connexion n’a pas dépassé la limite</li>
+     *     <li>le compte est activé</li>
+     *     <li>le compte n’a pas expiré</li>
+     * </ul>
+     *
+     * @throws LockedException si le compte est verrouillé
+     * @throws DisabledException si le compte est désactivé ou expiré
+     */
     private final Consumer<User> validateUser = user -> {
         if (!user.isAccountNonLocked() || user.getLoginAttempts() >= 5) {
             String message = user.getLoginAttempts() > 0
