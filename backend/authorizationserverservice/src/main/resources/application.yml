@@ -46,6 +46,26 @@ spring:
       table-name: SPRING_SESSION
     timeout: 300
 
+  kafka:
+    bootstrap-servers:
+      - ${KAFKA_SERVER_URL}
+    template:
+      default-topic: NOTIFICATION_TOPIC
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: Notification:io.getarrays.userservice.domain.Notification
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+
 # Eureka (activé par défaut, désactivé en dev/test)
 eureka:
   instance:
@@ -67,9 +87,9 @@ logging:
     org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
     org.springframework.security.oauth2: ${LOG_LEVEL_OAUTH2:WARN}
 
-# Server
+# Authorization Server - Application Port 9001
 server:
-  port: ${SERVER_PORT:9000}
+  port: ${SERVER_PORT:9001}
   error:
     path: /error
     whitelabel:
@@ -84,19 +104,9 @@ ui:
   app:
     url: ${UI_APP_URL}
 
-# Application Settings
-app:
-  security:
-    issuer-uri: ${ISSUER_URI:http://localhost:9000}
-    token:
-      access-token-validity: ${ACCESS_TOKEN_VALIDITY:30}
-      refresh-token-validity: ${REFRESH_TOKEN_VALIDITY:7}
-    keys:
-      directory: ${KEYS_DIRECTORY:src/main/resources/keys}
-      private: ${PRIVATE_KEY:private.key}
-      public: ${PUBLIC_KEY:public.key}
-  cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+#OAuth2 & JWT Configuration: ==> JWKS URI pour validation JWT (Resource Server: http://localhost:9001/oauth2/jwks)
+jwks:
+  uri: ${JWKS_URI}
 
 # Actuator
 management:

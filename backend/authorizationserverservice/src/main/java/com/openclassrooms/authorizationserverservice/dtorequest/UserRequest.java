@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dtorequest;
+package com.openclassrooms.authorizationserverservice.dtorequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Email;
@@ -17,16 +17,16 @@ import lombok.Setter;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserRequest {
-    @NotEmpty(message = "First name cannot be empty or null")
+    @NotEmpty(message = "Le prénom est obligatoire.")
     private String firstName;
-    @NotEmpty(message = "Last name cannot be empty or null")
+    @NotEmpty(message = "Le nom de famille est obligatoire.")
     private String lastName;
-    @NotEmpty(message = "Email cannot be empty or null")
-    @Email(message = "Inavlid email address")
+    @NotEmpty(message = "L'adresse e-mail est obligatoire.")
+    @Email(message = "Adresse e-mail invalide")
     private String email;
-    @NotEmpty(message = "Username cannot be empty or null")
+    @NotEmpty(message = "Le nom d'utilisateur est obligatoire.")
     private String username;
-    @NotEmpty(message = "Password cannot be empty or null")
+    @NotEmpty(message = "Le mot de passe est obligatoire.")
     private String password;
     private String bio;
     private String phone;

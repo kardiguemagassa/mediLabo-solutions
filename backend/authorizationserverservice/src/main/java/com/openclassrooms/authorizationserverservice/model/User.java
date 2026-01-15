@@ -1,10 +1,6 @@
 package com.openclassrooms.authorizationserverservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * Modèle User pour l'authentification
@@ -15,8 +11,11 @@ import lombok.Setter;
  * @since 2026-05-01
  */
 
+
 @Getter
 @Setter
+@ToString
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -29,6 +28,8 @@ public class User {
     private String phone;
     private String bio;
     private String imageUrl;
+    private String memberId;
+    private String address;
     private String qrCodeImageUri;
     private String qrCodeSecret;
     private String lastLogin;

@@ -1,19 +1,16 @@
--- ════════════════════════════════════════════════════════════════════════════
 -- Author: FirstName LastName
 -- MediLabo Authorization Server - Database Schema
 -- Date : January 5th 2026
 -- Version: 1.0
--- ════════════════════════════════════════════════════════════════════════════
 
--- ════════════════════════════════════════════════════════════════════════════
---- General Rules ---
+-- General Rules ---
 -- Use underscore_names instead of CamelCase --
 -- Table names should be plural --
 -- Spell out id fields (item_id instead of id) --
 -- Don't use ambiguous column names --
 -- Name foreign key columns the same as the columns they refer to --
 -- Use caps for all SQL keywords --
--- ════════════════════════════════════════════════════════════════════════════
+
 
 BEGIN;
 
@@ -138,7 +135,6 @@ CREATE TABLE IF NOT EXISTS devices (
 );
 
 -- INDEXES
-
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_user_uuid ON users(user_uuid);
@@ -159,30 +155,28 @@ CREATE OR REPLACE PROCEDURE create_user (
     IN p_member_id VARCHAR(40),
     IN p_role_name VARCHAR(25)
 )
-LANGUAGE PLPGSQL
-AS $$
-DECLARE
-v_user_id BIGINT;
-BEGIN
-INSERT INTO users (user_uuid, first_name, last_name, email, username, member_id)
-VALUES (p_user_uuid, p_first_name, p_last_name, p_email, p_username, p_member_id)
-    RETURNING user_id INTO v_user_id;
+    LANGUAGE PLPGSQL
+    AS $$
+    DECLARE
+    v_user_id BIGINT;
+    BEGIN
+    INSERT INTO users (user_uuid, first_name, last_name, email, username, member_id)
+    VALUES (p_user_uuid, p_first_name, p_last_name, p_email, p_username, p_member_id)
+        RETURNING user_id INTO v_user_id;
 
-INSERT INTO credentials (credential_uuid, user_id, password)
-VALUES (p_credential_uuid, v_user_id, p_password);
+    INSERT INTO credentials (credential_uuid, user_id, password)
+    VALUES (p_credential_uuid, v_user_id, p_password);
 
-INSERT INTO user_roles (user_id, role_id)
-VALUES (v_user_id, (SELECT role_id FROM roles WHERE name = p_role_name));
+    INSERT INTO user_roles (user_id, role_id)
+    VALUES (v_user_id, (SELECT role_id FROM roles WHERE name = p_role_name));
 
-INSERT INTO account_tokens (user_id, token)
-VALUES (v_user_id, p_token);
-END;
-$$;
+    INSERT INTO account_tokens (user_id, token)
+    VALUES (v_user_id, p_token);
+    END;
+    $$;
 
--- ────────────────────────────────────────────────────────────────────────────
+
 -- FUNCTIONS
--- ────────────────────────────────────────────────────────────────────────────
-
 -- Function to enable/disable MFA
 CREATE OR REPLACE FUNCTION enable_user_mfa (
     IN p_user_uuid VARCHAR(40), 
@@ -272,130 +266,48 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION toggle_account_expired (IN p_user_uuid VARCHAR(40))
+    RETURNS TABLE(qr_code_image_uri TEXT, member_id VARCHAR, role VARCHAR, authorities TEXT, account_non_expired BOOLEAN, account_non_locked BOOLEAN, created_at TIMESTAMP WITH TIME ZONE, email VARCHAR, enabled BOOLEAN, first_name VARCHAR, user_id BIGINT, image_url VARCHAR, last_login TIMESTAMP WITH TIME ZONE, last_name VARCHAR, mfa BOOLEAN, updated_at TIMESTAMP WITH TIME ZONE, user_uuid VARCHAR, phone VARCHAR, bio VARCHAR, address VARCHAR)
+    LANGUAGE PLPGSQL
+    AS $$
+    BEGIN
+        UPDATE users SET account_non_expired = NOT users.account_non_expired WHERE users.user_uuid = p_user_uuid;
+        RETURN QUERY SELECT u.qr_code_image_uri, u.member_id, r.name AS role, r.authority AS authorities, u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.enabled, u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, u.updated_at, u.user_uuid, u.phone, u.bio, u.address FROM users u JOIN user_roles ur ON ur.user_id = u.user_id JOIN roles r ON r.role_id = ur.role_id WHERE u.user_uuid = p_user_uuid;
+    END;
+    $$
+
 -- Fonction pour toggle account locked
 CREATE OR REPLACE FUNCTION toggle_account_locked (IN p_user_uuid VARCHAR(40))
-RETURNS TABLE(
-    qr_code_image_uri TEXT, 
-    member_id VARCHAR, 
-    role VARCHAR, 
-    authorities TEXT, 
-    account_non_expired BOOLEAN, 
-    account_non_locked BOOLEAN, 
-    created_at TIMESTAMP WITH TIME ZONE, 
-    email VARCHAR, 
-    enabled BOOLEAN, 
-    first_name VARCHAR, 
-    user_id BIGINT, 
-    image_url VARCHAR, 
-    last_login TIMESTAMP WITH TIME ZONE, 
-    last_name VARCHAR, 
-    mfa BOOLEAN, 
-    updated_at TIMESTAMP WITH TIME ZONE, 
-    user_uuid VARCHAR, 
-    phone VARCHAR, 
-    bio VARCHAR, 
-    address VARCHAR
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-    UPDATE users SET account_non_locked = NOT users.account_non_locked WHERE users.user_uuid = p_user_uuid;
-    
-    RETURN QUERY 
-    SELECT u.qr_code_image_uri, u.member_id, r.name AS role, r.authority AS authorities, 
-           u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.enabled, 
-           u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, 
-           u.updated_at, u.user_uuid, u.phone, u.bio, u.address 
-    FROM users u 
-    JOIN user_roles ur ON ur.user_id = u.user_id 
-    JOIN roles r ON r.role_id = ur.role_id 
-    WHERE u.user_uuid = p_user_uuid;
-END;
-$$;
+    RETURNS TABLE(qr_code_image_uri TEXT, member_id VARCHAR, role VARCHAR, authorities TEXT, account_non_expired BOOLEAN, account_non_locked BOOLEAN, created_at TIMESTAMP WITH TIME ZONE, email VARCHAR, enabled BOOLEAN, first_name VARCHAR, user_id BIGINT, image_url VARCHAR, last_login TIMESTAMP WITH TIME ZONE, last_name VARCHAR, mfa BOOLEAN, updated_at TIMESTAMP WITH TIME ZONE, user_uuid VARCHAR, phone VARCHAR, bio VARCHAR, address VARCHAR)
+    LANGUAGE PLPGSQL
+    AS $$
+    BEGIN
+        UPDATE users SET account_non_locked = NOT users.account_non_locked WHERE users.user_uuid = p_user_uuid;
+        RETURN QUERY SELECT u.qr_code_image_uri, u.member_id, r.name AS role, r.authority AS authorities, u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.enabled, u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, u.updated_at, u.user_uuid, u.phone, u.bio, u.address FROM users u JOIN user_roles ur ON ur.user_id = u.user_id JOIN roles r ON r.role_id = ur.role_id WHERE u.user_uuid = p_user_uuid;
+    END;
+    $$
 
 -- Fonction pour toggle account enabled
 CREATE OR REPLACE FUNCTION toggle_account_enabled (IN p_user_uuid VARCHAR(40))
-RETURNS TABLE(
-    qr_code_image_uri TEXT, 
-    member_id VARCHAR, 
-    role VARCHAR, 
-    authorities TEXT, 
-    account_non_expired BOOLEAN, 
-    account_non_locked BOOLEAN, 
-    created_at TIMESTAMP WITH TIME ZONE, 
-    email VARCHAR, 
-    enabled BOOLEAN, 
-    first_name VARCHAR, 
-    user_id BIGINT, 
-    image_url VARCHAR, 
-    last_login TIMESTAMP WITH TIME ZONE, 
-    last_name VARCHAR, 
-    mfa BOOLEAN, 
-    updated_at TIMESTAMP WITH TIME ZONE, 
-    user_uuid VARCHAR, 
-    phone VARCHAR, 
-    bio VARCHAR, 
-    address VARCHAR
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-    UPDATE users SET enabled = NOT users.enabled WHERE users.user_uuid = p_user_uuid;
-    
-    RETURN QUERY 
-    SELECT u.qr_code_image_uri, u.member_id, r.name AS role, r.authority AS authorities, 
-           u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.enabled, 
-           u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, 
-           u.updated_at, u.user_uuid, u.phone, u.bio, u.address 
-    FROM users u 
-    JOIN user_roles ur ON ur.user_id = u.user_id 
-    JOIN roles r ON r.role_id = ur.role_id 
-    WHERE u.user_uuid = p_user_uuid;
-END;
-$$;
+    RETURNS TABLE(qr_code_image_uri TEXT, member_id VARCHAR, role VARCHAR, authorities TEXT, account_non_expired BOOLEAN, account_non_locked BOOLEAN, created_at TIMESTAMP WITH TIME ZONE, email VARCHAR, enabled BOOLEAN, first_name VARCHAR, user_id BIGINT, image_url VARCHAR, last_login TIMESTAMP WITH TIME ZONE, last_name VARCHAR, mfa BOOLEAN, updated_at TIMESTAMP WITH TIME ZONE, user_uuid VARCHAR, phone VARCHAR, bio VARCHAR, address VARCHAR)
+    LANGUAGE PLPGSQL
+    AS $$
+    BEGIN
+        UPDATE users SET enabled = NOT users.enabled WHERE users.user_uuid = p_user_uuid;
+        RETURN QUERY SELECT u.qr_code_image_uri, u.member_id, r.name AS role, r.authority AS authorities, u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.enabled, u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, u.updated_at, u.user_uuid, u.phone, u.bio, u.address FROM users u JOIN user_roles ur ON ur.user_id = u.user_id JOIN roles r ON r.role_id = ur.role_id WHERE u.user_uuid = p_user_uuid;
+    END;
+    $$;
 
 -- Fonction pour mettre à jour le rôle utilisateur
-CREATE OR REPLACE FUNCTION update_user_role (IN p_user_uuid VARCHAR(40), IN p_role VARCHAR(50))
-RETURNS TABLE(
-    qr_code_image_uri TEXT, 
-    member_id VARCHAR, 
-    role VARCHAR, 
-    authorities TEXT, 
-    account_non_expired BOOLEAN, 
-    account_non_locked BOOLEAN, 
-    created_at TIMESTAMP WITH TIME ZONE, 
-    email VARCHAR, 
-    enabled BOOLEAN, 
-    first_name VARCHAR, 
-    user_id BIGINT, 
-    image_url VARCHAR, 
-    last_login TIMESTAMP WITH TIME ZONE, 
-    last_name VARCHAR, 
-    mfa BOOLEAN, 
-    updated_at TIMESTAMP WITH TIME ZONE, 
-    user_uuid VARCHAR, 
-    phone VARCHAR, 
-    bio VARCHAR, 
-    address VARCHAR
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-    UPDATE user_roles 
-    SET role_id = (SELECT r.role_id FROM roles r WHERE r.name = p_role) 
-    WHERE user_roles.user_id = (SELECT users.user_id FROM users WHERE users.user_uuid = p_user_uuid);
-    
-    RETURN QUERY 
-    SELECT u.qr_code_image_uri, u.member_id, r.name AS role, r.authority AS authorities, 
-           u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.enabled, 
-           u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, 
-           u.updated_at, u.user_uuid, u.phone, u.bio, u.address 
-    FROM users u 
-    JOIN user_roles ur ON ur.user_id = u.user_id 
-    JOIN roles r ON r.role_id = ur.role_id 
-    WHERE u.user_uuid = p_user_uuid;
-END;
-$$;
+CREATE OR REPLACE FUNCTION update_user_role (IN p_user_uuid VARCHAR(40), IN p_role VARCHAR(25))
+    RETURNS TABLE(qr_code_image_uri TEXT, member_id VARCHAR, role VARCHAR, authorities TEXT, account_non_expired BOOLEAN, account_non_locked BOOLEAN, created_at TIMESTAMP WITH TIME ZONE, email VARCHAR, enabled BOOLEAN, first_name VARCHAR, user_id BIGINT, image_url VARCHAR, last_login TIMESTAMP WITH TIME ZONE, last_name VARCHAR, mfa BOOLEAN, updated_at TIMESTAMP WITH TIME ZONE, user_uuid VARCHAR, phone VARCHAR, bio VARCHAR, address VARCHAR)
+    LANGUAGE PLPGSQL
+    AS $$
+    BEGIN
+        UPDATE user_roles SET role_id = (SELECT r.role_id FROM roles r WHERE r.name = p_role) WHERE user_roles.user_id = (SELECT users.user_id FROM users WHERE users.user_uuid = p_user_uuid);
+        RETURN QUERY SELECT u.qr_code_image_uri, u.member_id, r.name AS role, r.authority AS authorities, u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.enabled, u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, u.updated_at, u.user_uuid, u.phone, u.bio, u.address FROM users u JOIN user_roles ur ON ur.user_id = u.user_id JOIN roles r ON r.role_id = ur.role_id WHERE u.user_uuid = p_user_uuid;
+    END;
+    $$;
 
 -- Fonction pour mettre à jour le profil utilisateur
 CREATE OR REPLACE FUNCTION update_user_profile(

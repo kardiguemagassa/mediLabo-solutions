@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dtorequest;
+package com.openclassrooms.authorizationserverservice.dtorequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,10 +16,10 @@ import lombok.Setter;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PasswordRequest {
-    @NotEmpty(message = "Password cannot be empty or null")
+    @NotEmpty(message = "Le mot de passe actuel est obligatoire.")
     private String currentPassword;
-    @NotEmpty(message = "New password cannot be empty or null")
+    @NotEmpty(message = "Le nouveau mot de passe est obligatoire.")
     private String newPassword;
-    @NotEmpty(message = "Confirm password cannot be empty or null")
+    @NotEmpty(message = "La confirmation du mot de passe est obligatoire.")
     private String confirmNewPassword;
 }
