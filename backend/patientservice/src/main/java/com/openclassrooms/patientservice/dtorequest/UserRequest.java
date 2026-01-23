@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dto;
+package com.openclassrooms.patientservice.dtorequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfoDTO {
+public class UserRequest {
 
     private String userUuid;
     private String firstName;

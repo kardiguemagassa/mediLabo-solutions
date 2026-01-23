@@ -1,28 +1,28 @@
-ACTIVE_PROFILE: dev
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              AUTHORIZATION SERVER - Development Profile                    ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-PRIVATE_KEY: "private.key"
-PUBLIC_KEY: "public.key"
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
-POSTGRES_USERNAME: kara
-POSTGRES_PASSWORD: mhd02042017
-POSTGRES_HOST: 127.0.0.1
-POSTGRES_PORT: 5432
-POSTGRES_DATABASE: medilabo_authorization
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
 
-USER_NAME: admin
-PASSWORD: kara
-ROLES: EUREKA_CLIENT
-
-SERVER_PORT: 9001
-UI_APP_URL: http://localhost:3000
-
-JWKS_URI: http://localhost:9001/oauth2/jwks
-
-
-# Logging - DEBUG en dev
+# LOGGING - VERBOSE FOR DEBUGGING
 logging:
   level:
     com.openclassrooms: DEBUG
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
-    org.springframework.jdbc: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

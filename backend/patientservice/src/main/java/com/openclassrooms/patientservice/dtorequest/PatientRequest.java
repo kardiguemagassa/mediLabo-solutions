@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dto;
+package com.openclassrooms.patientservice.dtorequest;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * DTO pour créer un patient
@@ -21,11 +22,12 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreatePatientRequest {
-
+public class PatientRequest {
+    //private String patientUuid;
     @NotBlank(message = "User UUID is required")
-    private String userUuid;
+    private String userUuid; // Référence Authorization Server
 
+    // Données médicales
     @NotNull(message = "Date of birth is required")
     private LocalDate dateOfBirth;
 
@@ -45,4 +47,9 @@ public class CreatePatientRequest {
     // Assurance
     private String insuranceNumber;
     private String insuranceProvider;
+
+    // Métadonnées
+    private Boolean active;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

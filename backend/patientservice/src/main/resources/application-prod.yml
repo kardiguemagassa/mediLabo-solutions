@@ -1,17 +1,24 @@
-ACTIVE_PROFILE: prod
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              PATIENT SERVICE - Production Profile                          ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-PRIVATE_KEY: "private.key"
-PUBLIC_KEY: "public.key"
+spring:
+  jpa:
+    show-sql: false
 
-POSTGRES_USERNAME: kara
-POSTGRES_PASSWORD: mhd02042017
-POSTGRES_HOST: 127.0.0.1
-POSTGRES_PORT: 5432
-POSTGRES_DATABASE: medilabo_patient
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    hostname: ${PATIENT_SERVICE_HOST:patient-service}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
 
-USER_NAME: ${USER_NAME}
-PASSWORD: ${PASSWORD}
-ROLES: ${ROLES}
-
-SERVER_PORT: 8080
-UI_APP_URL: http://localhost:4200
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    org.springframework.security: WARN

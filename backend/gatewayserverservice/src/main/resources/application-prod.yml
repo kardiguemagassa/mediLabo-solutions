@@ -1,9 +1,22 @@
-ACTIVE_PROFILE: prod
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Production Profile                           ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-USER_NAME: ${USERNAME}
-PASSWORD: ${PASSWORD}
-ROLES: EUREKA_CLIENT
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    hostname: ${GATEWAY_HOST:gateway}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
 
-SERVER_PORT: 8000
-
-JWKS_URI: http://localhost:9000/oauth2/jwks
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    org.springframework.cloud.gateway: WARN
+    org.springframework.security: WARN
+    reactor.netty: WARN

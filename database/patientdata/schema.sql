@@ -12,11 +12,13 @@
 -- Name foreign key columns the same as the columns they refer to --
 -- Use caps for all SQL keywords --
 
+
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS patients (
     patient_id BIGSERIAL PRIMARY KEY,
     patient_uuid VARCHAR(40) NOT NULL UNIQUE,
     user_uuid VARCHAR(40) NOT NULL UNIQUE,  -- Référence Authorization Server
-    
     -- Données médicales
     date_of_birth DATE NOT NULL, -- User Story: voir date de naissance
     gender VARCHAR(10), -- User Story: voir genre (optionnel)
@@ -26,17 +28,14 @@ CREATE TABLE IF NOT EXISTS patients (
     allergies TEXT,
     chronic_conditions TEXT,
     current_medications TEXT,
-    
     -- Contact d'urgence
     emergency_contact_name VARCHAR(100),
     emergency_contact_phone VARCHAR(20),
     emergency_contact_relationship VARCHAR(50),
-    
     -- Assurance et dossier
     medical_record_number VARCHAR(20) UNIQUE,
     insurance_number VARCHAR(50),
     insurance_provider VARCHAR(100),
-    
     -- Métadonnées
     active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
@@ -46,7 +45,6 @@ CREATE TABLE IF NOT EXISTS patients (
     CONSTRAINT uq_patients_user_uuid UNIQUE (user_uuid),
     CONSTRAINT uq_patients_medical_record_number UNIQUE (medical_record_number)
 );
-
 
 -- INDEXES pour améliorer les performances
 CREATE INDEX IF NOT EXISTS idx_patients_user_uuid ON patients(user_uuid);
@@ -72,15 +70,17 @@ CREATE TRIGGER update_patients_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- COMMENTAIRES pour documentation
+-- COMMENT
 COMMENT ON TABLE patients IS 'Table des dossiers patients - Données médicales uniquement';
 COMMENT ON COLUMN patients.patient_uuid IS 'UUID unique du patient (exposé dans API)';
 COMMENT ON COLUMN patients.user_uuid IS 'UUID de l''utilisateur (référence Authorization Server)';
 COMMENT ON COLUMN patients.medical_record_number IS 'Numéro de dossier médical unique (format: MED-YYYY-XXXXXX)';
 COMMENT ON COLUMN patients.active IS 'Patient actif (false = soft delete)';
 
--- VÉRIFICATION SI TABLE EXISTE
+-- VÉRIFICATION 
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
 
 -- Compter les patients
 SELECT COUNT(*) FROM patients;
+
+COMMIT;

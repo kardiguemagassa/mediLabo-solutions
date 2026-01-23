@@ -1,0 +1,30 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              NOTIFICATION SERVICE - Production Profile                     ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  jpa:
+    show-sql: false
+
+  # THYMELEAF - ENABLE CACHE FOR PRODUCTION
+  thymeleaf:
+    cache: true
+
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    hostname: ${NOTIFICATION_SERVICE_HOST:notification-service}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    org.springframework.security: WARN
+    org.springframework.kafka: WARN
+    org.springframework.mail: INFO

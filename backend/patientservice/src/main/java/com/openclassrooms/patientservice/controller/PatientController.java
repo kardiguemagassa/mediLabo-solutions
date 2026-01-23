@@ -1,20 +1,26 @@
 package com.openclassrooms.patientservice.controller;
 
-import com.openclassrooms.patientservice.dto.ApiResponse;
-import com.openclassrooms.patientservice.dto.CreatePatientRequest;
-import com.openclassrooms.patientservice.dto.PatientDTO;
-import com.openclassrooms.patientservice.dto.UpdatePatientRequest;
+import com.openclassrooms.patientservice.domain.Response;
+import com.openclassrooms.patientservice.dtorequest.PatientRequest;
+import com.openclassrooms.patientservice.model.Patient;
 import com.openclassrooms.patientservice.service.PatientService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.net.URI;
 
-import java.util.List;
+import static com.openclassrooms.patientservice.util.RequestUtils.getResponse;
+import static java.util.Collections.emptyMap;
+import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.ResponseEntity.created;
+import static org.springframework.http.ResponseEntity.ok;
+
 
 /**
  * Controller REST pour les patients
@@ -37,17 +43,12 @@ public class PatientController {
      */
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN', 'PRACTITIONER')")
-    public ResponseEntity<ApiResponse<PatientDTO>> createPatient(
-            @Valid @RequestBody CreatePatientRequest request) {
+    public ResponseEntity<Response> register(@RequestBody PatientRequest patient, HttpServletRequest request) {
+        patientService.createPatient((PatientRequest) request);
 
-        log.info("Creating patient for user: {}", request.getUserUuid());
-
-        PatientDTO patient = patientService.createPatient(request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Patient created successfully", patient));
+        return created(getUri()).body(getResponse(request, emptyMap(), "Compte créé avec succès. Veuillez consulter votre boîte email pour activer votre compte.", CREATED));
     }
+
 
     /**
      * Récupérer un patient par UUID
@@ -55,14 +56,13 @@ public class PatientController {
      */
     @GetMapping("/{patientUuid}")
     @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN', 'PRACTITIONER')")
-    public ResponseEntity<ApiResponse<PatientDTO>> getPatientByUuid(
-            @PathVariable String patientUuid) {
+    public ResponseEntity<Response> getPatientByUuid(@PathVariable String patientUuid, HttpServletRequest request) {
 
         log.debug("Fetching patient: {}", patientUuid);
 
-        PatientDTO patient = patientService.getPatientByUuid(patientUuid);
+         patientService.getPatientByUuid(patientUuid);
 
-        return ResponseEntity.ok(ApiResponse.success(patient));
+        return ok(getResponse(request, emptyMap(), "un patient par UUID", OK));
     }
 
     /**
@@ -71,14 +71,13 @@ public class PatientController {
      */
     @GetMapping("/user/{userUuid}")
     @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN', 'PRACTITIONER')")
-    public ResponseEntity<ApiResponse<PatientDTO>> getPatientByUserUuid(
-            @PathVariable String userUuid) {
+    public ResponseEntity<Response> getPatientByUserUuid(@PathVariable String userUuid, HttpServletRequest request) {
 
         log.debug("Fetching patient for user: {}", userUuid);
 
-        PatientDTO patient = patientService.getPatientByUserUuid(userUuid);
+        patientService.getPatientByUserUuid(userUuid);
 
-        return ResponseEntity.ok(ApiResponse.success(patient));
+        return ok(getResponse(request, emptyMap(), "patient par user UUID",OK));
     }
 
     /**
@@ -87,14 +86,14 @@ public class PatientController {
      */
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('USER')")
-    public ResponseEntity<ApiResponse<PatientDTO>> getMyPatient(Authentication authentication) {
+    public ResponseEntity<Response> getPatient(Authentication authentication, HttpServletRequest request) {
 
         String userUuid = authentication.getName();
         log.debug("Fetching own patient record for user: {}", userUuid);
 
-        PatientDTO patient = patientService.getPatientByUserUuid(userUuid);
+        patientService.getPatientByUserUuid(userUuid);
 
-        return ResponseEntity.ok(ApiResponse.success(patient));
+        return ok(getResponse(request, emptyMap(), "patient par user UUID",OK));
     }
 
     /**
@@ -103,13 +102,13 @@ public class PatientController {
      */
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN', 'PRACTITIONER')")
-    public ResponseEntity<ApiResponse<List<PatientDTO>>> getAllPatients() {
+    public ResponseEntity<Response> getAllPatients(HttpServletRequest request) {
 
         log.debug("Fetching all patients");
 
-        List<PatientDTO> patients = patientService.getAllPatients();
+        patientService.getAllPatients();
 
-        return ResponseEntity.ok(ApiResponse.success(patients));
+        return ok(getResponse(request, emptyMap(), "Récupérer tous les patients",OK));
     }
 
     /**
@@ -118,15 +117,13 @@ public class PatientController {
      */
     @PutMapping("/{patientUuid}")
     @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN', 'PRACTITIONER')")
-    public ResponseEntity<ApiResponse<PatientDTO>> updatePatient(
-            @PathVariable String patientUuid,
-            @Valid @RequestBody UpdatePatientRequest request) {
+    public ResponseEntity<Response> updatePatient(@PathVariable String patientUuid, @Valid @RequestBody Patient request) {
 
         log.info("Updating patient: {}", patientUuid);
 
-        PatientDTO patient = patientService.updatePatient(patientUuid, request);
+        patientService.updatePatient(patientUuid, request);
 
-        return ResponseEntity.ok(ApiResponse.success("Patient updated successfully", patient));
+        return ok(getResponse((HttpServletRequest) request, emptyMap(),"Patient updated successfully", OK));
     }
 
     /**
@@ -135,12 +132,16 @@ public class PatientController {
      */
     @DeleteMapping("/{patientUuid}")
     @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deletePatient(@PathVariable String patientUuid) {
+    public ResponseEntity<Response> deletePatient(@PathVariable String patientUuid, HttpServletRequest request) {
 
         log.info("Deleting patient: {}", patientUuid);
 
         patientService.deletePatient(patientUuid);
 
-        return ResponseEntity.ok(ApiResponse.success("Patient deleted successfully", null));
+        return ok(getResponse(request, emptyMap(),"Patient deleted successfully", NO_CONTENT));
+    }
+
+    private URI getUri() {
+        return URI.create("/api/patients/profile/userId");
     }
 }

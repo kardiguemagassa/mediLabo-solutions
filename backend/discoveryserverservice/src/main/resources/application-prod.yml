@@ -1,14 +1,29 @@
-ACTIVE_PROFILE: prod
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              DISCOVERY SERVER - Production Profile                         ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-POSTGRES_USERNAME: kara
-POSTGRES_PASSWORD: mhd02042017
-POSTGRES_HOST: 127.0.0.1
-POSTGRES_PORT: 5432
-POSTGRES_DATABASE: medilabo_authorization
+spring:
+  jpa:
+    show-sql: false
 
-USER_NAME: admin
-PASSWORD: kara
-ROLES: EUREKA_CLIENT
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    hostname: ${EUREKA_HOST:discovery-server}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+  server:
+    enable-self-preservation: true
+    wait-time-in-ms-when-sync-empty: 5000
 
-SERVER_PORT: 5002
-UI_APP_URL: http://localhost:3000
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    org.springframework.security: WARN

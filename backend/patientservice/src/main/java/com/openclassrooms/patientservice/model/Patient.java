@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -24,11 +25,9 @@ import java.time.Period;
 @AllArgsConstructor
 public class Patient {
 
-    // IDs
     private Long patientId;
     private String patientUuid;
     private String userUuid;  // Référence Authorization Server
-
     // Données médicales
     private LocalDate dateOfBirth;
     private String gender;
@@ -38,25 +37,18 @@ public class Patient {
     private String allergies;
     private String chronicConditions;
     private String currentMedications;
-
     // Contact d'urgence
     private String emergencyContactName;
     private String emergencyContactPhone;
     private String emergencyContactRelationship;
-
     // Assurance et dossier
     private String medicalRecordNumber;
     private String insuranceNumber;
     private String insuranceProvider;
-
-    // Métadonnées
+    // Métadonnees
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    /**
-     * Calcule l'âge du patient
-     */
     public int getAge() {
         if (dateOfBirth == null) {
             return 0;
@@ -64,15 +56,12 @@ public class Patient {
         return Period.between(dateOfBirth, LocalDate.now()).getYears();
     }
 
-    /**
-     * Calcule l'IMC (Indice de Masse Corporelle)
-     */
     public BigDecimal getBMI() {
         if (heightCm == null || weightKg == null || heightCm == 0) {
             return null;
         }
         double heightM = heightCm / 100.0;
         double bmi = weightKg.doubleValue() / (heightM * heightM);
-        return BigDecimal.valueOf(bmi).setScale(2, BigDecimal.ROUND_HALF_UP);
+        return BigDecimal.valueOf(bmi).setScale(2, RoundingMode.HALF_UP);
     }
 }

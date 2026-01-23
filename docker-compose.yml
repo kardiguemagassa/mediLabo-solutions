@@ -1,247 +1,294 @@
-# ════════════════════════════════════════════════════════════
-# MediLabo Solutions - Application Stack
-# ════════════════════════════════════════════════════════════
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║                     MEDILABO SOLUTIONS - DOCKER COMPOSE                    ║
+# ║                                                                            ║
+# ║  🏗️  Architecture: 7 Microservices + Frontend                              ║
+# ║  🔒 Security: 12-Factor App - Secrets from .env, hosts overridden here     ║
+# ║                                                                            ║
+# ║  📋 Prerequisites:                                                         ║
+# ║     1. Run: infra.sh start-db && infra.sh start-mongodb && infra.sh start-kafka
+# ║     2. Connect infra to network:                                           ║
+# ║        docker network connect medilabo-network postgres                    ║
+# ║        docker network connect medilabo-network mongodb                     ║
+# ║        docker network connect medilabo-network kafka                       ║
+# ║                                                                            ║
+# ║  ⚠️  Note: .env keeps localhost for IntelliJ, Docker hosts are here        ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
 services:
-  # ══════════════════════════════════════════════════════════
-  # Databases
-  # ══════════════════════════════════════════════════════════
-  postgres:
-    image: postgres:15-alpine
-    container_name: medilabo-postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-kara}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mhd02042017}
-      POSTGRES_DB: ${POSTGRES_DATABASE:-openclassrooms_medical_microservice}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - medilabo-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kara}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  mongodb:
-    image: mongo:7.0
-    container_name: medilabo-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-kara}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mhd02042017}
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-medilabo_notes}
-    volumes:
-      - mongodb_data:/data/db
-    ports:
-      - "27017:27017"
-    networks:
-      - medilabo-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # ══════════════════════════════════════════════════════════
-  # Infrastructure Services
-  # ══════════════════════════════════════════════════════════
+  
+  # DISCOVERY SERVER (Eureka)
+  # Port: 8761 | Database: PostgreSQL (medilabo_authorization)
+  
   discovery-server:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/discoveryserverservice:${TAG:-latest}
+    build:
+      context: ./backend/discoveryserverservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/discoveryserverservice:${IMAGE_TAG:-latest}
     container_name: medilabo-discovery
+    env_file: .env
     environment:
-      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
-      SERVER_PORT: 8761
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${DISCOVERY_SERVER_PORT:-8761}
+      # ─── Docker datasource (override .env) ───
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_AUTHORIZATION:-medilabo_authorization}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # ─── Docker hosts ───
+      EUREKA_HOST: discovery-server
     ports:
-      - "8761:8761"
+      - "${DISCOVERY_SERVER_PORT:-8761}:${DISCOVERY_SERVER_PORT:-8761}"
     networks:
+     # ─── http://login:password@localhost:8761/actuator/health ───
       - medilabo-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@localhost:${DISCOVERY_SERVER_PORT:-8761}/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     restart: unless-stopped
 
-  gateway:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/gatewayserverservice:${TAG:-latest}
-    container_name: medilabo-gateway
-    environment:
-      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
-      SERVER_PORT: 8080
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-    ports:
-      - "8080:8080"
-    networks:
-      - medilabo-network
-    depends_on:
-      discovery-server:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    restart: unless-stopped
-
-  # ══════════════════════════════════════════════════════════
-  # Application Services
-  # ══════════════════════════════════════════════════════════
+  # AUTHORIZATION SERVER (OAuth2 + JWT)
+  # Port: 9001 | Database: PostgreSQL | RSA keys from .keys/
+ 
   authorization-server:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/authorizationserverservice:${TAG:-latest}
-    container_name: medilabo-auth
+    build:
+      context: ./backend/authorizationserverservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/authorizationserverservice:${IMAGE_TAG:-latest}
+    container_name: medilabo-authorization
+    env_file: .env
     environment:
-      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
-      SERVER_PORT: 9000
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-kara}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mhd02042017}
-      POSTGRES_DATABASE: ${POSTGRES_DATABASE:-openclassrooms_medical_microservice}
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${AUTHORIZATION_SERVER_PORT:-9001}
+      # ─── Docker datasource (override .env) ───
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_AUTHORIZATION:-medilabo_authorization}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # ─── Docker hosts ───
+      EUREKA_HOST: discovery-server
+      # ─── RSA Keys paths (used by KeyUtils.java) ───
+      keys.private: private.key
+      keys.public: public.key
+    volumes:
+      # Mount RSA keys to the path expected by KeyUtils.java
+      - ./.keys:/app/src/main/resources/keys:ro
     ports:
-      - "9000:9000"
+      - "${AUTHORIZATION_SERVER_PORT:-9001}:${AUTHORIZATION_SERVER_PORT:-9001}"
     networks:
       - medilabo-network
     depends_on:
       discovery-server:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9000/actuator/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${AUTHORIZATION_SERVER_PORT:-9001}/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 90s
     restart: unless-stopped
 
+  # GATEWAY (Spring Cloud Gateway)
+  # Port: 8080 | Routes API requests, validates JWT
+  
+  gateway:
+    build:
+      context: ./backend/gatewayserverservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/gatewayserverservice:${IMAGE_TAG:-latest}
+    container_name: medilabo-gateway
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${GATEWAY_PORT:-8080}
+      # ─── Docker hosts (override .env localhost) ───
+      EUREKA_HOST: discovery-server
+      JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks
+    ports:
+      - "${GATEWAY_PORT:-8080}:${GATEWAY_PORT:-8080}"
+    networks:
+      - medilabo-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      authorization-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${GATEWAY_PORT:-8080}/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # PATIENT SERVICE
+  # Port: 8081 | Database: PostgreSQL (medilabo_patients)
+  
   patient-service:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/patientservice:${TAG:-latest}
+    build:
+      context: ./backend/patientservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/patientservice:${IMAGE_TAG:-latest}
     container_name: medilabo-patient
+    env_file: .env
     environment:
-      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
-      SERVER_PORT: 8081
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-kara}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mhd02042017}
-      POSTGRES_DATABASE: ${POSTGRES_DATABASE:-openclassrooms_medical_microservice}
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${PATIENT_SERVICE_PORT:-8081}
+      # ─── Docker datasource (override .env) ───
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_PATIENTS:-medilabo_patients}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # ─── Docker hosts ───
+      EUREKA_HOST: discovery-server
+      PATIENT_SERVICE_HOST: patient-service
     ports:
-      - "8081:8081"
+      - "${PATIENT_SERVICE_PORT:-8081}:${PATIENT_SERVICE_PORT:-8081}"
     networks:
       - medilabo-network
     depends_on:
       discovery-server:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${PATIENT_SERVICE_PORT:-8081}/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     restart: unless-stopped
 
+  # NOTES SERVICE
+  # Port: 8082 | Database: MongoDB (medilabo_notes)
+  
   notes-service:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/notesservice:${TAG:-latest}
+    build:
+      context: ./backend/notesservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/notesservice:${IMAGE_TAG:-latest}
     container_name: medilabo-notes
+    env_file: .env
     environment:
-      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
-      SERVER_PORT: 8082
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      MONGO_HOST: mongodb
-      MONGO_PORT: 27017
-      MONGO_USER: ${MONGO_USER:-kara}
-      MONGO_PASSWORD: ${MONGO_PASSWORD:-mhd02042017}
-      MONGO_DATABASE: ${MONGO_DATABASE:-medilabo_notes}
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${NOTES_SERVICE_PORT:-8082}
+      # ─── Docker MongoDB (override .env) ───
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/${MONGO_DATABASE:-medilabo_notes}
+      # ─── Docker hosts ───
+      EUREKA_HOST: discovery-server
+      NOTES_SERVICE_HOST: notes-service
     ports:
-      - "8082:8082"
+      - "${NOTES_SERVICE_PORT:-8082}:${NOTES_SERVICE_PORT:-8082}"
     networks:
       - medilabo-network
     depends_on:
       discovery-server:
         condition: service_healthy
-      mongodb:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${NOTES_SERVICE_PORT:-8082}/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     restart: unless-stopped
 
+  # ASSESSMENT SERVICE
+  # Port: 8083 | Database: PostgreSQL (medilabo_assessment)
+  
   assessment-service:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/assessmentservice:${TAG:-latest}
+    build:
+      context: ./backend/assessmentservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/assessmentservice:${IMAGE_TAG:-latest}
     container_name: medilabo-assessment
+    env_file: .env
     environment:
-      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
-      SERVER_PORT: 8083
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${ASSESSMENT_SERVICE_PORT:-8083}
+      # ─── Docker datasource (override .env) ───
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_ASSESSMENT:-medilabo_assessment}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # ─── Docker hosts ───
+      EUREKA_HOST: discovery-server
+      ASSESSMENT_SERVICE_HOST: assessment-service
     ports:
-      - "8083:8083"
+      - "${ASSESSMENT_SERVICE_PORT:-8083}:${ASSESSMENT_SERVICE_PORT:-8083}"
     networks:
       - medilabo-network
     depends_on:
       discovery-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8083/actuator/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${ASSESSMENT_SERVICE_PORT:-8083}/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     restart: unless-stopped
 
+  # NOTIFICATION SERVICE
+  # Port: 8084 | Database: PostgreSQL | Kafka + Email
+  
   notification-service:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/notificationservice:${TAG:-latest}
+    build:
+      context: ./backend/notificationservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/notificationservice:${IMAGE_TAG:-latest}
     container_name: medilabo-notification
+    env_file: .env
     environment:
-      SPRING_PROFILES_ACTIVE: ${ACTIVE_PROFILE:-docker}
-      SERVER_PORT: 8084
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${NOTIFICATION_SERVICE_PORT:-8084}
+      # ─── Docker datasource (override .env) ───
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_NOTIFICATION:-medilabo_notification}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # ─── Docker hosts ───
+      EUREKA_HOST: discovery-server
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      NOTIFICATION_SERVICE_HOST: notification-service
+      JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks
     ports:
-      - "8084:8084"
+      - "${NOTIFICATION_SERVICE_PORT:-8084}:${NOTIFICATION_SERVICE_PORT:-8084}"
     networks:
       - medilabo-network
     depends_on:
       discovery-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8084/actuator/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${NOTIFICATION_SERVICE_PORT:-8084}/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
     restart: unless-stopped
 
-  # ══════════════════════════════════════════════════════════
-  # Frontend
-  # ══════════════════════════════════════════════════════════
+  # FRONTEND (Angular)
+  # Port: 4200
+  
   frontend:
-    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/medilabo-frontend:${TAG:-latest}
+    build:
+      context: ./frontend/mediLabo-solutions-ui
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/frontend:${IMAGE_TAG:-latest}
     container_name: medilabo-frontend
+    environment:
+      API_URL: http://gateway:${GATEWAY_PORT:-8080}
     ports:
-      - "80:80"
+      - "${UI_PORT:-4200}:80"
     networks:
       - medilabo-network
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
-# ══════════════════════════════════════════════════════════
-# Volumes
-# ══════════════════════════════════════════════════════════
-volumes:
-  postgres_data:
-    name: medilabo-postgres-data
-  mongodb_data:
-    name: medilabo-mongodb-data
+# NETWORKS
 
-# ══════════════════════════════════════════════════════════
-# Networks
-# ══════════════════════════════════════════════════════════
 networks:
   medilabo-network:
     name: medilabo-network

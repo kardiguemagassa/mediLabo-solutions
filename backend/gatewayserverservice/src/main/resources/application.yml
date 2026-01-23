@@ -1,18 +1,33 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Main Configuration                           ║
+# ║                                                                            ║
+# ║  🔒 SECURITY: No secrets in this file                                      ║
+# ║  All sensitive values come from environment variables                      ║
+# ║                                                                            ║
+# ║  📋 Required environment variables:                                        ║
+# ║     - EUREKA_HOST, EUREKA_USERNAME, EUREKA_PASSWORD                        ║
+# ║     - JWKS_URI                                                             ║
+# ║     - UI_APP_URL                                                           ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
 spring:
   application:
     name: gatewayserverservice
-  profiles:
-    active: dev
 
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # CLOUD GATEWAY CONFIGURATION
   cloud:
     gateway:
-      # STANDARD Spring Cloud 2023.0.x
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
 
-      # Configuration des routes
+      # ROUTES CONFIGURATION
       routes:
         # AUTHORIZATION SERVER - authorization endpoints
         - id: authorization-server
@@ -22,7 +37,7 @@ spring:
           filters:
             - StripPrefix=1
 
-         # AUTHORIZATION SERVER - user endpoints
+        # AUTHORIZATION SERVER - user endpoints
         - id: authorization-server-users
           uri: lb://authorizationserverservice
           predicates:
@@ -48,7 +63,7 @@ spring:
             - name: CircuitBreaker
               args:
                 name: notesServiceCircuitBreaker
-                fallbackUri: forward:/fallback/notes
+                allbackUri: forward:/fallback/notes
 
         # ASSESSMENT SERVICE
         - id: assessment-service
@@ -72,93 +87,75 @@ spring:
                 name: notificationServiceCircuitBreaker
                 fallbackUri: forward:/fallback/notifications
 
-      # Configuration CORS globale
       globalcors:
-        corsConfigurations:
+        cors-configurations:
           '[/**]':
-            allowedOrigins:
-              - "http://localhost:4200"
-              - "http://localhost:8080"
-            allowedMethods:
+            allowed-origins:
+              - ${UI_APP_URL}
+            allowed-methods:
               - GET
               - POST
               - PUT
               - DELETE
               - PATCH
               - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
-            maxAge: 3600
+            allowed-headers:
+              - "*"
+            allow-credentials: true
+            max-age: 3600
 
-  # SECURITY - OAuth2 Resource Server
+  # OAUTH2 RESOURCE SERVER JWT VALIDATION
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${jwks.uri}
+          jwk-set-uri: ${JWKS_URI}
 
-# EUREKA CLIENT - Port Standard
-eureka:
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}
-  client:
-    service-url:
-      defaultZone: http://${USER_NAME}:${PASSWORD}@localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-
-
-# SERVER - Port Standard Gateway 8080
+# SERVER CONFIGURATION
 server:
-  port: ${SERVER_PORT}
+  port: ${GATEWAY_PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: always
+    include-binding-errors: always
 
-jwks:
-  uri: ${JWKS_URI}
+# EUREKA CLIENT
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
 
-# ACTUATOR (Monitoring)
+# ACTUATOR - HEALTH & METRICS
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,gateway,circuitbreakers
+        include: health,info,metrics,gateway,prometheus
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
     gateway:
       enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
-# LOGGING
+# LOGGING CONFIGURATION
 logging:
   level:
-    org.springframework.cloud.gateway: INFO
-    org.springframework.security: INFO
-    com.openclassrooms: INFO
-
-# RESILIENCE4J - Circuit Breaker
-resilience4j:
-  circuitbreaker:
-    configs:
-      default:
-        sliding-window-size: 10
-        minimum-number-of-calls: 5
-        permitted-number-of-calls-in-half-open-state: 3
-        automatic-transition-from-open-to-half-open-enabled: true
-        wait-duration-in-open-state: 10s
-        failure-rate-threshold: 50
-        slow-call-rate-threshold: 100
-        slow-call-duration-threshold: 3s
-    instances:
-      patientServiceCircuitBreaker:
-        base-config: default
-      notesServiceCircuitBreaker:
-        base-config: default
-      assessmentServiceCircuitBreaker:
-        base-config: default
-      notificationServiceCircuitBreaker:
-        base-config: default
-
-  timelimiter:
-    configs:
-      default:
-        timeout-duration: 5s
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.openclassrooms: ${LOG_LEVEL_APP:INFO}
+    org.springframework.cloud.gateway: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    reactor.netty: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
