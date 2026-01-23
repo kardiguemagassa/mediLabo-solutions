@@ -1,5 +1,5 @@
--- MEDILABO AUTHORIZATION SERVER - INITIAL DATA (IMPROVED)
--- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+-- MEDILABO AUTHORIZATION SERVER - INITIAL DATA (ROLES AND ADMIN USER)
+
 BEGIN;
 
 -- ROLES
@@ -12,7 +12,6 @@ INSERT INTO roles (role_uuid, name, authority) VALUES ('838ca5ee-eb15-427a-b380-
 
 
 
--- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 -- CREATE ADMIN USER BY STORED PROCEDURES
 -- BCRYPT HASH GENERATE WITH STRENGTH 12
 --

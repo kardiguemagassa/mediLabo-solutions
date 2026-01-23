@@ -1,0 +1,34 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              NOTES SERVICE - Test Profile                                  ║
+# ║                                                                            ║
+# ║  🧪 Unit & Integration tests                                               ║
+# ║  Uses embedded MongoDB or Testcontainers                                   ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  data:
+    mongodb:
+      # FOR TESTS, USE EMBEDDED MONGODB (de.flapdoodle.embed.mongo)
+      # OR TESTCONTAINERS FOR INTEGRATION TESTS
+      host: localhost
+      port: 0
+      database: medilabo_notes_test
+      auto-index-creation: true
+
+# SERVER RANDOM PORT TO AVOID CONFLICTS
+server:
+  port: 0
+
+# EUREKA DISABLE FOR TEST
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# LOGGING - MINIMAL FOR TESTS
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG
+    org.mongodb.driver: WARN

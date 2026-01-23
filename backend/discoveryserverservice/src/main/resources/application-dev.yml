@@ -1,14 +1,30 @@
-ACTIVE_PROFILE: dev
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              DISCOVERY SERVER - Development Profile                        ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-POSTGRES_USERNAME: ***REMOVED_USER***
-POSTGRES_PASSWORD: ***REMOVED***
-POSTGRES_HOST: 127.0.0.1
-POSTGRES_PORT: 5432
-POSTGRES_DATABASE: medilabo_authorization
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
-USER_NAME: admin
-PASSWORD: ***REMOVED_USER***
-ROLES: EUREKA_CLIENT
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+  server:
+    enable-self-preservation: false
+    wait-time-in-ms-when-sync-empty: 0
 
-SERVER_PORT: 8761
-UI_APP_URL: http://localhost:3000
+# LOGGING - VERBOSE FOR DEBUGGING
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

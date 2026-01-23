@@ -35,8 +35,7 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
     private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
         // Essayer d'extraire depuis "authorities" (comma-separated)
         Object authoritiesClaim = jwt.getClaim(AUTHORITIES_CLAIM);
-        if (authoritiesClaim instanceof String) {
-            String authoritiesString = (String) authoritiesClaim;
+        if (authoritiesClaim instanceof String authoritiesString) {
             if (!authoritiesString.isEmpty()) {
                 return Stream.of(authoritiesString.split(","))
                         .map(String::trim)
@@ -47,8 +46,7 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
 
         // Essayer d'extraire depuis "scope" (space-separated)
         Object scopeClaim = jwt.getClaim(SCOPE_CLAIM);
-        if (scopeClaim instanceof String) {
-            String scopeString = (String) scopeClaim;
+        if (scopeClaim instanceof String scopeString) {
             if (!scopeString.isEmpty()) {
                 return Stream.of(scopeString.split(" "))
                         .map(String::trim)

@@ -31,7 +31,12 @@ public class PatientRepositoryImpl implements PatientRepository {
     private final JdbcClient jdbc;
 
     @Override
-    public Patient save(Patient patient) {
+    public List<Patient> getAllPatients() {
+        return List.of();
+    }
+
+    @Override
+    public Patient createPatient(Patient patient) {
         try {
             return jdbc.sql(INSERT_PATIENT_QUERY)
                     .param("patientUuid", patient.getPatientUuid())
@@ -53,14 +58,14 @@ public class PatientRepositoryImpl implements PatientRepository {
                     .param("active", true)
                     .query(Patient.class)
                     .single();
-        } catch (Exception e) {
-            log.error("Error saving patient: {}", e.getMessage(), e);
-            throw new ApiException("Failed to create patient: " + e.getMessage());
+        } catch (Exception exception) {
+            log.error("Error saving patient: {}", exception.getMessage(), exception);
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 
     @Override
-    public Patient update(Patient patient) {
+    public Patient updatePatient(Patient patient) {
         try {
             return jdbc.sql(UPDATE_PATIENT_QUERY)
                     .param("patientUuid", patient.getPatientUuid())
@@ -79,12 +84,12 @@ public class PatientRepositoryImpl implements PatientRepository {
                     .param("insuranceProvider", patient.getInsuranceProvider())
                     .query(Patient.class)
                     .single();
-        } catch (EmptyResultDataAccessException e) {
-            log.error("Patient not found for update: {}", patient.getPatientUuid());
+        } catch (EmptyResultDataAccessException exception) {
+            log.error(exception.getMessage(), patient.getPatientUuid());
             throw new ApiException(format("Patient not found: %s", patient.getPatientUuid()));
         } catch (Exception e) {
             log.error("Error updating patient: {}", e.getMessage(), e);
-            throw new ApiException("Failed to update patient: " + e.getMessage());
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 
@@ -101,7 +106,7 @@ public class PatientRepositoryImpl implements PatientRepository {
             return Optional.empty();
         } catch (Exception e) {
             log.error("Error finding patient by UUID: {}", e.getMessage(), e);
-            throw new ApiException("Failed to find patient: " + e.getMessage());
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 
@@ -116,20 +121,17 @@ public class PatientRepositoryImpl implements PatientRepository {
         } catch (EmptyResultDataAccessException e) {
             log.debug("Patient not found for user UUID: {}", userUuid);
             return Optional.empty();
-        } catch (Exception e) {
-            log.error("Error finding patient by user UUID: {}", e.getMessage(), e);
-            throw new ApiException("Failed to find patient: " + e.getMessage());
+        } catch (Exception exception) {
+            log.error("Error finding patient by user UUID: {}", exception.getMessage(), exception);
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 
     @Override
     public boolean existsByUserUuid(String userUuid) {
         try {
-            Boolean exists = jdbc.sql(EXISTS_BY_USER_UUID_QUERY)
-                    .param("userUuid", userUuid)
-                    .query(Boolean.class)
-                    .single();
-            return Boolean.TRUE.equals(exists);
+            return jdbc.sql(EXISTS_BY_USER_UUID_QUERY)
+                    .param("userUuid", userUuid).query(Boolean.class).single();
         } catch (Exception e) {
             log.error("Error checking patient existence: {}", e.getMessage(), e);
             return false;
@@ -139,12 +141,10 @@ public class PatientRepositoryImpl implements PatientRepository {
     @Override
     public List<Patient> findAllByActiveTrue() {
         try {
-            return jdbc.sql(SELECT_ALL_ACTIVE_PATIENTS_QUERY)
-                    .query(Patient.class)
-                    .list();
-        } catch (Exception e) {
-            log.error("Error finding all active patients: {}", e.getMessage(), e);
-            throw new ApiException("Failed to retrieve patients: " + e.getMessage());
+            return jdbc.sql(SELECT_ALL_ACTIVE_PATIENTS_QUERY).query(Patient.class).list();
+        } catch (Exception exception) {
+            log.error("Error finding all active patients: {}", exception.getMessage(), exception);
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 
@@ -152,16 +152,14 @@ public class PatientRepositoryImpl implements PatientRepository {
     public Optional<Patient> findByMedicalRecordNumber(String medicalRecordNumber) {
         try {
             Patient patient = jdbc.sql(SELECT_PATIENT_BY_MEDICAL_RECORD_NUMBER_QUERY)
-                    .param("medicalRecordNumber", medicalRecordNumber)
-                    .query(Patient.class)
-                    .single();
+                    .param("medicalRecordNumber", medicalRecordNumber).query(Patient.class).single();
             return Optional.of(patient);
         } catch (EmptyResultDataAccessException e) {
             log.debug("Patient not found with medical record number: {}", medicalRecordNumber);
             return Optional.empty();
-        } catch (Exception e) {
-            log.error("Error finding patient by medical record number: {}", e.getMessage(), e);
-            throw new ApiException("Failed to find patient: " + e.getMessage());
+        } catch (Exception exception) {
+            log.error("Error finding patient by medical record number: {}", exception.getMessage(), exception);
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 
@@ -173,10 +171,7 @@ public class PatientRepositoryImpl implements PatientRepository {
     @Override
     public long countByActiveTrue() {
         try {
-            Long count = jdbc.sql(COUNT_ACTIVE_PATIENTS_QUERY)
-                    .query(Long.class)
-                    .single();
-            return count != null ? count : 0L;
+            return jdbc.sql(COUNT_ACTIVE_PATIENTS_QUERY).query(Long.class).single();
         } catch (Exception e) {
             log.error("Error counting active patients: {}", e.getMessage(), e);
             return 0L;
@@ -187,30 +182,26 @@ public class PatientRepositoryImpl implements PatientRepository {
     public List<Patient> findByBloodTypeAndActiveTrue(String bloodType) {
         try {
             return jdbc.sql(SELECT_PATIENTS_BY_BLOOD_TYPE_QUERY)
-                    .param("bloodType", bloodType)
-                    .query(Patient.class)
-                    .list();
+                    .param("bloodType", bloodType).query(Patient.class).list();
         } catch (Exception e) {
             log.error("Error finding patients by blood type: {}", e.getMessage(), e);
-            throw new ApiException("Failed to retrieve patients: " + e.getMessage());
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 
     @Override
-    public void softDelete(String patientUuid) {
+    public void softDeletePatient(String patientUuid) {
         try {
-            int updated = jdbc.sql(SOFT_DELETE_PATIENT_QUERY)
-                    .param("patientUuid", patientUuid)
-                    .update();
+            int updated = jdbc.sql(SOFT_DELETE_PATIENT_QUERY).param("patientUuid", patientUuid).update();
 
             if (updated == 0) {
-                throw new ApiException(format("Patient not found: %s", patientUuid));
+                throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
             }
 
             log.info("Patient soft deleted: {}", patientUuid);
         } catch (Exception e) {
             log.error("Error soft deleting patient: {}", e.getMessage(), e);
-            throw new ApiException("Failed to delete patient: " + e.getMessage());
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
         }
     }
 }

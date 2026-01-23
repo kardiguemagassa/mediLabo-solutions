@@ -1,20 +1,28 @@
-ACTIVE_PROFILE: dev
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              PATIENT SERVICE - Development Profile                         ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-PRIVATE_KEY: "private.key"
-PUBLIC_KEY: "public.key"
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
-POSTGRES_USERNAME: ***REMOVED_USER***
-POSTGRES_PASSWORD: ***REMOVED***
-POSTGRES_HOST: 127.0.0.1
-POSTGRES_PORT: 5432
-POSTGRES_DATABASE: medilabo_patients
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
 
-USER_NAME: admin
-PASSWORD: ***REMOVED_USER***
-
-SERVER_PORT: 8081
-UI_APP_URL: http://localhost:4200
-
-JWKS_URI: http://localhost:9001/oauth2/jwks
-
-KAFKA_SERVER_URL: http://127.0.0.1:9092
+# LOGGING - VERBOSE FOR DEBUGGING
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

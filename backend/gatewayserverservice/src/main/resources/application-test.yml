@@ -1,9 +1,38 @@
-ACTIVE_PROFILE: test
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Test Profile                                 ║
+# ║                                                                            ║
+# ║  🧪 Unit & Integration tests                                               ║
+# ║  Eureka disabled, mock JWKS                                                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-USER_NAME: admin
-PASSWORD: ***REMOVED_USER***
-ROLES: EUREKA_CLIENT
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
 
-SERVER_PORT: 8000
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # FOR TESTS, USE A LOCAL MOCK OR DISABLE JWT VALIDATION
+          jwk-set-uri: http://localhost:9001/oauth2/jwks
 
-JWKS_URI: http://localhost:9000/oauth2/jwks
+# SERVER RANDOM PORT TO AVOID CONFLICTS
+server:
+  port: 0
+
+# EUREKA DISABLE FOR TEST
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# LOGGING - MINIMAL FOR TESTS
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG
+    org.springframework.cloud.gateway: DEBUG

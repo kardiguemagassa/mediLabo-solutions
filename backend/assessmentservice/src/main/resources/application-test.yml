@@ -1,0 +1,39 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              ASSESSMENT SERVICE - Test Profile                             ║
+# ║                                                                            ║
+# ║  🧪 Unit & Integration tests                                               ║
+# ║  Uses H2 in-memory database - no external dependencies                     ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database: H2
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+
+# SERVER RANDOM PORT TO AVOID CONFLICTS
+server:
+  port: 0
+
+# EUREKA DISABLE FOR TEST
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# LOGGING - MINIMAL FOR TESTS
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG

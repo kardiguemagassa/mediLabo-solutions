@@ -1,0 +1,24 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              ASSESSMENT SERVICE - Production Profile                       ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  jpa:
+    show-sql: false
+
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    hostname: ${ASSESSMENT_SERVICE_HOST:assessment-service}
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    org.springframework.security: WARN

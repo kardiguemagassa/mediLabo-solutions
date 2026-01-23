@@ -1,5 +1,7 @@
-package com.openclassrooms.patientservice.dto;
+package com.openclassrooms.patientservice.dtorequest;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,10 +9,10 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
- * DTO pour mettre à jour un patient
- * Tous les champs sont optionnels
+ * DTO pour créer un patient
  *
  * @author FirstName LastName
  * @version 1.0
@@ -20,9 +22,15 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdatePatientRequest {
+public class PatientRequest {
+    //private String patientUuid;
+    @NotBlank(message = "User UUID is required")
+    private String userUuid; // Référence Authorization Server
 
+    // Données médicales
+    @NotNull(message = "Date of birth is required")
     private LocalDate dateOfBirth;
+
     private String gender;
     private String bloodType;
     private Integer heightCm;
@@ -39,4 +47,9 @@ public class UpdatePatientRequest {
     // Assurance
     private String insuranceNumber;
     private String insuranceProvider;
+
+    // Métadonnées
+    private Boolean active;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

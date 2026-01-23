@@ -1,14 +1,47 @@
-ACTIVE_PROFILE: test
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              DISCOVERY SERVER - Test Profile                               ║
+# ║                                                                            ║
+# ║  🧪 Unit & Integration tests                                               ║
+# ║  Uses H2 in-memory database - no external dependencies                     ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-POSTGRES_USERNAME: ***REMOVED_USER***
-POSTGRES_PASSWORD: ***REMOVED***
-POSTGRES_HOST: 127.0.0.1
-POSTGRES_PORT: 5432
-POSTGRES_DATABASE: microservice_french_localdb
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database: H2
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
+      enabled: true
 
-USER_NAME: admin
-PASSWORD: ***REMOVED_USER***
-ROLES: EUREKA_CLIENT
+# SERVER RANDOM PORT TO AVOID CONFLICTS
+server:
+  port: 0
 
-SERVER_PORT: 5002
-UI_APP_URL: http://localhost:3000
+# EUREKA DISABLE FOR TEST
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://admin:test@localhost:${server.port}/eureka/
+  server:
+    enable-self-preservation: false
+    wait-time-in-ms-when-sync-empty: 0
+
+# RSA KEYS USE TEST KEYS FROM CLASSPATH
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG

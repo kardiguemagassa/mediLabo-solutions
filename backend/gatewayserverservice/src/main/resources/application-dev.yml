@@ -1,9 +1,20 @@
-ACTIVE_PROFILE: dev
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Development Profile                          ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
-USER_NAME: admin
-PASSWORD: ***REMOVED_USER***
-ROLES: EUREKA_CLIENT
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
 
-SERVER_PORT: 8080
-
-JWKS_URI: http://localhost:9001/oauth2/jwks
+# LOGGING - VERBOSE FOR DEBUGGING
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    reactor.netty: INFO
