@@ -189,3 +189,4 @@ scripts/
 # macOS
 # ══════════════════════════════════════════════════════════════════
 .DS_Store
+database/authdata/data.sql
