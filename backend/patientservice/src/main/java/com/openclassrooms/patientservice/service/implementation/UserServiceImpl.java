@@ -3,98 +3,140 @@ package com.openclassrooms.patientservice.service.implementation;
 import com.openclassrooms.patientservice.domain.Response;
 import com.openclassrooms.patientservice.dtorequest.UserRequest;
 import com.openclassrooms.patientservice.exception.ApiException;
-import com.openclassrooms.patientservice.handler.RestClientInterceptor;
 import com.openclassrooms.patientservice.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 
 import static com.openclassrooms.patientservice.util.RequestUtils.convertResponse;
 
+/**
+ * Implémentation du service de communication avec Authorization Server.
+ *
+ * Utilise WebClient (standard microservices) pour les appels inter-services.
+ * Le token JWT est automatiquement propagé via WebClientInterceptor.
+ *
+ * @author Kardigué MAGASSA
+ * @version 2.0
+ * @since 2026-01-09
+ */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    /*private final RestClient restClient;
-
-    public UserServiceImpl() {
-        this.restClient = RestClient.builder()
-                .requestFactory(new HttpComponentsClientHttpRequestFactory())
-                .baseUrl("http://localhost:9001")
-                .requestInterceptor(new RestClientInterceptor())
-                .build();
-    }
-
+    private final WebClient authServerWebClient;
 
     @Override
     public UserRequest getUserByUuid(String userUuid) {
-        try {
-            var response = restClient.get().uri("/user/profile").retrieve().body(Response.class);
-            assert response != null;
-            return convertResponse(response, UserRequest.class,"user");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
+        log.debug("Fetching user by UUID: {}", userUuid);
 
+        try {
+            Response response = authServerWebClient.get()
+                    .uri("/api/users/{userUuid}", userUuid)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
+                        if (clientResponse.statusCode() == HttpStatus.NOT_FOUND) {
+                            return Mono.error(new ApiException("Utilisateur non trouvé: " + userUuid));
+                        }
+                        return Mono.error(new ApiException("Erreur lors de la récupération de l'utilisateur"));
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                            Mono.error(new ApiException("Erreur serveur Authorization Server")))
+                    .bodyToMono(Response.class)
+                    .block();
+
+            if (response == null || response.data() == null) {
+                throw new ApiException("Réponse vide du service utilisateur");
+            }
+
+            return convertResponse(response, UserRequest.class, "user");
+
+        } catch (ApiException e) {
+            throw e;
+        } catch (WebClientResponseException.NotFound e) {
+            log.warn("User not found: {}", userUuid);
+            throw new ApiException("Utilisateur non trouvé: " + userUuid);
+        } catch (Exception e) {
+            log.error("Error fetching user by UUID: {}", e.getMessage(), e);
+            throw new ApiException("Erreur lors de la communication avec le service utilisateur");
+        }
+    }
+
+    @Override
+    public Optional<UserRequest> getUserByEmail(String email) {
+        log.debug("Fetching user by email: {}", email);
+
+        try {
+            Response response = authServerWebClient.get()
+                    .uri("/api/users/email/{email}", email)
+                    .retrieve()
+                    .onStatus(status -> status == HttpStatus.NOT_FOUND, clientResponse ->
+                            Mono.empty())  // 404 = pas d'erreur, juste Optional.empty()
+                    .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                            Mono.error(new ApiException("Erreur serveur Authorization Server")))
+                    .bodyToMono(Response.class)
+                    .block();
+
+            if (response == null || response.data() == null || !response.data().containsKey("user")) {
+                log.debug("User not found for email: {}", email);
+                return Optional.empty();
+            }
+
+            UserRequest user = convertResponse(response, UserRequest.class, "user");
+            return Optional.of(user);
+
+        } catch (WebClientResponseException.NotFound e) {
+            log.debug("User not found for email: {}", email);
+            return Optional.empty();
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error fetching user by email: {}", e.getMessage(), e);
+            throw new ApiException("Erreur lors de la communication avec le service utilisateur");
+        }
     }
 
     @Override
     public UserRequest getAssignee(String patientUuid) {
+        log.debug("Fetching assignee for patient: {}", patientUuid);
+
         try {
-            var response = restClient.get().uri("/user/assignee" + patientUuid).retrieve().body(Response.class);
-            assert response != null;
-            return convertResponse(response, UserRequest.class,"user");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+            Response response = authServerWebClient.get()
+                    .uri("/api/users/assignee/{patientUuid}", patientUuid)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
+                        if (clientResponse.statusCode() == HttpStatus.NOT_FOUND) {
+                            return Mono.error(new ApiException("Assigné non trouvé pour le patient: " + patientUuid));
+                        }
+                        return Mono.error(new ApiException("Erreur lors de la récupération de l'assigné"));
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
+                            Mono.error(new ApiException("Erreur serveur Authorization Server")))
+                    .bodyToMono(Response.class)
+                    .block();
+
+            if (response == null || response.data() == null) {
+                throw new ApiException("Réponse vide du service utilisateur");
+            }
+
+            return convertResponse(response, UserRequest.class, "user");
+
+        } catch (ApiException e) {
+            throw e;
+        } catch (WebClientResponseException.NotFound e) {
+            log.warn("Assignee not found for patient: {}", patientUuid);
+            throw new ApiException("Assigné non trouvé pour le patient: " + patientUuid);
+        } catch (Exception e) {
+            log.error("Error fetching assignee: {}", e.getMessage(), e);
+            throw new ApiException("Erreur lors de la communication avec le service utilisateur");
         }
-    }*/
-
-
-    private final WebClient webClient;
-
-    public UserServiceImpl(WebClient userWebClient) {
-        this.webClient = userWebClient;
     }
-
-
-    @Override
-    public UserRequest getUserByUuid(String userUuid) {
-        Response response = webClient.get().uri("/user/profile").retrieve()
-                .onStatus(HttpStatusCode::isError, clientResponse -> Mono.error(new ApiException("Erreur lors de l'appel user-service")))
-                .bodyToMono(Response.class).switchIfEmpty(Mono.error(new ApiException("Réponse vide du service utilisateur"))).block();
-
-        return convertResponse(response, UserRequest.class,"user");
-
-    }
-
-
-    @Override
-    public UserRequest getAssignee(String patientUuid) {
-
-        Response response = webClient.get().uri("/user/assignee/{uuid}", patientUuid).retrieve()
-                .onStatus(HttpStatusCode::isError, clientResponse -> Mono.error(new ApiException("Erreur lors de l'appel user-service")))
-                .bodyToMono(Response.class).switchIfEmpty(Mono.error(new ApiException("Réponse vide du service utilisateur"))).block();
-
-        return convertResponse(response, UserRequest.class, "user");
-    }
-
-    @Override
-    public UserRequest getUserByUuid(String userUuid, String bearerToken) {
-        return null;
-    }
-
-    @Override
-    public UserRequest getAssignee(String patientUuid, String bearerToken) {
-        return null;
-    }
-
-
 }

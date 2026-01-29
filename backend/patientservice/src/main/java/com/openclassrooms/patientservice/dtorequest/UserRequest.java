@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * @since 2026-01-09
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequest {
