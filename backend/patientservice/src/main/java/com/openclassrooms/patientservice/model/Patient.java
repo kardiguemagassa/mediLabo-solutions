@@ -15,12 +15,12 @@ import java.time.Period;
  * Entité Patient - Données médicales uniquement
  * Les infos utilisateur (nom, prénom, etc.) sont dans Authorization Server
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Patient {
@@ -49,6 +49,7 @@ public class Patient {
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
     public int getAge() {
         if (dateOfBirth == null) {
             return 0;
@@ -64,4 +65,5 @@ public class Patient {
         double bmi = weightKg.doubleValue() / (heightM * heightM);
         return BigDecimal.valueOf(bmi).setScale(2, RoundingMode.HALF_UP);
     }
+    private String insurancePolicyNumber;
 }

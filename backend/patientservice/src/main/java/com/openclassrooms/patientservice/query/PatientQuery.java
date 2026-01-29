@@ -1,26 +1,24 @@
 package com.openclassrooms.patientservice.query;
 
 /**
- * Requêtes SQL natives pour Patient
- * Toutes les requêtes sont définies ici pour faciliter la maintenance
+ * Requêtes SQL natives pour Patient.
+ * Toutes les requêtes sont centralisées ici pour faciliter la maintenance.
  *
- * Bonnes pratiques :
+ * Conventions :
  * - Pas de SELECT *
  * - Colonnes explicites
- * - Base SELECT réutilisable
+ * - Nommage : ACTION_ENTITY_BY_FIELD_QUERY
  *
- * @author FirstName LastName
- * @version 1.1
+ * @author Kardigué MAGASSA
+ * @version 2.0
  * @since 2026-01-22
  */
 public final class PatientQuery {
 
-//    private PatientQuery() {
-//        // Utility class
-//    }
+    private PatientQuery() {}
 
+    // BASE SELECT
 
-    //SELECT
     public static final String BASE_PATIENT_SELECT =
             """
             SELECT
@@ -47,8 +45,8 @@ public final class PatientQuery {
             FROM patients
             """;
 
+    // INSERT
 
-    //INSERT
     public static final String INSERT_PATIENT_QUERY =
             """
             INSERT INTO patients (
@@ -111,8 +109,8 @@ public final class PatientQuery {
                 updated_at
             """;
 
-
     // UPDATE
+
     public static final String UPDATE_PATIENT_QUERY =
             """
             UPDATE patients SET
@@ -155,64 +153,58 @@ public final class PatientQuery {
                 updated_at
             """;
 
-    //SELECT
+    // SELECT
+
     public static final String SELECT_PATIENT_BY_UUID_QUERY =
-            BASE_PATIENT_SELECT + """
-        WHERE patient_uuid = :patientUuid
-          AND active = true
-        """;
+            BASE_PATIENT_SELECT +
+                    """
+                    WHERE patient_uuid = :patientUuid AND active = true
+                    """;
 
     public static final String SELECT_PATIENT_BY_USER_UUID_QUERY =
-            BASE_PATIENT_SELECT + """
-        WHERE user_uuid = :userUuid
-          AND active = true
-        """;
+            BASE_PATIENT_SELECT +
+                    """
+                    WHERE user_uuid = :userUuid AND active = true
+                    """;
 
     public static final String SELECT_PATIENT_BY_MEDICAL_RECORD_NUMBER_QUERY =
-            BASE_PATIENT_SELECT + """
-        WHERE medical_record_number = :medicalRecordNumber
-          AND active = true
-        """;
+            BASE_PATIENT_SELECT +
+                    """
+                    WHERE medical_record_number = :medicalRecordNumber AND active = true
+                    """;
 
     public static final String SELECT_ALL_ACTIVE_PATIENTS_QUERY =
             BASE_PATIENT_SELECT + """
-        WHERE active = true
-        ORDER BY created_at DESC
-        """;
+                    WHERE active = true ORDER BY created_at DESC
+                    """;
 
     public static final String SELECT_PATIENTS_BY_BLOOD_TYPE_QUERY =
-            BASE_PATIENT_SELECT + """
-        WHERE blood_type = :bloodType
-          AND active = true
-        ORDER BY created_at DESC
-        """;
+            BASE_PATIENT_SELECT +
+                    """
+                    WHERE blood_type = :bloodType AND active = true ORDER BY created_at DESC
+                    """;
 
+    // EXISTS / COUNT
 
-    //EXISTS / COUNT
     public static final String EXISTS_BY_USER_UUID_QUERY =
             """
-            SELECT EXISTS (
-                SELECT 1
-                FROM patients
-                WHERE user_uuid = :userUuid
-                  AND active = true
-            )
+            SELECT EXISTS ( SELECT 1 FROM patients WHERE user_uuid = :userUuid AND active = true )
+            """;
+
+    public static final String EXISTS_BY_MEDICAL_RECORD_NUMBER_QUERY =
+            """
+            SELECT EXISTS (SELECT 1 FROM patients WHERE medical_record_number = :medicalRecordNumber )
             """;
 
     public static final String COUNT_ACTIVE_PATIENTS_QUERY =
             """
-            SELECT COUNT(*)
-            FROM patients
-            WHERE active = true
+            SELECT COUNT(*) FROM patients WHERE active = true
             """;
 
+    // DELETE (SOFT)
 
-    //SOFT DELETE
     public static final String SOFT_DELETE_PATIENT_QUERY =
             """
-            UPDATE patients
-            SET active = false,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE patient_uuid = :patientUuid
+            UPDATE patients SET active = false,updated_at = CURRENT_TIMESTAMP WHERE patient_uuid = :patientUuid AND active = true
             """;
 }

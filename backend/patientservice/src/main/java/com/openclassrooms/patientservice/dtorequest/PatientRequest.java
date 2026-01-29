@@ -2,6 +2,7 @@ package com.openclassrooms.patientservice.dtorequest;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,12 +24,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PatientRequest {
-    //private String patientUuid;
-    @NotBlank(message = "User UUID is required")
-    private String userUuid; // Référence Authorization Server
 
-    // Données médicales
-    @NotNull(message = "Date of birth is required")
+    @NotBlank(message = "L'UUID utilisateur est obligatoire")
+    private String userUuid;
+    @NotNull(message = "La date de naissance est obligatoire")
+    @Past(message = "La date de naissance doit être dans le passé")
     private LocalDate dateOfBirth;
 
     private String gender;
@@ -52,4 +52,5 @@ public class PatientRequest {
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String insurancePolicyNumber;
 }
