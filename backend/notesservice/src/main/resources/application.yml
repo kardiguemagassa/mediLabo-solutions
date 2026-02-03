@@ -29,6 +29,13 @@ spring:
       authentication-database: ${MONGO_AUTH_DATABASE:admin}
       auto-index-creation: true
 
+#  # SECURITY - JWT CONFIGURATION
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_SERVER_ISSUER_URI:http://localhost:9001}
+
 # SERVER CONFIGURATION
 server:
   port: ${NOTES_SERVICE_PORT:8082}
@@ -40,10 +47,13 @@ server:
 # EUREKA CLIENT
 eureka:
   client:
-    register-with-eureka: true
-    fetch-registry: true
+    register-with-eureka: ${EUREKA_ENABLED:true}
+    fetch-registry: ${EUREKA_ENABLED:true}
     service-url:
       defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
+    instance:
+      prefer-ip-address: true
+      instance-id: ${spring.application.name}:${random.uuid}
 
 # ACTUATOR - HEALTH & METRICS
 management:
