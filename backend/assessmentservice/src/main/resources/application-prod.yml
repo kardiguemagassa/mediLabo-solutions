@@ -6,17 +6,23 @@
 # ╚════════════════════════════════════════════════════════════════════════════╝
 
 spring:
-  jpa:
-    show-sql: false
+  config:
+    activate:
+      on-profile: prod
 
 # EUREKA INSTANCE DOCKER PRODUCTION
 eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
   instance:
+    #hostname: ${ASSESSMENT_SERVICE_HOST:assessment-service}
+    #instance-id: ${spring.application.name}:${server.port}
     hostname: ${ASSESSMENT_SERVICE_HOST:assessment-service}
     prefer-ip-address: false
-    instance-id: ${spring.application.name}:${server.port}
 
-# LOGGING PRODUCTION LEVEL
 logging:
   level:
     root: INFO
