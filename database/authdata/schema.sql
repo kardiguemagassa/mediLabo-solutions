@@ -1,4 +1,4 @@
--- Author: FirstName LastName
+-- Author: Kardigué MAGASSA
 -- MediLabo Authorization Server - Database Schema
 -- Date : January 5th 2026
 -- Version: 1.0

@@ -40,6 +40,7 @@ services:
     networks:
      # ─── http://login:password@localhost:8761/actuator/health ───
       - medilabo-network
+      - postgres-network # <--- pour que Discovery Server puisse accéder à PostgreSQL
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@localhost:${DISCOVERY_SERVER_PORT:-8761}/actuator/health"]
       interval: 30s
@@ -77,6 +78,7 @@ services:
       - "${AUTHORIZATION_SERVER_PORT:-9001}:${AUTHORIZATION_SERVER_PORT:-9001}"
     networks:
       - medilabo-network
+      - postgres-network # <--- pour que Authorization Server puisse accéder à PostgreSQL
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -145,6 +147,7 @@ services:
       - "${PATIENT_SERVICE_PORT:-8081}:${PATIENT_SERVICE_PORT:-8081}"
     networks:
       - medilabo-network
+      - postgres-network # <--- pour que Patient Service puisse accéder à PostgreSQL
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -178,6 +181,7 @@ services:
       - "${NOTES_SERVICE_PORT:-8082}:${NOTES_SERVICE_PORT:-8082}"
     networks:
       - medilabo-network
+      - mongodb-network # <--- pour que Notes Service puisse accéder à MongoDB
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -250,6 +254,8 @@ services:
       - "${NOTIFICATION_SERVICE_PORT:-8084}:${NOTIFICATION_SERVICE_PORT:-8084}"
     networks:
       - medilabo-network
+      - postgres-network # <--- pour que Notification Service puisse accéder à PostgreSQL
+      - kafka-network # <--- pour que Notification Service puisse accéder à Kafka
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -293,3 +299,9 @@ networks:
   medilabo-network:
     name: medilabo-network
     driver: bridge
+  postgres-network:
+    external: true  # Indique à Docker que ce réseau est géré ailleurs
+  mongodb-network:
+    external: true  # Indique à Docker que ce réseau est géré ailleurs
+  kafka-network:
+    external: true  # Indique à Docker que ce réseau est géré ailleurs

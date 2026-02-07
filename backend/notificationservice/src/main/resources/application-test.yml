@@ -6,60 +6,30 @@
 # ╚════════════════════════════════════════════════════════════════════════════╝
 
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  jpa:
-    database: H2
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-  h2:
-    console:
-      enabled: true
+  config:
+    activate:
+      on-profile: test
 
-  # KAFKA - DISABLE OR USE EMBEDDED FOR TESTS
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+
   kafka:
     bootstrap-servers: localhost:9092
-    consumer:
-      auto-offset-reset: earliest
 
-  # EMAIL -DISABLED FOR TESTS
   mail:
     host: localhost
     port: 1025
-    username: test
-    password: test
 
-# SERVER RANDOM PORT TO AVOID CONFLICTS
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9001/oauth2/jwks
+
 server:
   port: 0
 
-# EUREKA DISABLE FOR TEST
 eureka:
   client:
     enabled: false
-    register-with-eureka: false
-    fetch-registry: false
-
-# TEST URLs
-ui:
-  app:
-    url: http://localhost:4200
-
-verify:
-  email:
-    host: http://localhost:4200
-
-jwks:
-  uri: http://localhost:9001/oauth2/jwks
-
-# LOGGING - MINIMAL FOR TESTS
-logging:
-  level:
-    root: WARN
-    com.openclassrooms: DEBUG
-    org.springframework.kafka: WARN
