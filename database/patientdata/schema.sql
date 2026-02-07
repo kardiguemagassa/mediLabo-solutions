@@ -1,5 +1,5 @@
 -- MediLabo Solutions - Patient Service Database Schema
--- Author: FirstName LastName
+-- Author: Kardigué MAGASSA
 -- Date: January 09, 2026
 -- Version: 1.0
 
