@@ -25,57 +25,75 @@
 		<spring-cloud.version>2023.0.6</spring-cloud.version>
 		<jacoco.version>0.8.12</jacoco.version>
 	</properties>
+
 	<dependencies>
-		<!-- Gateway REACTIVE -->
+
+		<!--GATEWAY REACTIVE -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-gateway</artifactId>
 		</dependency>
-		<!-- Eureka Client -->
+
+		<!--EUREKA CLIENT -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-		<!-- OAuth2 Resource Server (JWT validation) -->
+
+		<!-- RESOURCE SERVER  -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
-		<!-- Security -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-		<!-- Circuit Breaker (Resilience4j) -->
+
+		<!-- CIRCUIT BRAKER RESILIENCE4J-->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
 		</dependency>
-		<!-- Actuator (monitoring) -->
+
+		<!-- MONITORING ACTUATOR -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+
+		<!--MONITORING PROMETHEUS  -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+
+		<!-- SWAGGER / OPENAPI 3.0 API DOCUMENTATION -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
 		<!-- Apache Commons Lang3 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.18.0</version>
 		</dependency>
-		<!-- DevTools -->
+
+		<!-- DEVTOOLS -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-		<!-- Lombok -->
+
+		<!-- LOMBOK -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- Tests -->
+
+		<!-- TEST -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -92,6 +110,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -130,6 +149,8 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
+			<!-- JACOCO FOR UNIT TESTS -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
@@ -150,6 +171,8 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<!--SUREFIRE FOR UNIT TESTS -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>

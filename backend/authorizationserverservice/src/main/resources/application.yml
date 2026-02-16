@@ -44,7 +44,7 @@ spring:
         jdbc:
           time_zone: UTC
 
-# SERVER CONFIGURATION
+# CONFIGURATION TECHNIQUE SERVEE
 server:
   port: ${AUTHORIZATION_SERVER_PORT:9001}
   shutdown: graceful
@@ -52,6 +52,39 @@ server:
   error:
     include-message: always
     include-binding-errors: always
+
+# CONFIGURATION MÉTIER OAUTH2
+auth:
+  server:
+    issuer: ${AUTH_SERVER_ISSUER_URI} # .env
+  token:
+    access-token-ttl: ${ACCESS_TOKEN_TTL_MINUTES:15}
+    refresh-token-ttl: ${REFRESH_TOKEN_TTL_DAYS:30}
+
+# Configuration du JWK Set (JSON Web Key Set)
+# Cet endpoint est le "certificat public" du serveur d'autorisation.
+# Il permet aux autres micro-services (Resource Servers) de :
+#   1. Récupérer la clé publique RSA pour vérifier la signature des JWT.
+#   2. S'assurer que le token n'a pas été falsifié sans avoir besoin de partager
+#      la clé privée.
+jwks:
+  uri: ${JWKS_URI}
+
+# Configuration de l'Interface Utilisateur (Frontend)
+# Définit l'origine de confiance pour ton application cliente (Angular/React).
+# Utilisé pour :
+#   1. Les redirections après une authentification réussie.
+#   2. La gestion du Post-Logout (renvoyer l'utilisateur sur l'accueil après déconnexion).
+#   3. La configuration CORS (autoriser les navigateurs à appeler ce serveur).
+ui:
+  app:
+    url: ${UI_APP_URL}
+
+
+# RSA KEYS CONFIGURATION FOR JWT SIGNING
+keys:
+  private: ${RSA_PRIVATE_KEY_PATH}
+  public: ${RSA_PUBLIC_KEY_PATH}
 
 # EUREKA CLIENT
 eureka:
@@ -91,8 +124,3 @@ logging:
     org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-
-# RSA KEYS CONFIGURATION FOR JWT SIGNING
-keys:
-  private: ${RSA_PRIVATE_KEY_PATH}
-  public: ${RSA_PUBLIC_KEY_PATH}

@@ -29,4 +29,16 @@ public class NoteResponse {
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    /**
+     * Nombre de fichiers attachés à cette note.
+     * Permet au frontend d'afficher un badge sans appel API supplémentaire.
+     */
+    private Integer fileCount;
+
+    /**
+     * Nombre de commentaires sur cette note.
+     * Permet au frontend d'afficher un badge sans appel API supplémentaire.
+     */
+    private Integer commentCount;
 }

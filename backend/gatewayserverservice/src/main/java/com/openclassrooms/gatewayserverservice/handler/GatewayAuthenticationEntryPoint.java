@@ -11,9 +11,8 @@ import static com.openclassrooms.gatewayserverservice.utils.RequestUtils.handleE
 
 /**
  * Point d'entrée pour les erreurs d'authentification (401 Unauthorized) - Version REACTIVE.
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
@@ -23,10 +22,7 @@ public class GatewayAuthenticationEntryPoint implements ServerAuthenticationEntr
 
     @Override
     public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException exception) {
-        log.warn("Authentification requise pour l'URI: {} - Raison: {}",
-                exchange.getRequest().getPath().value(),
-                exception.getMessage());
-
+        log.warn("Authentification requise pour l'URI: {} - Raison: {}", exchange.getRequest().getPath().value(), exception.getMessage());
         return handleErrorResponse(exchange, exception);
     }
 }

@@ -25,6 +25,8 @@ import static com.openclassrooms.discoveryserverservice.constants.Roles.*;
 public class FilterChainConfig {
     private final DiscoveryUserDetailsService userDetailsService;
 
+    private static final String [] EUREKA_PUBLIC_ENDPOINTS = {"/eureka/fonts/**", "/eureka/css/**", "/eureka/js/**", "/eureka/images/**", "/icon/**"};
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/eureka/**"))
@@ -32,7 +34,8 @@ public class FilterChainConfig {
                 .exceptionHandling(exception -> exception.accessDeniedHandler(new DiscoveryAccessDeniedHandler()))
                 .authorizeHttpRequests( authorize -> authorize
                         // Ressources publiques (CSS, JS, images)
-                        .requestMatchers("/eureka/fonts/**", "/eureka/css/**", "/eureka/js/**", "/eureka/images/**", "/icon/**").permitAll()
+                        .requestMatchers(EUREKA_PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         // API Eureka pour les services (Basic Auth)
                         .requestMatchers("/eureka/**").hasAnyAuthority(EUREKA_READ)
                         // Dashboard Eureka - réservé aux admins

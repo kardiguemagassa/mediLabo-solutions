@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.openclassrooms.notesservice.constant.Role.*;
 import static com.openclassrooms.notesservice.util.RequestUtils.getResponse;
@@ -34,7 +36,7 @@ import static org.springframework.http.HttpStatus.*;
  * http://localhost:8082/v3/api-docs
  * http://localhost:8082/v3/api-docs.yaml
  * http://localhost:8082/actuator/health
- *
+ * http://localhost:8082/actuator/circuitbreakers
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-02-02
@@ -126,7 +128,7 @@ public class NoteController {
     @Operation(summary = "Récupérer mes propres notes",
             description = "Retourne les notes créées par le praticien connecté")
     @GetMapping("/my-notes")
-    @PreAuthorize(PRACTITIONER_ONLY)
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     public ResponseEntity<Response> getMyNotes(@Parameter(hidden = true) Authentication authentication, HttpServletRequest request) {
 
         String practitionerUuid = authentication.getName();
@@ -195,23 +197,24 @@ public class NoteController {
     /**
      * Extrait le nom du praticien depuis le JWT
      */
+
     private String extractPractitionerName(Authentication authentication) {
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            String firstName = jwt.getClaimAsString("firstName");
-            String lastName = jwt.getClaimAsString("lastName");
-
-            if (firstName != null && lastName != null) {
-                return firstName + " " + lastName;
-            }
-
-            // Fallback sur le claim "name" ou "preferred_username"
-            String name = jwt.getClaimAsString("name");
-            if (name != null) {
-                return name;
-            }
-
-            return jwt.getClaimAsString("preferred_username");
+        if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return "Unknown";
         }
-        return "Unknown";
+
+        // Tentative 1: Prénom + Nom
+        String fullName = String.format("%s %s", jwt.getClaimAsString("firstName"), jwt.getClaimAsString("lastName")).trim();
+
+        if (!fullName.isEmpty() && !fullName.equals("null null")) {
+            return fullName;
+        }
+
+        // Tentative 2 & 3: Name ou Username via Stream/Optional
+        return Stream.of("name", "preferred_username", "sub")
+                .map(jwt::getClaimAsString)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("Unknown");
     }
 }

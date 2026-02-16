@@ -1,38 +1,24 @@
-// MediLabo Solutions - Notes Service Database Initialization
-// Author: Kardigué MAGASSA
-// Date: January 09, 2026
-// Version: 1.0
-// Database: MongoDB
+// ╔════════════════════════════════════════════════════════════════════════════╗
+// ║     MediLabo Solutions - Notes Service Database medilabo_notes        ║
+// ║                                                                            ║
+// ║  Author: Kardigué MAGASSA                                                  ║
+// ║  Date: February 09, 2026                                                   ║
+// ║  Version: 2.0                                                              ║
+// ║  Database: MongoDB                                                         ║
+// ║                                                                            ║
+// ║  NOUVEAUTÉS V2:                                                            ║
+// ║    - Ajout du champ "files" (array) pour les fichiers attachés             ║
+// ║    - Ajout du champ "comments" (array) pour les commentaires               ║
+// ╚════════════════════════════════════════════════════════════════════════════╝
 
 
-// UTILISATION
-// Dans MongoDB Shell (mongosh):
-// use medilabo_notes
-// load('/path/to/init-mongo.js')
-//
-// Ou directement depuis le terminal:
-// mongosh medilabo_notes < init-mongo.js
-
-// Se connecter à la base de données
-db = db.getSiblingDB('medilabo_notes');
-
-print('════════════════════════════════════════════════════════════════');
-print('Initialisation de la base medilabo_notes...');
-print('════════════════════════════════════════════════════════════════');
-
-
-// SUPPRIMER LA COLLECTION SI ELLE EXISTE (Développement uniquement)
-// ATTENTION: Décommenter cette ligne UNIQUEMENT en développement !
-// db.notes.drop();
-// print('Collection notes supprimée (si existante)');
-
-// CRÉER LA COLLECTION AVEC VALIDATION DE SCHÉMA
 db.createCollection('notes', {
   validator: {
     $jsonSchema: {
       bsonType: 'object',
       required: ['noteUuid', 'patientUuid', 'practitionerUuid', 'content', 'createdAt'],
       properties: {
+        // CHAMPS EXISTANTS V1
         noteUuid: {
           bsonType: 'string',
           description: 'UUID unique de la note - obligatoire'
@@ -45,14 +31,18 @@ db.createCollection('notes', {
           bsonType: 'string',
           description: 'UUID du praticien qui a créé la note - obligatoire'
         },
+        practitionerName: {
+          bsonType: 'string',
+          description: 'Nom du praticien (pour affichage)'
+        },
         content: {
           bsonType: 'string',
           minLength: 1,
           description: 'Contenu de la note médicale - obligatoire'
         },
-        createdBy: {
-          bsonType: 'string',
-          description: 'Nom du praticien (pour affichage)'
+        active: {
+          bsonType: 'bool',
+          description: 'Note active (soft delete)'
         },
         createdAt: {
           bsonType: 'date',
@@ -62,9 +52,114 @@ db.createCollection('notes', {
           bsonType: 'date',
           description: 'Date de dernière modification'
         },
-        active: {
-          bsonType: 'bool',
-          description: 'Note active (soft delete)'
+
+        // NOUVEAUX CHAMPS V2 - Fichiers attachés
+        files: {
+          bsonType: 'array',
+          description: 'Liste des fichiers attachés à la note',
+          items: {
+            bsonType: 'object',
+            required: ['fileUuid', 'originalName', 'uploadedAt'],
+            properties: {
+              fileUuid: {
+                bsonType: 'string',
+                description: 'UUID unique du fichier'
+              },
+              originalName: {
+                bsonType: 'string',
+                description: 'Nom original du fichier'
+              },
+              storedName: {
+                bsonType: 'string',
+                description: 'Nom de stockage (UUID.extension)'
+              },
+              extension: {
+                bsonType: 'string',
+                description: 'Extension du fichier (pdf, jpg, etc.)'
+              },
+              contentType: {
+                bsonType: 'string',
+                description: 'Type MIME du fichier'
+              },
+              size: {
+                bsonType: 'long',
+                description: 'Taille en bytes'
+              },
+              formattedSize: {
+                bsonType: 'string',
+                description: 'Taille formatée (ex: 1.5 MB)'
+              },
+              uri: {
+                bsonType: 'string',
+                description: 'Chemin relatif du fichier stocké'
+              },
+              uploadedByUuid: {
+                bsonType: 'string',
+                description: 'UUID de l\'utilisateur qui a uploadé'
+              },
+              uploadedByName: {
+                bsonType: 'string',
+                description: 'Nom de l\'utilisateur qui a uploadé'
+              },
+              uploadedByRole: {
+                bsonType: 'string',
+                description: 'Rôle de l\'utilisateur (DOCTOR, NURSE, etc.)'
+              },
+              uploadedAt: {
+                bsonType: 'date',
+                description: 'Date d\'upload'
+              }
+            }
+          }
+        },
+
+        // NOUVEAUX CHAMPS (V2) - Commentaires
+        comments: {
+          bsonType: 'array',
+          description: 'Liste des commentaires sur la note',
+          items: {
+            bsonType: 'object',
+            required: ['commentUuid', 'content', 'authorUuid', 'createdAt'],
+            properties: {
+              commentUuid: {
+                bsonType: 'string',
+                description: 'UUID unique du commentaire'
+              },
+              content: {
+                bsonType: 'string',
+                minLength: 1,
+                description: 'Contenu du commentaire'
+              },
+              authorUuid: {
+                bsonType: 'string',
+                description: 'UUID de l\'auteur'
+              },
+              authorName: {
+                bsonType: 'string',
+                description: 'Nom de l\'auteur'
+              },
+              authorRole: {
+                bsonType: 'string',
+                description: 'Rôle de l\'auteur (DOCTOR, NURSE, etc.)'
+              },
+              authorImageUrl: {
+                bsonType: 'string',
+                description: 'URL de l\'avatar de l\'auteur'
+              },
+              edited: {
+                bsonType: 'bool',
+                description: 'Indique si le commentaire a été modifié'
+              },
+              createdAt: {
+                bsonType: 'date',
+                description: 'Date de création'
+              },
+              updatedAt: {
+                bsonType: 'date',
+                description: 'Date de dernière modification'
+              }
+            }
+          }
         }
       }
     }
@@ -73,9 +168,8 @@ db.createCollection('notes', {
   validationAction: 'error'
 });
 
-print('✅ Collection "notes" créée avec validation de schéma');
 
-// CRÉER LES INDEX POUR OPTIMISER LES PERFORMANCES
+// CRÉATION DES INDEX
 
 // Index unique sur noteUuid
 db.notes.createIndex(
@@ -85,7 +179,6 @@ db.notes.createIndex(
     name: 'idx_note_uuid_unique'
   }
 );
-print('✅ Index unique créé : idx_note_uuid_unique');
 
 // Index composé pour recherche par patient (trié par date décroissante)
 db.notes.createIndex(
@@ -95,7 +188,6 @@ db.notes.createIndex(
     background: true
   }
 );
-print('✅ Index composé créé : idx_patient_created_at');
 
 // Index pour recherche par praticien
 db.notes.createIndex(
@@ -105,7 +197,6 @@ db.notes.createIndex(
     background: true
   }
 );
-print('✅ Index créé : idx_practitioner_uuid');
 
 // Index pour soft delete (filter notes actives)
 db.notes.createIndex(
@@ -115,7 +206,6 @@ db.notes.createIndex(
     background: true
   }
 );
-print('✅ Index créé : idx_active');
 
 // Index composé pour recherche par patient ET actives
 db.notes.createIndex(
@@ -125,62 +215,23 @@ db.notes.createIndex(
     background: true
   }
 );
-print('✅ Index composé créé : idx_patient_active_created');
 
+// NOUVEL INDEX: Recherche de fichiers par fileUuid (pour téléchargement rapide)
+db.notes.createIndex(
+  { 'files.fileUuid': 1 },
+  { 
+    name: 'idx_files_uuid',
+    background: true,
+    sparse: true
+  }
+);
 
-// VÉRIFICATION DES INDEX
-print('\n════════════════════════════════════════════════════════════════');
-print('Liste des index créés :');
-print('════════════════════════════════════════════════════════════════');
-db.notes.getIndexes().forEach(function(index) {
-  print('  - ' + index.name);
-});
-
-// STATISTIQUES
-print('\n════════════════════════════════════════════════════════════════');
-print('Statistiques de la collection :');
-print('════════════════════════════════════════════════════════════════');
-const stats = db.notes.stats();
-print('Nombre de documents : ' + stats.count);
-print('Taille de la collection : ' + (stats.size / 1024).toFixed(2) + ' KB');
-print('Nombre d\'index : ' + stats.nindexes);
-
-print('\n════════════════════════════════════════════════════════════════');
-print('✅ Initialisation terminée avec succès !');
-print('════════════════════════════════════════════════════════════════');
-
-
-// DONNÉES DE TEST (Optionnel - Décommenter pour insérer)
-
-/*
-print('\n════════════════════════════════════════════════════════════════');
-print('Insertion de données de test...');
-print('════════════════════════════════════════════════════════════════');
-
-// Note de test 1
-db.notes.insertOne({
-  noteUuid: 'note-test-001',
-  patientUuid: 'patient-uuid-here',
-  practitionerUuid: 'practitioner-uuid-here',
-  content: 'Patient présente des symptômes de diabète. Taux de glucose élevé. Recommandation: suivi régulier et ajustement du traitement.',
-  createdBy: 'Dr. Jean Dupont',
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  active: true
-});
-
-// Note de test 2
-db.notes.insertOne({
-  noteUuid: 'note-test-002',
-  patientUuid: 'patient-uuid-here',
-  practitionerUuid: 'practitioner-uuid-here',
-  content: 'Consultation de suivi. Patient montre une amélioration. Poids en baisse. Continue le traitement actuel.',
-  createdBy: 'Dr. Marie Martin',
-  createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Il y a 7 jours
-  updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-  active: true
-});
-
-print('✅ Données de test insérées : ' + db.notes.countDocuments() + ' notes');
-print('════════════════════════════════════════════════════════════════');
-*/
+// NOUVEL INDEX: Recherche de commentaires par auteur
+db.notes.createIndex(
+  { 'comments.authorUuid': 1 },
+  { 
+    name: 'idx_comments_author',
+    background: true,
+    sparse: true
+  }
+);

@@ -91,6 +91,31 @@ public class AuthorizationServerConfig {
     @Value("${jwks.uri}")
     private String jwkSetUri;
 
+    @Value("${ui.app.url}")
+    private String redirectUri;
+
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/login",
+            "/error",
+            "/user/register/**",
+            "/user/verify/account/**",
+            "/user/verify/password/**",
+            "/user/resetpassword/**",
+            "/user/image/**",
+            "/actuator/health",
+            "/actuator/info",
+            "/actuator/prometheus"};
+
+    private static final String[] SWAGGER_ENDPOINTS = {
+            "/v3/api-docs/**",
+            "/v3/api-docs.yaml",
+            "/v3/api-docs/swagger-config",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/webjars/**"
+    };
+
+
     // SECURITY FILTER CHAIN 1
 
     /**
@@ -162,22 +187,12 @@ public class AuthorizationServerConfig {
 
         log.info("Configuring Default Security Filter Chain (Forms + API)");
 
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
                         // Endpoints Publics
-                        .requestMatchers(
-                                "/login",
-                                "/error",
-                                "/user/register/**",
-                                "/user/verify/account/**",
-                                "/user/verify/password/**",
-                                "/user/resetpassword/**",
-                                "/user/image/**",
-                                "/actuator/health",
-                                "/actuator/info"
-                        ).permitAll()
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                         .requestMatchers(POST, "/logout").permitAll()
                         // MFA Required
                         .requestMatchers("/mfa").hasAuthority("MFA_REQUIRED")
@@ -187,18 +202,15 @@ public class AuthorizationServerConfig {
                         .authorities("MFA_REQUIRED"));
 
         // Configuration Formulaires (Login, Logout)
-        http
-                .formLogin(login -> login
-                        .loginPage("/login")
-                        .successHandler(new MfaAuthenticationHandler("/mfa", "MFA_REQUIRED"))
-                        .failureHandler(new SimpleUrlAuthenticationFailureHandler("/login?error")))
-                .logout(logout -> logout
-                        .logoutSuccessUrl("http://localhost:3000")
-                        .addLogoutHandler(new CookieClearingLogoutHandler("JSESSIONID")));
+        http.formLogin(login -> login
+                .loginPage("/login")
+                .successHandler(new MfaAuthenticationHandler("/mfa", "MFA_REQUIRED"))
+                .failureHandler(new SimpleUrlAuthenticationFailureHandler("/login?error")));
+        http.logout(logout -> logout.logoutSuccessUrl(redirectUri)
+                .addLogoutHandler(new CookieClearingLogoutHandler("JSESSIONID")));
 
         // Configuration OAuth2 Resource Server (Validation JWT pour API REST)
-        http
-                .oauth2ResourceServer(oauth2 -> oauth2
+        http.oauth2ResourceServer(oauth2 -> oauth2
                         .accessDeniedHandler(new CustomAccessDeniedHandler())
                         .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
                         .jwt(jwt -> jwt

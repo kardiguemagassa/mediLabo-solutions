@@ -8,18 +8,22 @@
 spring:
   jpa:
     show-sql: false
+    hibernate:
+      ddl-auto: update
 
 # EUREKA INSTANCE DOCKER PRODUCTION
 eureka:
   instance:
-    hostname: ${AUTHORIZATION_SERVER_HOST:authorization-server}
-    prefer-ip-address: false
-    instance-id: ${spring.application.name}:${server.port}
+    # Utilise l'IP pour éviter les problèmes de résolution de nom entre conteneurs
+    prefer-ip-address: true
+    # Un ID unique permet d'éviter les collisions si on scalais le service
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Temps avant qu'Eureka ne considère le service comme mort
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
-# LOGGING PRODUCTION LEVEL
+# LOGGING PRODUCTION
 logging:
   level:
     root: INFO
-    com.openclassrooms: INFO
     org.springframework.security: WARN
-    org.springframework.security.oauth2: WARN

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -23,9 +23,8 @@ import static org.springframework.http.HttpMethod.*;
 /**
  * Configuration de sécurité pour le Gateway - Version REACTIVE.
  * Gère l'authentification OAuth2/JWT et les règles d'autorisation.
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
@@ -34,12 +33,37 @@ import static org.springframework.http.HttpMethod.*;
 @RequiredArgsConstructor
 public class ResourceServerConfig {
 
-    @Value("${jwks.uri}")
+
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
     private String jwkSetUri;
 
     private final GatewayAccessDeniedHandler accessDeniedHandler;
     private final GatewayAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtConverter jwtConverter;
+
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/eureka/**",
+            "/actuator/**", // Gateway's actuator
+            "/api/*/actuator/**",      // All microservices actuators
+            "/authorization/**",
+            "/user/register/**",
+            "/user/verify/account/**",
+            "/user/verify/password/**",
+            "/user/resetpassword/**",
+            "/.well-known/**",
+           "/fallback/**" // <--- pour que le Circuit Breaker réponde toujours
+    };
+
+    private static final String[] SWAGGER_ENDPOINTS = {
+            "/v3/api-docs/**",
+            "/api/*/v3/api-docs/**",
+            "/v3/api-docs.yaml",
+            "/v3/api-docs/swagger-config",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/webjars/**"
+    };
+
 
     /**
      * Configuration de la chaîne de filtres de sécurité REACTIVE.
@@ -49,32 +73,21 @@ public class ResourceServerConfig {
         log.info("Configuration de la sécurité du Gateway (Reactive)");
 
         http
-                // Désactiver CSRF (API stateless)
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-
-                // Configuration CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Règles d'autorisation
                 .authorizeExchange(exchanges -> exchanges
-                        // Endpoints publics
-                        .pathMatchers(
-                                "/eureka/**",
-                                "/actuator/health",
-                                "/actuator/info",
-                                "/auth/**",
-                                "/user/register/**",
-                                "/user/verify/account/**",
-                                "/user/verify/password/**",
-                                "/user/resetpassword/**",
-                                "/.well-known/**"
-                        ).permitAll()
+                        // 1. ON FORCE L'ACCÈS LIBRE AUX ACTUATORS (Ordre de priorité élevé)
+//                        .pathMatchers("/actuator/**").permitAll()
+//                        .pathMatchers("/api/notes/actuator/**").permitAll()
+//                        .pathMatchers("/api/patients/actuator/**").permitAll()
 
-                        // Tous les autres endpoints nécessitent une authentification
+                        // 2. TES AUTRES ENDPOINTS PUBLICS
+                        .pathMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .pathMatchers(SWAGGER_ENDPOINTS).permitAll()
+
+                        // 3. LE RESTE DOIT ÊTRE AUTHENTIFIÉ
                         .anyExchange().authenticated()
                 )
-
-                // Configuration OAuth2 Resource Server (JWT)
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .accessDeniedHandler(accessDeniedHandler)
                         .authenticationEntryPoint(authenticationEntryPoint)
@@ -84,7 +97,6 @@ public class ResourceServerConfig {
                         )
                 );
 
-        log.info("Sécurité Gateway configurée avec JWKS URI: {}", jwkSetUri);
         return http.build();
     }
 

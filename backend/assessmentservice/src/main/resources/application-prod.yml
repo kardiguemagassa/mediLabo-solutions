@@ -10,21 +10,20 @@ spring:
     activate:
       on-profile: prod
 
-# EUREKA INSTANCE DOCKER PRODUCTION
 eureka:
   client:
-    register-with-eureka: true
-    fetch-registry: true
     service-url:
-      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
+      # On utilise les variables injectées par le compose
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT}/eureka/
   instance:
-    #hostname: ${ASSESSMENT_SERVICE_HOST:assessment-service}
-    #instance-id: ${spring.application.name}:${server.port}
-    hostname: ${ASSESSMENT_SERVICE_HOST:assessment-service}
-    prefer-ip-address: false
+    # TRÈS IMPORTANT : Utilise l'IP dans le réseau Docker pour éviter les lags DNS
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}
 
-logging:
-  level:
-    root: INFO
-    com.openclassrooms: INFO
-    org.springframework.security: WARN
+# Configuration des URLs pour les clients Feign/WebClient en PROD
+services:
+  patient:
+    # On utilise le nom du service défini dans docker-compose.yml
+    url: http://medilabo-patient:8081
+  notes:
+    url: http://medilabo-notes:8082

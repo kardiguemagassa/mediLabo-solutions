@@ -78,8 +78,9 @@ class AssessmentServiceImplTest {
             // Given
             PatientResponse patient = createPatient(45, Gender.MALE);
 
+            // CORRECTION : Utilisation de getNotesByPatientUuidAsync
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Collections.emptyList()));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Collections.emptyList()));
             when(riskLevelCalculator.calculate(eq(45), eq(Gender.MALE), eq(0))).thenReturn(RiskLevel.NONE);
 
             // When
@@ -95,7 +96,7 @@ class AssessmentServiceImplTest {
             assertThat(result.triggersFound()).isEmpty();
 
             verify(patientClient).getPatientByUuid(PATIENT_UUID);
-            verify(noteClient).getNotesByPatientUuid(PATIENT_UUID);
+            verify(noteClient).getNotesByPatientUuidAsync(PATIENT_UUID);
             verify(riskLevelCalculator).calculate(45, Gender.MALE, 0);
         }
 
@@ -110,7 +111,7 @@ class AssessmentServiceImplTest {
             );
 
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture((notes)));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture((notes)));
             when(riskLevelCalculator.calculate(eq(45), eq(Gender.FEMALE), eq(3))).thenReturn(RiskLevel.BORDERLINE);
 
             // When
@@ -132,7 +133,7 @@ class AssessmentServiceImplTest {
             );
 
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(notes));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(notes));
             when(riskLevelCalculator.calculate(eq(25), eq(Gender.MALE), eq(3))).thenReturn(RiskLevel.IN_DANGER);
 
             // When
@@ -154,7 +155,7 @@ class AssessmentServiceImplTest {
             );
 
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(notes));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(notes));
             when(riskLevelCalculator.calculate(eq(28), eq(Gender.MALE), eq(6))).thenReturn(RiskLevel.EARLY_ONSET);
 
             // When
@@ -177,7 +178,7 @@ class AssessmentServiceImplTest {
             );
 
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(notes));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(notes));
             when(riskLevelCalculator.calculate(eq(40), eq(Gender.MALE), eq(2))).thenReturn(RiskLevel.BORDERLINE);
 
             // When
@@ -202,7 +203,7 @@ class AssessmentServiceImplTest {
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
 
             // OBLIGATOIRE sinon NPE dans thenCombine
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(List.of()));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(List.of()));
 
             // WHEN
             CompletableFuture<Assessment> future = assessmentService.assessDiabetesRisk(PATIENT_UUID);
@@ -211,7 +212,7 @@ class AssessmentServiceImplTest {
             assertThatThrownBy(future::join).hasCauseInstanceOf(ApiException.class).hasMessageContaining(PATIENT_UUID);
 
             verify(patientClient).getPatientByUuid(PATIENT_UUID);
-            verify(noteClient).getNotesByPatientUuid(PATIENT_UUID);
+            verify(noteClient).getNotesByPatientUuidAsync(PATIENT_UUID);
             verify(riskLevelCalculator, never()).calculate(anyInt(), any(), anyInt());
         }
 
@@ -222,7 +223,7 @@ class AssessmentServiceImplTest {
             // Given
             PatientResponse patient = createPatient(50, Gender.FEMALE);
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Collections.emptyList())); // Fallback
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Collections.emptyList())); // Fallback
             when(riskLevelCalculator.calculate(eq(50), eq(Gender.FEMALE), eq(0))).thenReturn(RiskLevel.NONE);
 
             // When
@@ -234,7 +235,7 @@ class AssessmentServiceImplTest {
         }
     }
 
-    // ==================== CAS LIMITES ====================
+    // CAS LIMITES
 
     @Nested
     @DisplayName("Cas limites")
@@ -252,7 +253,7 @@ class AssessmentServiceImplTest {
                     .build();
 
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(List.of(noteWithNullContent)));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(List.of(noteWithNullContent)));
             when(riskLevelCalculator.calculate(eq(35), eq(Gender.MALE), eq(0))).thenReturn(RiskLevel.NONE);
 
             // When
@@ -270,7 +271,7 @@ class AssessmentServiceImplTest {
             NoteResponse emptyNote = createNote("");
 
             when(patientClient.getPatientByUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(Optional.of(patient)));
-            when(noteClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(List.of(emptyNote)));
+            when(noteClient.getNotesByPatientUuidAsync(PATIENT_UUID)).thenReturn(CompletableFuture.completedFuture(List.of(emptyNote)));
             when(riskLevelCalculator.calculate(eq(35), eq(Gender.FEMALE), eq(0))).thenReturn(RiskLevel.NONE);
 
             // When

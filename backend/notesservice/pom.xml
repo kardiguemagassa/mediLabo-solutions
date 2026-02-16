@@ -16,41 +16,19 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<spring-cloud.version>2025.0.0</spring-cloud.version>
+		<resilience4j.version>2.2.0</resilience4j.version>
 		<springdoc.version>2.7.0</springdoc.version>
 		<testcontainers.version>1.20.4</testcontainers.version>
 		<jacoco.version>0.8.12</jacoco.version>
-		<spring-cloud.version>2025.0.0</spring-cloud.version>
 	</properties>
 
 	<dependencies>
-		<!-- Spring Web -->
+
+		<!-- WEB  -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<!-- Spring Data MongoDB -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb</artifactId>
-		</dependency>
-
-		<!-- Validation -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-
-		<!-- Spring Cloud - Eureka Client -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-		</dependency>
-
-		<!-- OAuth2 Resource Server (JWT validation) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 
 		<!-- WebClient pour appels inter-services -->
@@ -59,39 +37,97 @@
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 
+		<!-- MONGODB -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+
+		<!-- VALIDATION  -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- EUREKA CLIENT  -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+
+		<!-- RESOURCE SERVER  -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+
+		<!-- KAFKA NOTIFICATION -->
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka</artifactId>
 		</dependency>
 
-		<!-- Actuator (monitoring) -->
+		<!-- RESILIENCE  -->
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-spring-boot3</artifactId>
+			<version>${resilience4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-circuitbreaker</artifactId>
+			<version>${resilience4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-timelimiter</artifactId>
+			<version>${resilience4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
+		<!-- CACHE CAFFEINE -->
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+		</dependency>
+
+		<!-- MONITORING ACTUATOR -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
-		<!-- Swagger / OpenAPI 3.0 -->
+		<!--MONITORING PROMETHEUS  -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+
+		<!-- SWAGGER / OPENAPI 3.0 API DOCUMENTATION -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.8.6</version>
 		</dependency>
 
-		<!-- Apache Commons Lang3 -->
+		<!-- COMMONS LANG3 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.18.0</version>
 		</dependency>
 
-		<!-- Lombok -->
+		<!-- LOMBOK -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 
-		<!-- DevTools -->
+		<!-- DEVTOOLS -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -99,7 +135,7 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- TEST DEPENDENCIES -->
+		<!-- TESTING -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -112,7 +148,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Testcontainers MongoDB -->
+		<!--TESTCONTAINERS MONGODB -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mongodb</artifactId>
@@ -171,6 +207,8 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
+			<!-- JACOCO FOR UNIT TESTS -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
@@ -191,23 +229,31 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Failsafe for integration tests -->
+
+			<!--SUREFIRE FOR UNIT TESTS -->
 			<plugin>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-failsafe-plugin</artifactId>
-			<configuration>
-				<includes>
-					<include>**/*IT.java</include>
-				</includes>
-			</configuration>
-			<executions>
-				<execution>
-					<goals>
-						<goal>integration-test</goal>
-						<goal>verify</goal>
-					</goals>
-				</execution>
-			</executions>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.2</version>
+			</plugin>
+
+			<!-- FAILSAFE FOR INTEGRATION TESTS -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<includes>
+						<include>**/*IT.java</include>
+					</includes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

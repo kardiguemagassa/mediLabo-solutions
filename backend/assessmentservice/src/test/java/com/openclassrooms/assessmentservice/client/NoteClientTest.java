@@ -64,7 +64,7 @@ class NoteClientTest {
                 .setBody(mockJsonResponse));
 
         // WHEN
-        CompletableFuture<List<NoteResponse>> future = noteClient.getNotesByPatientUuid("uuid-123");
+        CompletableFuture<List<NoteResponse>> future = noteClient.getNotesByPatientUuidAsync("uuid-123");
         List<NoteResponse> result = future.get();
 
         // THEN
@@ -84,7 +84,7 @@ class NoteClientTest {
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE));
 
         // WHEN
-        List<NoteResponse> result = noteClient.getNotesByPatientUuid("uuid-123").get();
+        List<NoteResponse> result = noteClient.getNotesByPatientUuidAsync("uuid-123").get();
 
         // THEN
         assertThat(result).isEmpty();
