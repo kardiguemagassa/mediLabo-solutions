@@ -116,6 +116,9 @@ public class NoteServiceImpl implements NoteService {
 
     // PRIVATE METHODS
 
+    /**
+     * Convertit une entité Note en NoteResponse.
+     */
     private NoteResponse toResponse(Note note) {
         return NoteResponse.builder()
                 .noteUuid(note.getNoteUuid())
@@ -125,6 +128,8 @@ public class NoteServiceImpl implements NoteService {
                 .content(note.getContent())
                 .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())
+                .fileCount(note.getFileCount())
+                .commentCount(note.getCommentCount())
                 .build();
     }
 }

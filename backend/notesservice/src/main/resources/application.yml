@@ -13,6 +13,43 @@
 spring:
   application:
     name: notesservice
+    # FILE STORAGE CONFIGURATION
+    storage:
+      upload-dir: ${FILE_UPLOAD_DIR:./uploads}
+      max-file-size: ${MAX_FILE_SIZE:10485760}  # 10 MB en bytes
+      max-request-size: ${MAX_REQUEST_SIZE:52428800}  # 50 MB en bytes
+      base-download-url: /api/notes
+      allowed-extensions:
+        - pdf
+        - doc
+        - docx
+        - xls
+        - xlsx
+        - jpg
+        - jpeg
+        - png
+        - gif
+        - txt
+        - csv
+      allowed-content-types:
+        - application/pdf
+        - application/msword
+        - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+        - application/vnd.ms-excel
+        - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        - image/jpeg
+        - image/png
+        - image/gif
+        - text/plain
+        - text/csv
+
+  # SPRING SERVLET - File Upload Limits
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:50MB}
+      file-size-threshold: 2KB
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
@@ -23,11 +60,11 @@ spring:
       host: ${MONGO_HOST}
       port: ${MONGO_PORT:27017}
       database: ${MONGO_DATABASE}
-      # AUTHENTICATION OPTIONAL - CONTROLLED BY MONGO_AUTH_ENABLED
       username: ${MONGO_USERNAME:}
       password: ${MONGO_PASSWORD:}
       authentication-database: ${MONGO_AUTH_DATABASE:admin}
-      auto-index-creation: true
+      auto-index-creation: false
+
 
 #  # SECURITY - JWT CONFIGURATION
   security:
@@ -55,12 +92,66 @@ eureka:
       prefer-ip-address: true
       instance-id: ${spring.application.name}:${random.uuid}
 
+
+# INTER-SERVICES COMMUNICATION
+services:
+  patient-service:
+    url: ${PATIENT_SERVICE_URL:http://localhost:8081}
+    timeout: ${PATIENT_SERVICE_TIMEOUT:5000}
+  authorization-server:
+    url: ${AUTH_SERVER_URL:http://localhost:9001}
+    timeout: ${AUTH_SERVER_TIMEOUT:5000}
+
+
+# RESILIENCE4J CONFIGURATION
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+    instances:
+      patientService:
+        ignoreExceptions:
+          - com.openclassrooms.notesservice.exception.ApiException
+        registerHealthIndicator: true
+        slowCallDurationThreshold: 2s
+        slowCallRateThreshold: 50
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  retry:
+    instances:
+      patientService:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+  timelimiter:
+    instances:
+      patientService:
+        timeoutDuration: 5s
+        cancelRunningFuture: true
+
+  # KAFKA CONFIGURATION
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+
 # ACTUATOR - HEALTH & METRICS
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,circuitbreakers,retry,timelimiters
   endpoint:
     health:
       show-details: always
@@ -74,6 +165,7 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
 
 # LOGGING CONFIGURATION
 logging:

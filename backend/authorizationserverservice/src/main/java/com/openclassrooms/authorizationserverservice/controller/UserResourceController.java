@@ -100,6 +100,8 @@ import static org.springframework.http.ResponseEntity.ok;
  * avec une documentation automatique grâce à Springdoc/OpenAPI.
  * </p>
  *
+ * http://localhost:9001/swagger-ui/index.html#/
+ *
  * @author FirstName LastName
  * @version 1.0
  * @since 2026-05-01

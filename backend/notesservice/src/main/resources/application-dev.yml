@@ -11,6 +11,7 @@ spring:
       # IN DEV, MONGODB OFTEN RUNS WITHOUT AUTHENTICATION
       # SET MONGO_AUTH_ENABLED=TRUE IN .ENV IF YOU NEED AUTH
       auto-index-creation: true
+      connect-timeout: 2000
 
 # EUREKA INSTANCE LOCAL DEVELOPMENT
 eureka:
@@ -18,6 +19,12 @@ eureka:
     hostname: localhost
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
+
+# Pour voir les détails des circuits breakers dans Actuator en dev
+management:
+  endpoint:
+    health:
+      show-details: always
 
 # LOGGING - VERBOSE FOR DEBUGGING
 logging:

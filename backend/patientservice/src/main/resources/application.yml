@@ -44,6 +44,20 @@ spring:
         jdbc:
           time_zone: UTC
 
+  #SÉCURITÉ
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # On priorise l'URL complète si elle est dans le .env
+          # sinon on reconstruit dynamiquement pour Docker
+          issuer-uri: ${AUTH_SERVER_ISSUER_URI:http://${AUTH_SERVER_HOST:authorizationserver}:${AUTH_SERVER_PORT:9001}}
+          jwk-set-uri: ${JWKS_URI:http://${AUTH_SERVER_HOST:authorizationserver}:${AUTH_SERVER_PORT:9001}/oauth2/jwks}
+
+  #KAFKA
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:kafka}:${KAFKA_PORT:9092}
+
 # SERVER CONFIGURATION
 server:
   port: ${PATIENT_SERVICE_PORT:8081}
@@ -51,6 +65,32 @@ server:
   error:
     include-message: always
     include-binding-errors: always
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+    instances:
+      patientService:
+        baseConfig: default
+      notesService:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
+    instances:
+      patientService:
+        baseConfig: default
+      notesService:
+        baseConfig: default
 
 # EUREKA CLIENT
 eureka:
@@ -72,6 +112,10 @@ management:
       probes:
         enabled: true
   health:
+    circuitbreakers:
+      enabled: true
+    atelimiters:
+      enabled: true
     livenessstate:
       enabled: true
     readinessstate:

@@ -18,6 +18,22 @@ eureka:
     hostname: localhost
     prefer-ip-address: true
 
+# SERVER CONFIGURATION
+server:
+  port: ${AUTHORIZATION_SERVER_PORT:9001}
+  shutdown: graceful
+  forward-headers-strategy: framework
+  error:
+    include-message: always
+    include-binding-errors: always
+
+ui:
+  app:
+    url: ${UI_APP_URL:http://localhost:4200}
+
+jwks:
+  uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
+
 # LOGGING - VERBOSE FOR DEBUGGING
 logging:
   level:

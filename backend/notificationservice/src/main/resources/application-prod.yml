@@ -16,9 +16,10 @@ spring:
 # EUREKA INSTANCE DOCKER PRODUCTION
 eureka:
   instance:
-    hostname: ${NOTIFICATION_SERVICE_HOST:notification-service}
-    prefer-ip-address: false
-    instance-id: ${spring.application.name}:${server.port}
+    prefer-ip-address: true # Plus fiable dans Docker
+    instance-id: ${spring.application.name}:${random.uuid} # Permet le scaling
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 # LOGGING PRODUCTION LEVEL
 logging:

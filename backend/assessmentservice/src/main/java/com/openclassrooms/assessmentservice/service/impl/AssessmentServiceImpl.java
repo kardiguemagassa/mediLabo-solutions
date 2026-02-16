@@ -41,42 +41,42 @@ public class AssessmentServiceImpl implements AssessmentService {
     private final NoteClient noteClient;
     private final RiskLevelCalculator riskLevelCalculator;
 
-    /**
-     * Évalue le risque de diabète pour un patient de manière asynchrone.
-     *
-     * @param patientUuid UUID du patient
-     * @return CompletableFuture contenant l'Assessment
-     */
     @Override
     public CompletableFuture<Assessment> assessDiabetesRisk(String patientUuid) {
         log.info("Starting async diabetes risk assessment for patient: {}", patientUuid);
 
-        // Récupération asynchrone des données patient et notes
+        // 1. Lancement des appels en parallèle (Non-bloquant)
+        // Note: On utilise bien les nouveaux noms de méthodes Async
         CompletableFuture<Optional<PatientResponse>> patientFuture = patientClient.getPatientByUuid(patientUuid);
-        CompletableFuture<List<NoteResponse>> notesFuture = noteClient.getNotesByPatientUuid(patientUuid);
+        CompletableFuture<List<NoteResponse>> notesFuture = noteClient.getNotesByPatientUuidAsync(patientUuid);
 
+        // 2. Combinaison des deux futurs quand ils sont prêts
         return patientFuture.thenCombine(notesFuture, (patientOptional, notes) -> {
-            // Vérification de l'existence du patient
+
+            // Extraction du patient ou exception si absent
             PatientResponse patient = patientOptional.orElseThrow(() -> new ApiException("Patient non trouvé: " + patientUuid));
 
-            // Extraire le contenu des notes
+            // Extraction du contenu des notes
             List<String> noteContents = notes.stream().map(NoteResponse::getContent).toList();
 
-            // Comptage des termes déclencheurs
+            // Analyse des termes déclencheurs
             Set<String> triggersFound = TriggerTerms.findTriggersInMultipleTexts(noteContents);
             int triggerCount = triggersFound.size();
 
-            // Calcul du niveau de risque
+            // Calcul du niveau de risque via le calculateur métier
             RiskLevel riskLevel = riskLevelCalculator.calculate(patient.getAge(), patient.getGender(), triggerCount);
 
-            log.info("Assessment complete for patient {} - Risk Level: {}, Triggers found: {}", patientUuid, riskLevel, triggerCount);
+            log.info("Assessment complete for patient {} - Risk Level: {}, Triggers: {}",
+                    patientUuid, riskLevel, triggerCount);
 
-            // Retourner l'objet Assessment
-            return new Assessment(patient.getPatientUuid(), patient.getFullName(), patient.getAge(), patient.getGender(),riskLevel, triggerCount, new ArrayList<>(triggersFound));
+            return new Assessment(patient.getPatientUuid(), patient.getFullName(), patient.getAge(), patient.getGender(), riskLevel, triggerCount, new ArrayList<>(triggersFound));
         }).exceptionally(ex -> {
-            log.error("Error assessing patient {}: {}", patientUuid, ex.getMessage(), ex);
-            throw new ApiException("Impossible d'évaluer le risque pour le patient: " + patientUuid);
+            // Gestion propre des erreurs de la chaîne asynchrone
+            log.error("Error assessing patient {}: {}", patientUuid, ex.getMessage());
+            if (ex.getCause() instanceof ApiException) {
+                throw (ApiException) ex.getCause();
+            }
+            throw new ApiException("Erreur lors de l'évaluation du risque");
         });
     }
-
 }

@@ -1,9 +1,6 @@
 package com.openclassrooms.discoveryserverservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * @author FirstName LastName
@@ -16,6 +13,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder(toBuilder = true)
 public class User {
     private Long userId;
     private String userUuid;

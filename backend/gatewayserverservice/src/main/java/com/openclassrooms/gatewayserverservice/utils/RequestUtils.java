@@ -5,6 +5,7 @@ import com.openclassrooms.gatewayserverservice.domain.Response;
 import com.openclassrooms.gatewayserverservice.exception.ApiException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,15 +27,18 @@ import static org.springframework.http.HttpStatus.*;
 
 /**
  * Utilitaires pour gérer les erreurs dans le Gateway (version REACTIVE).
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
 public class RequestUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public static Response handleErrorResponse(String message, String exception, ServerWebExchange exchange, HttpStatusCode status) {
+        return new Response(now().toString(), status.value(), exchange.getRequest().getPath().value(), HttpStatus.valueOf(status.value()), message, exception, emptyMap());
+    }
 
     /**
      * Gère les réponses d'erreur de manière réactive.
@@ -48,6 +52,10 @@ public class RequestUtils {
         Response apiResponse = getErrorResponse(exchange, exception, status);
 
         return writeResponse(exchange, apiResponse, status);
+    }
+
+    public static Response getResponse(ServerWebExchange exchange, Map<?, ?> data, String message, HttpStatus status) {
+        return new Response(now().toString(), status.value(), exchange.getRequest().getPath().value(), status, message, "", data);
     }
 
     /**
