@@ -3,6 +3,7 @@ package com.openclassrooms.patientservice.service.implementation;
 import com.openclassrooms.patientservice.dtorequest.PatientRequest;
 import com.openclassrooms.patientservice.dtorequest.UserRequest;
 import com.openclassrooms.patientservice.dtoresponse.PatientResponse;
+import com.openclassrooms.patientservice.event.Event;
 import com.openclassrooms.patientservice.exception.ApiException;
 import com.openclassrooms.patientservice.mapper.PatientMapper;
 import com.openclassrooms.patientservice.model.Patient;
@@ -11,14 +12,16 @@ import com.openclassrooms.patientservice.service.PatientService;
 import com.openclassrooms.patientservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Year;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import static com.openclassrooms.patientservice.util.UserUtils.hasElevatedPermissions;
+import static com.openclassrooms.patientservice.enumeration.EventType.PATIENT_CREATED;
 
 /**
  * Implémentation du service Patient.
@@ -42,6 +45,7 @@ public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     // CRUD OPERATIONS
@@ -51,28 +55,27 @@ public class PatientServiceImpl implements PatientService {
     public PatientResponse createPatient(PatientRequest request) {
         log.info("Creating patient for user: {}", request.getUserUuid());
 
-        // Vérifier qu'un dossier n'existe pas déjà pour cet utilisateur
         if (patientRepository.existsPatientByUserUuid(request.getUserUuid())) {
             throw new ApiException("Un dossier patient existe déjà pour cet utilisateur");
         }
 
-        // Vérifier que l'utilisateur existe dans Authorization Server
-        try {
-            userService.getUserByUuid(request.getUserUuid());
-        } catch (ApiException e) {
-            throw new ApiException("Utilisateur non trouvé dans le système");
-        }
-
-        // Générer le numéro de dossier médical
+        UserRequest user = userService.getUserByUuid(request.getUserUuid());
         String medicalRecordNumber = generateUniqueMedicalRecordNumber();
-
-        // Créer l'entité
         Patient patient = patientMapper.toEntity(request, medicalRecordNumber);
-
-        // Persister
         Patient savedPatient = patientRepository.savePatient(patient);
-        log.info("Patient created successfully: {}", savedPatient.getPatientUuid());
 
+        // Publier l'événement avec la structure attendue par NotificationService
+        eventPublisher.publishEvent(Event.builder()
+                .eventType(PATIENT_CREATED)
+                .data(Map.of(
+                        "email", user.getEmail(),
+                        "name", user.getFirstName() + " " + user.getLastName(),
+                        "recordNumber", medicalRecordNumber,
+                        "subject", "Bienvenue chez MediLabo"
+                ))
+                .build());
+
+        log.info("Patient created successfully: {}", savedPatient.getPatientUuid());
         return patientMapper.toResponse(savedPatient);
     }
 
@@ -104,7 +107,8 @@ public class PatientServiceImpl implements PatientService {
             UserRequest user = userService.getUserByUuid(patient.getUserUuid());
             return patientMapper.toResponseWithUserInfo(patient, user);
         } catch (ApiException e) {
-            log.warn("Could not fetch user info for patient: {}", patient.getPatientUuid());
+            //log.warn("Could not fetch user info for patient: {}", patient.getPatientUuid());
+            log.error("Erreur détaillée lors de l'enrichissement : ", e);
             return patientMapper.toResponse(patient);
         }
     }
@@ -145,7 +149,17 @@ public class PatientServiceImpl implements PatientService {
 
         List<Patient> patients = patientRepository.findAllPatientByActiveTrue();
 
-        return patientMapper.toResponseList(patients);
+        // Pour chaque patient, enrichir avec les infos utilisateur on optimise appel http
+        return patients.stream()
+                .map(patient -> {
+                    try {
+                        return enrichWithUserInfo(patient);
+                    } catch (Exception e) {
+                        log.warn("Could not enrich patient {}: {}", patient.getPatientUuid(), e.getMessage());
+                        return patientMapper.toResponse(patient);
+                    }
+                })
+                .toList();
     }
 
     @Override
@@ -186,6 +200,26 @@ public class PatientServiceImpl implements PatientService {
         }
 
         log.info("Patient deleted successfully: {}", patientUuid);
+    }
+
+    @Override
+    @Transactional
+    public PatientResponse restorePatient(String patientUuid) {
+        log.info("Restoring patient: {}", patientUuid);
+
+        // Vérifier que le patient existe et est bien supprimé
+        Patient patient = patientRepository.findSoftDeletedByPatientUuid(patientUuid)
+                .orElseThrow(() -> new ApiException("Patient supprimé non trouvé: " + patientUuid));
+
+        boolean restored = patientRepository.restorePatientByPatientUuid(patientUuid);
+
+        if (!restored) {
+            throw new ApiException("Erreur lors de la restauration du patient");
+        }
+
+        log.info("Patient restored successfully: {}", patientUuid);
+
+        return enrichWithUserInfo(patient);
     }
 
     // QUERY OPERATIONS

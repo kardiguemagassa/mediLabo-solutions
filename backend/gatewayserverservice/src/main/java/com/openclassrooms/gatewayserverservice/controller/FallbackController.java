@@ -18,6 +18,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
+/**
+ * http://localhost:8080/swagger-ui.html
+ */
 
 @Tag(name = "Resilience", description = "Endpoints de secours déclenchés par le Circuit Breaker")
 @RestController
@@ -26,21 +29,21 @@ public class FallbackController {
 
     @Operation(summary = "Fallback Patient", description = "Réponse de secours pour Patient-Service")
     @ApiResponses(value = { @ApiResponse(responseCode = "503", content = @Content(schema = @Schema(implementation = Response.class))) })
-    @GetMapping("/patients")
+    @RequestMapping(value = "/patients")
     public Mono<ResponseEntity<Response>> patientFallback(ServerWebExchange exchange) {
         return buildFallbackResponse(exchange, "Le service Patient est momentanément indisponible.");
     }
 
     @Operation(summary = "Fallback Notes", description = "Réponse de secours pour Notes-Service")
     @ApiResponses(value = { @ApiResponse(responseCode = "503", content = @Content(schema = @Schema(implementation = Response.class))) })
-    @GetMapping("/notes")
+    @RequestMapping(value = "/notes")
     public Mono<ResponseEntity<Response>> notesFallback(ServerWebExchange exchange) {
         return buildFallbackResponse(exchange, "Le service des Notes est indisponible pour le moment.");
     }
 
     @Operation(summary = "Fallback Assessments", description = "Réponse de secours pour Assessment-Service")
     @ApiResponses(value = { @ApiResponse(responseCode = "503", content = @Content(schema = @Schema(implementation = Response.class))) })
-    @GetMapping("/assessments")
+    @RequestMapping(value = "/assessments")
     public Mono<ResponseEntity<Response>> assessmentFallback(ServerWebExchange exchange) {
         return buildFallbackResponse(exchange, "Le service d'évaluation santé est indisponible.");
     }

@@ -26,10 +26,12 @@ public class Constant {
     public static final String SUBJECT_RESULTS_AVAILABLE = "MediLabo - Vos résultats d'analyses sont disponibles";
     public static final String SUBJECT_RISK_ASSESSMENT = "MediLabo - Évaluation de votre risque diabète";
     public static final String SUBJECT_NEW_MESSAGE = "MediLabo - Nouveau message";
+    public static final String SUBJECT_WELCOME_PATIENT = "MediLabo - Bienvenue ! Votre dossier patient a été créé";
 
     // NOMS DES TEMPLATES THYMELEAF CORRESPONDRE AUX FICHIERS.THML
     public static final String TEMPLATE_ACCOUNT_VERIFICATION = "account-verification";
     public static final String TEMPLATE_PASSWORD_RESET = "password-reset";
+    public static final String TEMPLATE_WELCOME_PATIENT = "welcome-patient";
     public static final String TEMPLATE_APPOINTMENT_CONFIRMATION = "appointment-confirmation";
     public static final String TEMPLATE_APPOINTMENT_REMINDER = "appointment-reminder";
     public static final String TEMPLATE_NEW_NOTE = "new-medical-note";

@@ -1,9 +1,7 @@
 package com.openclassrooms.patientservice.dtorequest;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 
 /**
  * DTO pour les informations utilisateur
@@ -15,8 +13,11 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder(toBuilder = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserRequest {
 
     private String userUuid;

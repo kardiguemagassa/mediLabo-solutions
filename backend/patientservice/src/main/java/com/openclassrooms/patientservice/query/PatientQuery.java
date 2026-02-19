@@ -207,4 +207,9 @@ public final class PatientQuery {
             """
             UPDATE patients SET active = false,updated_at = CURRENT_TIMESTAMP WHERE patient_uuid = :patientUuid AND active = true
             """;
+
+    public static final String SELECT_SOFT_DELETED_PATIENT_BY_UUID_QUERY = BASE_PATIENT_SELECT +
+           """
+           WHERE patient_uuid = :patientUuid AND active = false
+           """;
 }

@@ -65,6 +65,11 @@ resilience4j:
       notesService:
         baseConfig: default
 
+# SWAGGER URL GATEWAY
+springdoc:
+  api-docs:
+    path: /api/assessments/v3/api-docs
+
 # Actuator
 management:
   endpoints:

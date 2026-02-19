@@ -82,6 +82,8 @@ public interface PatientService {
      */
     void deletePatient(String patientUuid);
 
+    PatientResponse restorePatient(String patientUuid);
+
     // QUERY OPERATIONS
 
     /**

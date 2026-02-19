@@ -39,6 +39,7 @@ public class ResourceServerConfig {
 
     private static final String[] SWAGGER_ENDPOINTS = {
             "/v3/api-docs/**",
+            "/api/notifications/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/swagger-ui/**",
             "/swagger-ui.html"

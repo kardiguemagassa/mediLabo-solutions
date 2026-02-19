@@ -1,10 +1,9 @@
 package com.openclassrooms.notesservice.service.implementation;
 
-import com.openclassrooms.notesservice.model.Note;
-
 import com.openclassrooms.notesservice.dto.NoteRequest;
 import com.openclassrooms.notesservice.dto.NoteResponse;
 import com.openclassrooms.notesservice.exception.ApiException;
+import com.openclassrooms.notesservice.model.Note;
 import com.openclassrooms.notesservice.repository.NoteRepository;
 import com.openclassrooms.notesservice.service.NoteService;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +15,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Implémentation du service de gestion des notes
+ * Implémentation du service de gestion des notes.
+ *
  * @author Kardigué MAGASSA
- * @version 1.0
+ * @version 2.0
  * @since 2026-02-02
  */
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -114,10 +113,12 @@ public class NoteServiceImpl implements NoteService {
         return noteRepository.countByPatientUuidAndActiveTrue(patientUuid);
     }
 
+
     // PRIVATE METHODS
 
     /**
      * Convertit une entité Note en NoteResponse.
+     * Inclut les compteurs fileCount et commentCount.
      */
     private NoteResponse toResponse(Note note) {
         return NoteResponse.builder()

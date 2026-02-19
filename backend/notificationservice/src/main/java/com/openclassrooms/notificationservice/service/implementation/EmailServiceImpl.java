@@ -68,6 +68,20 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(email, SUBJECT_PASSWORD_RESET, TEMPLATE_PASSWORD_RESET, variables);
     }
 
+    // PATIENTS
+    @Override
+    @Async
+    public void sendWelcomePatientEmail(String name, String email, String recordNumber) {
+        log.info("Envoi email bienvenue patient à: {}", email);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("recordNumber", recordNumber);
+        variables.put("url", getPatientDashboardUrl(host));
+
+        sendEmail(email, SUBJECT_WELCOME_PATIENT, TEMPLATE_WELCOME_PATIENT, variables);
+    }
+
     // RENDEZ-VOUS
     @Override
     @Async

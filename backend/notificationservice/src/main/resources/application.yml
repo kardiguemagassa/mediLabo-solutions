@@ -116,6 +116,13 @@ services:
     url: ${AUTH_SERVER_URL:http://localhost:9001}
     timeout: 5000
 
+
+# SWAGGER URL GATEWAY
+springdoc:
+  api-docs:
+    path: /api/notifications/v3/api-docs
+
+
 # ACTUATOR - HEALTH & METRICS
 management:
   endpoints:

@@ -63,7 +63,12 @@ public class NoteAttachmentController {
     })
     @PostMapping(value = "/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> uploadFile(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Parameter(description = "Fichier à uploader") @RequestParam("file") MultipartFile file, @AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
+    public ResponseEntity<Response> uploadFile(
+            @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
+            @Parameter(description = "Fichier à uploader") @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest request
+    ) {
         log.info("Upload fichier pour note: {} par: {}", noteUuid, jwt.getSubject());
         FileResponse response = noteFileService.uploadFile(noteUuid, file, jwt);
         return ResponseEntity.ok(getResponse(request, Map.of("file", response), "Fichier uploadé avec succès", OK));
@@ -76,7 +81,10 @@ public class NoteAttachmentController {
     })
     @GetMapping("/files")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> getFiles(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, HttpServletRequest request) {
+    public ResponseEntity<Response> getFiles(
+            @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
+            HttpServletRequest request
+    ) {
         log.debug("Liste des fichiers pour note: {}", noteUuid);
         List<FileResponse> files = noteFileService.getFiles(noteUuid);
         return ResponseEntity.ok(getResponse(request, Map.of("files", files, "count", files.size()),
@@ -91,12 +99,18 @@ public class NoteAttachmentController {
     })
     @GetMapping("/files/{fileUuid}/download")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Resource> downloadFile(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Parameter(description = "UUID du fichier") @PathVariable String fileUuid) {
+    public ResponseEntity<Resource> downloadFile(
+            @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
+            @Parameter(description = "UUID du fichier") @PathVariable String fileUuid
+    ) {
         log.debug("Téléchargement fichier: {} de la note: {}", fileUuid, noteUuid);
 
         NoteFileService.FileDownload download = noteFileService.downloadFile(noteUuid, fileUuid);
 
-        return ResponseEntity.ok().contentType(MediaType.parseMediaType(download.getContentType())).header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFilename() + "\"").body(download.getResource());
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(download.getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFilename() + "\"")
+                .body(download.getResource());
     }
 
     @Operation(summary = "Supprime un fichier", description = "Supprime un fichier attaché à une note")
@@ -107,12 +121,16 @@ public class NoteAttachmentController {
     })
     @DeleteMapping("/files/{fileUuid}")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> deleteFile(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Parameter(description = "UUID du fichier") @PathVariable String fileUuid, @AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
+    public ResponseEntity<Response> deleteFile(
+            @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
+            @Parameter(description = "UUID du fichier") @PathVariable String fileUuid,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest request
+    ) {
         log.info("Suppression fichier: {} de la note: {} par: {}", fileUuid, noteUuid, jwt.getSubject());
         noteFileService.deleteFile(noteUuid, fileUuid, jwt);
         return ResponseEntity.ok(getResponse(request, Map.of(), "Fichier supprimé avec succès", OK));
     }
-
 
     // COMMENTAIRES
 

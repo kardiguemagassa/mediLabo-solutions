@@ -1,6 +1,7 @@
 package com.openclassrooms.patientservice.repository.implementation;
 
 import com.openclassrooms.patientservice.exception.ApiException;
+import com.openclassrooms.patientservice.mapper.PatientMapper;
 import com.openclassrooms.patientservice.model.Patient;
 import com.openclassrooms.patientservice.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
@@ -217,5 +218,29 @@ public class PatientRepositoryImpl implements PatientRepository {
             log.error("Error soft deleting patient: {}", exception.getMessage(), exception);
             throw new ApiException("Erreur lors de la suppression du patient");
         }
+    }
+
+    @Override
+    public Optional<Patient> findSoftDeletedByPatientUuid(String patientUuid) {
+        log.debug("Finding soft-deleted patient: {}", patientUuid);
+        try {
+            Patient patient = jdbc.sql(SELECT_SOFT_DELETED_PATIENT_BY_UUID_QUERY)
+                    .param("patientUuid", patientUuid)
+                    .query(Patient.class)
+                    .single();
+            return Optional.of(patient);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public boolean restorePatientByPatientUuid(String patientUuid) {
+        log.debug("Restoring patient: {}", patientUuid);
+        String sql = "UPDATE patients SET active = true, updated_at = CURRENT_TIMESTAMP WHERE patient_uuid = :patientUuid AND active = false";
+        int updated = jdbc.sql(sql)
+                .param("patientUuid", patientUuid)
+                .update();
+        return updated > 0;
     }
 }

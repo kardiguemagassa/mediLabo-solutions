@@ -14,6 +14,8 @@ public interface EmailService {
     // AUTHENTIFICATION
     void sendAccountVerificationEmail(String name, String email, String token);
     void sendPasswordResetEmail(String name, String email, String token);
+    // PATIENTS
+    void sendWelcomePatientEmail(String name, String email, String recordNumber);
     // RENDEZ-VOUS
     void sendAppointmentConfirmationEmail(String name, String email, String appointmentDate, String appointmentTime, String doctorName, String department, String location);
     void sendAppointmentReminderEmail(String name, String email, String appointmentDate, String appointmentTime, String doctorName, String location);
