@@ -55,13 +55,23 @@ public class ResourceServerConfig {
     };
 
     private static final String[] SWAGGER_ENDPOINTS = {
-            "/v3/api-docs/**",
-            "/api/*/v3/api-docs/**",
-            "/v3/api-docs.yaml",
-            "/v3/api-docs/swagger-config",
+            // UI et Ressources de base
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/webjars/**"
+            "/webjars/**",
+            "/swagger-resources/**",
+
+            // Docs de la Gateway
+            "/v3/api-docs/**",
+            "/v3/api-docs/swagger-config",
+
+            // Docs des Microservices (Via tes routes manuelles /api/...)
+            "/api/*/v3/api-docs/**",
+            "/api/*/v3/api-docs/swagger-config",
+
+            // Docs des Microservices (Via les routes automatiques Eureka)
+            "/*/v3/api-docs/**",
+            "/*/v3/api-docs/swagger-config"
     };
 
 
@@ -111,7 +121,8 @@ public class ResourceServerConfig {
         corsConfiguration.setAllowCredentials(true);
         corsConfiguration.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "http://localhost:4200"
+                "http://localhost:4200",
+                "http://localhost:8080"
         ));
 
         corsConfiguration.setAllowedHeaders(Arrays.asList(

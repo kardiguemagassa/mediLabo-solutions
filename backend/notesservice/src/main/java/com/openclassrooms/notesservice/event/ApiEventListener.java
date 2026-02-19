@@ -25,7 +25,7 @@ import static org.springframework.kafka.support.KafkaHeaders.TOPIC;
 public class ApiEventListener {
 
     private final KafkaTemplate<String, Notification> kafkaTemplate;
-    private static final String NOTIFICATION_TOPIC = "medilabo-notifications";
+    private static final String NOTIFICATION_TOPIC = "MEDILABO_NOTIFICATIONS";
 
     /**
      * Écoute les événements et les publie sur Kafka.
@@ -36,7 +36,7 @@ public class ApiEventListener {
     @EventListener
     public void onApiEvent(Event event) {
         try {
-            log.info("Publishing event: type={}, noteUuid={}", event.getType(), event.getNoteUuid());
+            log.info("Publishing event: eventType={}", event.getEventType());
 
             var notification = new Notification(event);
             var message = MessageBuilder
@@ -47,11 +47,11 @@ public class ApiEventListener {
             kafkaTemplate.send(message)
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
-                            log.error("Failed to publish event: type={}, noteUuid={}",
-                                    event.getType(), event.getNoteUuid(), ex);
+                            log.error("Failed to publish event: eventType={}",
+                                    event.getEventType(), ex);
                         } else {
-                            log.debug("Event published successfully: type={}, noteUuid={}",
-                                    event.getType(), event.getNoteUuid());
+                            log.debug("Event published successfully: eventType={}",
+                                    event.getEventType());
                         }
                     });
 

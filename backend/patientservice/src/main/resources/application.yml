@@ -54,9 +54,15 @@ spring:
           issuer-uri: ${AUTH_SERVER_ISSUER_URI:http://${AUTH_SERVER_HOST:authorizationserver}:${AUTH_SERVER_PORT:9001}}
           jwk-set-uri: ${JWKS_URI:http://${AUTH_SERVER_HOST:authorizationserver}:${AUTH_SERVER_PORT:9001}/oauth2/jwks}
 
-  #KAFKA
+
+  # KAFKA CONFIGURATION - POUR LES NOTIFICATIONS
   kafka:
-    bootstrap-servers: ${KAFKA_HOST:kafka}:${KAFKA_PORT:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
 
 # SERVER CONFIGURATION
 server:
@@ -99,6 +105,13 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
+
+
+# SWAGGER URL GATEWAY
+springdoc:
+  api-docs:
+    path: /api/patients/v3/api-docs
+
 
 # ACTUATOR - HEALTH & METRICS
 management:

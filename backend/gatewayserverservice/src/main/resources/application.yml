@@ -18,24 +18,7 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
 
-  # SPRINGDOC DOIT ÊTRE ICI (au même niveau que 'cloud' ou 'application')
-  springdoc:
-    swagger-ui:
-      # Permet d'afficher les microservices dans un menu déroulant
-      urls:
-        - name: Auth-Service
-        - url: /authorization/v3/api-docs
-        - name: Patient-Service
-          url: /api/patients/v3/api-docs
-        - name: Notes-Service
-          url: /api/notes/v3/api-docs
-        - name: Notification-Service
-          url: /api/notifications/v3/api-docs
-        - name: Assessment-Service
-          url: /api/assessments/v3/api-docs
-      path: /swagger-ui.html
-    api-docs:
-      path: /v3/api-docs
+  # SPRINGDOC
 
   # CLOUD GATEWAY CONFIGURATION
   cloud:
@@ -93,6 +76,10 @@ spring:
               args:
                 name: notesServiceCircuitBreaker
                 fallbackUri: forward:/fallback/notes
+          metadata:
+            # ploads
+            connect-timeout: 5000
+            response-timeout: 30000
 
         # ASSESSMENT SERVICE
         - id: assessment-service
@@ -177,6 +164,13 @@ resilience4j:
       notesServiceCircuitBreaker:
         baseConfig: default
 
+# UPLOAD
+servlet:
+  multipart:
+    enabled: true
+    max-file-size: 50MB
+    max-request-size: 50MB
+
 # ACTUATOR - HEALTH & METRICS
 management:
   endpoints:
@@ -198,6 +192,32 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+
+springdoc:
+  api-docs:
+    # On change le chemin de la Gateway pour qu'il ne collisionne pas
+    path: /gateway/v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      # Pour Auth-Service, l'URL doit correspondre à ce que le microservice attend
+      # Si Auth-Service n'a pas de préfixe interne, c'est juste /authorization/v3/api-docs
+      - name: Auth-Service
+        url: /authorization/v3/api-docs
+
+      # Pour les autres, on garde le préfixe que la Gateway utilise pour router
+      - name: Patient-Service
+        url: /api/patients/v3/api-docs
+
+      - name: Notes-Service
+        url: /api/notes/v3/api-docs
+
+      - name: Notification-Service
+        url: /api/notifications/v3/api-docs
+
+      - name: Assessment-Service
+        url: /api/assessments/v3/api-docs
 
 # LOGGING CONFIGURATION
 logging:

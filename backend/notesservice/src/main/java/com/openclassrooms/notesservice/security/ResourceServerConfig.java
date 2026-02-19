@@ -29,6 +29,7 @@ public class ResourceServerConfig {
     private static final String[] PUBLIC_ENDPOINTS = {"/actuator/**"};
     private static final String[] SWAGGER_ENDPOINTS = {
             "/v3/api-docs/**",
+            "/api/notes/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/v3/api-docs/swagger-config",
             "/swagger-ui/**",

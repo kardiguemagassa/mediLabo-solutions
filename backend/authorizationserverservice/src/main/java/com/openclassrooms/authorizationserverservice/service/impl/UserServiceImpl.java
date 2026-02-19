@@ -1,6 +1,6 @@
 package com.openclassrooms.authorizationserverservice.service.impl;
 
-import com.openclassrooms.authorizationserverservice.dto.UserInfoDTO;
+
 import com.openclassrooms.authorizationserverservice.event.Event;
 import com.openclassrooms.authorizationserverservice.exception.ApiException;
 import com.openclassrooms.authorizationserverservice.model.Credential;
@@ -549,33 +549,6 @@ public class UserServiceImpl implements UserService {
     };
 
     // USER PATIENT MANAGEMENT
-
-    /**
-     * Récupère les informations détaillées d'un utilisateur à partir de son UUID.
-     *
-     * @param userUuid UUID de l'utilisateur.
-     * @return DTO contenant les informations de l'utilisateur.
-     */
-    @Override
-    public UserInfoDTO getUserInfoByUuid(String userUuid) {
-        log.debug("Fetching user info for UUID: {}", userUuid);
-
-        User user = userRepository.getUserByUuid(userUuid);
-
-        return UserInfoDTO.builder()
-                .userUuid(user.getUserUuid())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .address(user.getAddress())
-                .imageUrl(user.getImageUrl())
-                .memberId(user.getMemberId())
-                .role(user.getRole())
-                .enabled(user.isEnabled())
-                .accountNonLocked(user.isAccountNonLocked())
-                .build();
-    }
 
     /**
      * Vérifie si un utilisateur existe dans la base de données à partir de son UUID.

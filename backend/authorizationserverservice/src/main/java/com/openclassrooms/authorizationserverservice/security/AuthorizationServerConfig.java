@@ -2,6 +2,7 @@ package com.openclassrooms.authorizationserverservice.security;
 
 import com.openclassrooms.authorizationserverservice.handler.CustomAccessDeniedHandler;
 import com.openclassrooms.authorizationserverservice.handler.CustomAuthenticationEntryPoint;
+import com.openclassrooms.authorizationserverservice.model.User;
 import com.openclassrooms.authorizationserverservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -278,6 +279,25 @@ public class AuthorizationServerConfig {
         return (context) -> {
             if (ACCESS_TOKEN.equals(context.getTokenType())) {
                 context.getClaims().claims(claims -> claims.put("authorities", getAuthorities(context)));
+
+                // Le Principal est déjà un objet User !
+                var principal = context.getPrincipal().getPrincipal();
+
+                if (principal instanceof User user) {
+                    log.info("🔑 JWT Customizer - User found: {} {}", user.getFirstName(), user.getLastName());
+
+                    context.getClaims().claims(claims -> {
+                        claims.put("firstName", user.getFirstName());
+                        claims.put("lastName", user.getLastName());
+                        claims.put("email", user.getEmail());
+                        claims.put("name", user.getFirstName() + " " + user.getLastName());
+                        if (user.getImageUrl() != null) {
+                            claims.put("imageUrl", user.getImageUrl());
+                        }
+                    });
+                } else {
+                    log.warn("🔑 JWT Customizer - Principal is not a User: {}", principal.getClass().getName());
+                }
             }
         };
     }

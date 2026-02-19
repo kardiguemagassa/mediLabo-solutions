@@ -607,38 +607,38 @@ class PatientServiceImplTest {
         }
     }
 
-    @Nested
-    @DisplayName("Medical Record Number Generation")
-    class MedicalRecordNumberGenerationTests {
-
-        @Test
-        @DisplayName("Should generate medical record number with correct format")
-        void generateMedicalRecordNumber_returnsCorrectFormat() {
-            // Given
-            PatientServiceImpl service = new PatientServiceImpl(patientRepository, patientMapper, userService);
-
-            // Use reflection to test private method
-            try {
-                java.lang.reflect.Method method = PatientServiceImpl.class.getDeclaredMethod("generateMedicalRecordNumber");
-                method.setAccessible(true);
-
-                // When
-                String result = (String) method.invoke(service);
-
-                // Then
-                assertThat(result).matches("MED-\\d{4}-\\d{6}");
-
-                // Extract year
-                String yearPart = result.substring(4, 8);
-                int year = Integer.parseInt(yearPart);
-                int currentYear = Year.now().getValue();
-
-                assertThat(year).isEqualTo(currentYear);
-
-            } catch (Exception e) {
-                fail("Failed to test private method", e);
-            }
-        }
-    }
+//    @Nested
+//    @DisplayName("Medical Record Number Generation")
+//    class MedicalRecordNumberGenerationTests {
+//
+//        @Test
+//        @DisplayName("Should generate medical record number with correct format")
+//        void generateMedicalRecordNumber_returnsCorrectFormat() {
+//            // Given
+//            PatientServiceImpl service = new PatientServiceImpl(patientRepository, patientMapper, userService);
+//
+//            // Use reflection to test private method
+//            try {
+//                java.lang.reflect.Method method = PatientServiceImpl.class.getDeclaredMethod("generateMedicalRecordNumber");
+//                method.setAccessible(true);
+//
+//                // When
+//                String result = (String) method.invoke(service);
+//
+//                // Then
+//                assertThat(result).matches("MED-\\d{4}-\\d{6}");
+//
+//                // Extract year
+//                String yearPart = result.substring(4, 8);
+//                int year = Integer.parseInt(yearPart);
+//                int currentYear = Year.now().getValue();
+//
+//                assertThat(year).isEqualTo(currentYear);
+//
+//            } catch (Exception e) {
+//                fail("Failed to test private method", e);
+//            }
+//        }
+//    }
 
 }

@@ -69,6 +69,8 @@ public interface PatientRepository {
      */
     List<Patient> findPatientByBloodTypeAndActiveTrue(String bloodType);
 
+    Optional<Patient> findSoftDeletedByPatientUuid(String patientUuid);
+
     //EXISTS / COUNT
 
     /**
@@ -108,4 +110,5 @@ public interface PatientRepository {
      * @return true si la désactivation a réussi
      */
     boolean softDeletePatientByPatientUuid(String patientUuid);
+    boolean restorePatientByPatientUuid(String patientUuid);
 }

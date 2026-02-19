@@ -69,6 +69,15 @@ public class NotificationListener {
                 );
             }
 
+            case PATIENT_CREATED -> {
+                log.info("Traitement PATIENT_CREATED pour: {}", data.getEmail());
+                emailService.sendWelcomePatientEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getRecordNumber()
+                );
+            }
+
             // RENDEZ-VOUS
             case APPOINTMENT_CREATED -> {
                 log.info("Traitement APPOINTMENT_CREATED pour: {}", data.getEmail());
@@ -109,7 +118,7 @@ public class NotificationListener {
                 );
             }
 
-            case NOTE_COMMENT_ADDED -> {
+            case COMMENT_CREATED -> {
                 log.info("Traitement NOTE_COMMENT_ADDED pour: {}", data.getEmail());
                 emailService.sendNewCommentEmail(
                         data.getName(),
@@ -122,7 +131,7 @@ public class NotificationListener {
                 );
             }
 
-            case NOTE_FILE_UPLOADED -> {
+            case FILE_UPLOADED -> {
                 log.info("Traitement NOTE_FILE_UPLOADED pour: {}", data.getEmail());
                 emailService.sendNewFilesEmail(
                         data.getName(),

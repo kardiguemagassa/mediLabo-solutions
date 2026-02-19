@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -166,6 +167,21 @@ public class PatientController {
         log.info("Deleting patient: {}", patientUuid);
         patientService.deletePatient(patientUuid);
         return ResponseEntity.ok(getResponse(request, Map.of(), "Patient supprimé avec succès", OK));
+    }
+
+    // RESTORE FOR PATIENTS DELETED
+
+    @PatchMapping("/{patientUuid}/restore")
+    @PreAuthorize("hasAnyAuthority('patient:update', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> restorePatient(
+            @PathVariable String patientUuid,
+            HttpServletRequest request) {
+
+        log.info("Restoring patient: {}", patientUuid);
+        PatientResponse patient = patientService.restorePatient(patientUuid);
+
+        return ResponseEntity.ok(getResponse(request, Map.of("patient", patient),
+                "Patient restauré avec succès", HttpStatus.OK));
     }
 
     // STATS & UTILS

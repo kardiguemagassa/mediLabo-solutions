@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
 
         try {
             Response response = authServerWebClient.get()
-                    .uri("/api/users/{userUuid}", userUuid)
+                    .uri("/user/{userUuid}", userUuid)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
                         if (clientResponse.statusCode() == HttpStatus.NOT_FOUND) {
@@ -76,7 +76,7 @@ public class UserServiceImpl implements UserService {
 
         try {
             Response response = authServerWebClient.get()
-                    .uri("/api/users/email/{email}", email)
+                    .uri("/user/user/{email}", email)
                     .retrieve()
                     .onStatus(status -> status == HttpStatus.NOT_FOUND, clientResponse ->
                             Mono.empty())  // 404 = pas d'erreur, juste Optional.empty()
@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
 
         try {
             Response response = authServerWebClient.get()
-                    .uri("/api/users/assignee/{patientUuid}", patientUuid)
+                    .uri("/user/assignee/{patientUuid}", patientUuid)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
                         if (clientResponse.statusCode() == HttpStatus.NOT_FOUND) {

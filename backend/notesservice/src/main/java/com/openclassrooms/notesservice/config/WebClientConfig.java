@@ -30,15 +30,15 @@ public class WebClientConfig {
     @Value("${services.authorization-server.url:http://localhost:9001}")
     private String authorizationServerUrl;
 
-    @Bean
-    public WebClient patientWebClient(WebClient.Builder builder) {
-        return builder
-                .baseUrl(patientServiceUrl)
-                .filter(WebClientInterceptor.jwtAuthorizationFilter())
-                .filter(WebClientInterceptor.logRequest())
-                .filter(WebClientInterceptor.logResponse())
-                .build();
-    }
+//    @Bean
+//    public WebClient patientWebClient(WebClient.Builder builder) {
+//        return builder
+//                .baseUrl(patientServiceUrl)
+//                .filter(WebClientInterceptor.jwtAuthorizationFilter())
+//                .filter(WebClientInterceptor.logRequest())
+//                .filter(WebClientInterceptor.logResponse())
+//                .build();
+//    }
 
     /**
      * Builder de base partagé pour éviter de répéter les filtres.

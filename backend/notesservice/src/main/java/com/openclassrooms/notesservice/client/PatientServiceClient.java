@@ -1,6 +1,8 @@
 package com.openclassrooms.notesservice.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.notesservice.domain.Response;
+import com.openclassrooms.notesservice.dto.ExternalResponse;
 import com.openclassrooms.notesservice.dto.PatientInfo;
 import com.openclassrooms.notesservice.exception.ApiException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -49,13 +51,23 @@ public class PatientServiceClient {
                         resp -> Mono.error(new ApiException("Patient non trouvé: " + patientUuid)))
                 .onStatus(HttpStatusCode::isError,
                         resp -> Mono.error(new ApiException("Erreur technique PatientService")))
-                .bodyToMono(Response.class)
+                .bodyToMono(ExternalResponse.class)
+                .doOnNext(response -> {
+                    log.info("ExternalResponse received: data={}", response.data());
+                    if (response.data() != null) {
+                        log.info("Patient data: {}", response.data().get("patient"));
+                    }
+                })
                 .map(response -> {
                     if (response == null || response.data() == null) {
                         throw new ApiException("Réponse vide du PatientService");
                     }
-                    return convertResponse(response, PatientInfo.class, "patient");
-                });
+                    ObjectMapper mapper = new ObjectMapper();
+                    PatientInfo patient = mapper.convertValue(response.data().get("patient"), PatientInfo.class);
+                    log.info("Converted PatientInfo: email={}, fullName={}", patient.getEmail(), patient.getFullName());
+                    return patient;
+                })
+                .doOnError(e -> log.error("Error in fetchPatient: {}", e.getMessage(), e));
     }
 
     /**

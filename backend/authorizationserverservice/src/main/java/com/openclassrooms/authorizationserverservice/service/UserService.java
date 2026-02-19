@@ -1,6 +1,6 @@
 package com.openclassrooms.authorizationserverservice.service;
 
-import com.openclassrooms.authorizationserverservice.dto.UserInfoDTO;
+//import com.openclassrooms.authorizationserverservice.dto.UserInfoDTO;
 import com.openclassrooms.authorizationserverservice.model.Credential;
 import com.openclassrooms.authorizationserverservice.model.Device;
 import com.openclassrooms.authorizationserverservice.model.User;
@@ -50,6 +50,6 @@ public interface UserService {
     User getPatientUser(String patientUuid);
 
     // USER PATIENT MANAGEMENT
-    UserInfoDTO getUserInfoByUuid(String userUuid);
+    //UserInfoDTO getUserInfoByUuid(String userUuid);
     boolean userExistsByUuid(String userUuid);
 }

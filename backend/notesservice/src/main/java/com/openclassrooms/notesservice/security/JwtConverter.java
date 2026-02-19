@@ -11,19 +11,32 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 /**
  * Convertit le JWT en Authentication avec les authorities appropriées.
+ *
+ * Gère les formats suivants :
+ * - "authorities" comme String séparée par des virgules (ex: "SUPER_ADMIN,user:read")
+ * - "authorities" comme List JSON
+ * - "role" / "roles" claims
+ *
+ * Ajoute automatiquement le préfixe "ROLE_" pour les rôles connus.
+ *
  * @author Kardigué MAGASSA
- * @version 1.0
+ * @version 2.0
  * @since 2026-02-02
  */
-
 @Slf4j
 @Component
 public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken> {
+
+    // Liste des rôles connus qui doivent avoir le préfixe ROLE_
+    private static final List<String> KNOWN_ROLES = List.of(
+            "SUPER_ADMIN", "ADMIN", "HEAD_PRACTITIONER", "PRACTITIONER", "DOCTOR", "USER", "ORGANIZER"
+    );
 
     @Override
     public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
@@ -39,40 +52,83 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
     private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        // Extraire le rôle depuis le claim "role"
+        // ─────────────────────────────────────────────────────────────────────
+        // 1. Extraire depuis le claim "role" (String simple)
+        // ─────────────────────────────────────────────────────────────────────
         String role = jwt.getClaimAsString("role");
         if (role != null && !role.isEmpty()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
             log.debug("Added role from 'role' claim: ROLE_{}", role.toUpperCase());
         }
 
-        // Extraire les rôles depuis le claim "roles" (liste)
+        // ─────────────────────────────────────────────────────────────────────
+        // 2. Extraire depuis le claim "roles" (List)
+        // ─────────────────────────────────────────────────────────────────────
         List<String> roles = jwt.getClaimAsStringList("roles");
         if (roles != null) {
-            authorities.addAll(roles.stream()
-                    .map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase()))
-                    .toList());
-            log.debug("Added roles from 'roles' claim: {}", roles);
+            roles.forEach(r -> {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + r.toUpperCase()));
+                log.debug("Added role from 'roles' claim: ROLE_{}", r.toUpperCase());
+            });
         }
 
-        // Extraire les authorities depuis le claim "authorities"
-        List<String> authoritiesClaim = jwt.getClaimAsStringList("authorities");
+        // ─────────────────────────────────────────────────────────────────────
+        // 3. Extraire depuis le claim "authorities" (String OU List)
+        // ─────────────────────────────────────────────────────────────────────
+        Object authoritiesClaim = jwt.getClaim("authorities");
+
         if (authoritiesClaim != null) {
-            authorities.addAll(authoritiesClaim.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .toList());
-            log.debug("Added authorities from 'authorities' claim: {}", authoritiesClaim);
-        }
+            List<String> authList;
 
-        // Extraire les scopes
-        String scope = jwt.getClaimAsString("scope");
-        if (scope != null) {
-            String[] scopes = scope.split(" ");
-            for (String s : scopes) {
-                authorities.add(new SimpleGrantedAuthority("SCOPE_" + s));
+            // Cas 1: authorities est une String séparée par des virgules
+            if (authoritiesClaim instanceof String authString) {
+                authList = Arrays.asList(authString.split(","));
+                log.debug("Authorities claim is a String, splitting by comma");
+            }
+            // Cas 2: authorities est une List
+            else if (authoritiesClaim instanceof List<?>) {
+                authList = ((List<?>) authoritiesClaim).stream()
+                        .map(Object::toString)
+                        .toList();
+                log.debug("Authorities claim is a List");
+            }
+            else {
+                authList = List.of();
+                log.warn("Authorities claim has unexpected type: {}", authoritiesClaim.getClass());
+            }
+
+            // Traiter chaque authority
+            for (String auth : authList) {
+                String trimmedAuth = auth.trim();
+
+                if (trimmedAuth.isEmpty()) continue;
+
+                // Si c'est un rôle connu, ajouter avec préfixe ROLE_
+                if (KNOWN_ROLES.contains(trimmedAuth.toUpperCase())) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + trimmedAuth.toUpperCase()));
+                    log.debug("Added role: ROLE_{}", trimmedAuth.toUpperCase());
+                }
+
+                // Ajouter aussi l'authority brute (pour les permissions comme "user:read")
+                authorities.add(new SimpleGrantedAuthority(trimmedAuth));
+                log.debug("Added authority: {}", trimmedAuth);
             }
         }
 
+        // ─────────────────────────────────────────────────────────────────────
+        // 4. Extraire les scopes
+        // ─────────────────────────────────────────────────────────────────────
+        String scope = jwt.getClaimAsString("scope");
+        if (scope != null && !scope.isEmpty()) {
+            Arrays.stream(scope.split(" "))
+                    .filter(s -> !s.isEmpty())
+                    .forEach(s -> {
+                        authorities.add(new SimpleGrantedAuthority("SCOPE_" + s));
+                        log.debug("Added scope: SCOPE_{}", s);
+                    });
+        }
+
+        log.debug("Total authorities extracted: {}", authorities.size());
         return authorities;
     }
 }
