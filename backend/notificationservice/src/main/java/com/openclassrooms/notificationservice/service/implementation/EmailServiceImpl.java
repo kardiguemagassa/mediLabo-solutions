@@ -73,13 +73,40 @@ public class EmailServiceImpl implements EmailService {
     @Async
     public void sendWelcomePatientEmail(String name, String email, String recordNumber) {
         log.info("Envoi email bienvenue patient à: {}", email);
-
         var variables = new HashMap<String, Object>();
         variables.put("name", name);
         variables.put("recordNumber", recordNumber);
         variables.put("url", getPatientDashboardUrl(host));
 
         sendEmail(email, SUBJECT_WELCOME_PATIENT, TEMPLATE_WELCOME_PATIENT, variables);
+    }
+
+    @Override
+    @Async
+    public void sendPatientUpdatedEmail(String name, String email, String recordNumber, String date) {
+        log.info("Envoi email mise à jour dossier patient à: {}", email);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("recordNumber", recordNumber);
+        variables.put("date", date);
+        variables.put("url", getPatientDashboardUrl(host));
+
+        sendEmail(email, SUBJECT_PATIENT_UPDATED, TEMPLATE_PATIENT_UPDATED, variables);
+    }
+
+    @Override
+    @Async
+    public void sendPatientDeletedEmail(String name, String email, String recordNumber, String date) {
+        log.info("Envoi email suppression dossier patient à: {}", email);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("recordNumber", recordNumber);
+        variables.put("date", date);
+        variables.put("url", host);
+
+        sendEmail(email, SUBJECT_PATIENT_DELETED, TEMPLATE_PATIENT_DELETED, variables);
     }
 
     // RENDEZ-VOUS
@@ -136,6 +163,22 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async
+    public void sendNoteUpdatedEmail(String name, String email, String patientNumber, String doctorName, String date, String notePreview) {
+        log.info("Envoi email note mise à jour à: {}", email);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("patientNumber", patientNumber);
+        variables.put("doctorName", doctorName);
+        variables.put("date", date);
+        variables.put("notePreview", notePreview);
+        variables.put("url", getPatientDashboardUrl(host));
+
+        sendEmail(email, SUBJECT_NOTE_UPDATED, TEMPLATE_NOTE_UPDATED, variables);
+    }
+
+    @Override
+    @Async
     public void sendNewCommentEmail(String name, String email, String recordNumber, String subject, String senderName, String date, String comment) {
         log.info("Envoi notification nouveau commentaire à: {}", email);
 
@@ -153,6 +196,37 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async
+    public void sendCommentUpdatedEmail(String name, String email, String recordNumber, String senderName, String date, String comment) {
+        log.info("Envoi email commentaire modifié à: {}", email);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("recordNumber", recordNumber);
+        variables.put("senderName", senderName);
+        variables.put("date", date);
+        variables.put("comment", comment);
+        variables.put("url", getPatientDashboardUrl(host));
+
+        sendEmail(email, SUBJECT_COMMENT_UPDATED, TEMPLATE_COMMENT_UPDATED, variables);
+    }
+
+    @Override
+    @Async
+    public void sendCommentDeletedEmail(String name, String email, String recordNumber, String senderName, String date) {
+        log.info("Envoi email commentaire supprimé à: {}", email);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("recordNumber", recordNumber);
+        variables.put("senderName", senderName);
+        variables.put("date", date);
+        variables.put("url", getPatientDashboardUrl(host));
+
+        sendEmail(email, SUBJECT_COMMENT_DELETED, TEMPLATE_COMMENT_DELETED, variables);
+    }
+
+    @Override
+    @Async
     public void sendNewFilesEmail(String name, String email, String recordNumber, String subject, String uploaderName, String date, String files) {
         log.info("Envoi notification nouveaux fichiers à: {}", email);
 
@@ -166,6 +240,22 @@ public class EmailServiceImpl implements EmailService {
         variables.put("url", getPatientDashboardUrl(host));
 
         sendEmail(email, SUBJECT_NEW_FILES, TEMPLATE_NEW_FILES, variables);
+    }
+
+    @Override
+    @Async
+    public void sendFileDeletedEmail(String name, String email, String recordNumber, String uploaderName, String date, String fileName) {
+        log.info("Envoi email fichier supprimé à: {}", email);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("recordNumber", recordNumber);
+        variables.put("uploaderName", uploaderName);
+        variables.put("date", date);
+        variables.put("fileName", fileName);
+        variables.put("url", getPatientDashboardUrl(host));
+
+        sendEmail(email, SUBJECT_FILE_DELETED, TEMPLATE_FILE_DELETED, variables);
     }
 
     // RÉSULTATS & ÉVALUATIONS
@@ -202,6 +292,25 @@ public class EmailServiceImpl implements EmailService {
         variables.put("url", getRiskAssessmentUrl(host));
 
         sendEmail(email, SUBJECT_RISK_ASSESSMENT, TEMPLATE_RISK_ASSESSMENT, variables);
+    }
+
+    @Override
+    @Async
+    public void sendAssessmentCompletedEmail(String name, String email, String riskLevel, String riskLevelDescription, String assessedAt, Integer triggerCount, Integer age, List<String> triggersFound) {
+        log.info("Envoi notification évaluation diabète à: {} - Niveau: {}", email, riskLevel);
+
+        var variables = new HashMap<String, Object>();
+        variables.put("name", name);
+        variables.put("riskLevel", riskLevel);
+        variables.put("riskLevelDescription", riskLevelDescription);
+        variables.put("assessedAt", assessedAt);
+        variables.put("triggerCount", triggerCount != null ? triggerCount : 0);
+        variables.put("age", age != null ? age : 0);
+        variables.put("triggersFound", triggersFound != null ? triggersFound : List.of());
+        variables.put("recommendation", getDefaultRecommendation(riskLevel));
+        variables.put("url", getRiskAssessmentUrl(host));
+
+        sendEmail(email, SUBJECT_ASSESSMENT_COMPLETED, TEMPLATE_ASSESSMENT_COMPLETED, variables);
     }
 
     // MESSAGES

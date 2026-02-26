@@ -1,17 +1,18 @@
 package com.openclassrooms.notificationservice.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openclassrooms.notificationservice.dto.UserInfo;
+import com.openclassrooms.notificationservice.dtorequest.UserRequest;
+import com.openclassrooms.notificationservice.dtoresponse.MessageResponse;
+import com.openclassrooms.notificationservice.service.implementation.UserServiceImpl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.test.StepVerifier;
 
 import java.io.IOException;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AuthServerClientTest {
 
     private static MockWebServer mockWebServer;
-    private AuthServerClient authServerClient;
+    private UserServiceImpl authServerClient;
     private ObjectMapper objectMapper;
 
     @BeforeAll
@@ -47,7 +48,7 @@ class AuthServerClientTest {
 
         WebClient webClient = WebClient.builder().baseUrl(mockWebServer.url("/").toString()).build();
 
-        authServerClient = new AuthServerClient(webClient);
+        authServerClient = new UserServiceImpl(webClient);
     }
 
     @Nested
@@ -55,15 +56,14 @@ class AuthServerClientTest {
     class GetUserByEmailTests {
 
         @Test
-        @DisplayName("Devrait retourner UserInfo quand l'utilisateur existe")
-        void shouldReturnUserInfoWhenUserExists() throws Exception {
-            // Given
-            UserInfo expectedUser = UserInfo.builder()
+        @DisplayName("Devrait retourner UserRequest quand l'utilisateur existe")
+        void shouldReturnUserRequestWhenUserExists() throws Exception {
+            // Given : On utilise UserRequest qui est le type attendu par ton service
+            UserRequest expectedUser = UserRequest.builder()
                     .userUuid("user-uuid-123")
                     .firstName("Jean")
                     .lastName("Dupont")
                     .email("jean.dupont@medilabo.fr")
-                    .imageUrl("https://example.com/jean.jpg")
                     .role("DOCTOR")
                     .build();
 
@@ -72,31 +72,26 @@ class AuthServerClientTest {
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody(objectMapper.writeValueAsString(expectedUser)));
 
-            // When
-            Optional<UserInfo> result = authServerClient.getUserByEmail("jean.dupont@medilabo.fr").get();
-
-            // Then
-            assertThat(result).isPresent();
-            assertThat(result.get().getUserUuid()).isEqualTo("user-uuid-123");
-            assertThat(result.get().getFirstName()).isEqualTo("Jean");
-            assertThat(result.get().getLastName()).isEqualTo("Dupont");
-            assertThat(result.get().getName()).isEqualTo("Jean Dupont");
+            // When & Then
+            StepVerifier.create(authServerClient.getUserByEmail("jean.dupont@medilabo.fr"))
+                    .assertNext(user -> {
+                        assertThat(user.getUserUuid()).isEqualTo("user-uuid-123");
+                        assertThat(user.getFirstName()).isEqualTo("Jean");
+                        assertThat(user.getEmail()).isEqualTo("jean.dupont@medilabo.fr");
+                    })
+                    .verifyComplete();
         }
 
         @Test
-        @DisplayName("Devrait retourner Optional vide quand l'utilisateur n'existe pas")
-        void shouldReturnEmptyWhenUserNotFound() throws ExecutionException, InterruptedException {
-            // Given
+        @DisplayName("Devrait retourner un Mono vide quand l'utilisateur n'existe pas (404)")
+        void shouldReturnEmptyWhenUserNotFound() {
+            // Given : Simulation d'une erreur 404
             mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(404)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(""));
+                    .setResponseCode(404));
 
-            // When
-            Optional<UserInfo> result = authServerClient.getUserByEmail("unknown@email.com").get();
-
-            // Then
-            assertThat(result).isEmpty();
+            // When & Then
+            StepVerifier.create(authServerClient.getUserByEmail("unknown@email.com"))
+                    .verifyComplete(); // Un Mono vide termine sans émission (comportement du fallback)
         }
     }
 
@@ -105,10 +100,10 @@ class AuthServerClientTest {
     class GetUserByUuidTests {
 
         @Test
-        @DisplayName("Devrait retourner UserInfo quand l'utilisateur existe")
-        void shouldReturnUserInfoWhenUserExists() throws Exception {
+        @DisplayName("Devrait retourner UserRequest quand l'utilisateur existe")
+        void shouldReturnUserRequestWhenUserExists() throws Exception {
             // Given
-            UserInfo expectedUser = UserInfo.builder()
+            UserRequest expectedUser = UserRequest.builder()
                     .userUuid("user-uuid-456")
                     .firstName("Marie")
                     .lastName("Martin")
@@ -121,13 +116,25 @@ class AuthServerClientTest {
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody(objectMapper.writeValueAsString(expectedUser)));
 
-            // When
-            Optional<UserInfo> result = authServerClient.getUserByUuid("user-uuid-456").get();
+            // When & Then
+            StepVerifier.create(authServerClient.getUserByUuid("user-uuid-456"))
+                    .assertNext(user -> {
+                        assertThat(user.getEmail()).isEqualTo("marie.martin@patient.fr");
+                        assertThat(user.getUserUuid()).isEqualTo("user-uuid-456");
+                        assertThat(user.getRole()).isEqualTo("PATIENT");
+                    })
+                    .verifyComplete();
+        }
 
-            // Then
-            assertThat(result).isPresent();
-            assertThat(result.get().getEmail()).isEqualTo("marie.martin@patient.fr");
-            assertThat(result.get().getRole()).isEqualTo("PATIENT");
+        @Test
+        @DisplayName("Devrait retourner Mono empty en cas de timeout ou erreur serveur")
+        void shouldReturnEmptyOnServerError() {
+            // Given : Erreur 500
+            mockWebServer.enqueue(new MockResponse().setResponseCode(500));
+
+            // When & Then
+            StepVerifier.create(authServerClient.getUserByUuid("any-uuid"))
+                    .verifyComplete(); // Ton fallback catch l'erreur et retourne Mono.empty()
         }
     }
 }

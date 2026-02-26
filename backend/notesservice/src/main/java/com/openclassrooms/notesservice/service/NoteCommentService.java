@@ -3,53 +3,35 @@ package com.openclassrooms.notesservice.service;
 import com.openclassrooms.notesservice.dto.CommentRequest;
 import com.openclassrooms.notesservice.dto.CommentResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
- * Service de gestion des commentaires sur les notes médicales.
+ * Service de gestion des commentaires sur les notes médicales (Full Réactif).
  *
  * @author Kardigué MAGASSA
- * @version 1.0
- * @since 2026-02-07
+ * @version 2.0
+ * @since 2026-02-25
  */
 public interface NoteCommentService {
 
     /**
      * Ajoute un commentaire à une note.
-     *
-     * @param noteUuid UUID de la note
-     * @param request  Contenu du commentaire
-     * @param jwt      Token JWT de l'utilisateur
-     * @return CommentResponse avec les informations du commentaire
      */
-    CommentResponse addComment(String noteUuid, CommentRequest request, Jwt jwt);
+    Mono<CommentResponse> addComment(String noteUuid, CommentRequest request, Jwt jwt);
 
     /**
      * Liste tous les commentaires d'une note.
-     *
-     * @param noteUuid UUID de la note
-     * @return Liste des commentaires
      */
-    List<CommentResponse> getComments(String noteUuid);
+    Flux<CommentResponse> getComments(String noteUuid);
 
     /**
      * Met à jour un commentaire.
-     *
-     * @param noteUuid    UUID de la note
-     * @param commentUuid UUID du commentaire
-     * @param request     Nouveau contenu
-     * @param jwt         Token JWT de l'utilisateur
-     * @return CommentResponse mis à jour
      */
-    CommentResponse updateComment(String noteUuid, String commentUuid, CommentRequest request, Jwt jwt);
+    Mono<CommentResponse> updateComment(String noteUuid, String commentUuid, CommentRequest request, Jwt jwt);
 
     /**
      * Supprime un commentaire.
-     *
-     * @param noteUuid    UUID de la note
-     * @param commentUuid UUID du commentaire
-     * @param jwt         Token JWT de l'utilisateur
      */
-    void deleteComment(String noteUuid, String commentUuid, Jwt jwt);
+    Mono<Void> deleteComment(String noteUuid, String commentUuid, Jwt jwt);
 }

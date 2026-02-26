@@ -1,46 +1,30 @@
 package com.openclassrooms.notificationservice.repository;
 
 import com.openclassrooms.notificationservice.model.Message;
-
 import java.util.List;
 
 /**
  * Repository pour la gestion des messages et notifications.
- *
- * @author Kardigué MAGASSA
- * @version 2.0
- * @since 2026-02-09
+ * Optimisé pour utiliser l'objet domaine Message.
  */
 public interface NotificationRepository {
 
     /**
-     * Envoie un message avec toutes les infos dénormalisées.
+     * Sauvegarde un message complet dans la base de données.
+     * Utilise les données de l'objet Message pour remplir les colonnes dénormalisées.
      *
-     * @param messageUuid UUID unique du message
-     * @param conversationId UUID de la conversation (existante ou nouvelle)
-     * @param senderUuid UUID de l'expéditeur
-     * @param senderName Nom complet de l'expéditeur
-     * @param senderEmail Email de l'expéditeur
-     * @param senderImageUrl URL de l'avatar de l'expéditeur
-     * @param senderRole Rôle de l'expéditeur (PATIENT, DOCTOR, ADMIN)
-     * @param receiverUuid UUID du destinataire
-     * @param receiverName Nom complet du destinataire
-     * @param receiverEmail Email du destinataire
-     * @param receiverImageUrl URL de l'avatar du destinataire
-     * @param receiverRole Rôle du destinataire
-     * @param subject Sujet du message
-     * @param message Contenu du message
-     * @return Le message créé
+     * @param message L'entité message complète préparée par le mapper
+     * @return Le message créé avec son ID généré par la DB
      */
-    Message sendMessage(String messageUuid, String conversationId, String senderUuid, String senderName, String senderEmail, String senderImageUrl, String senderRole, String receiverUuid, String receiverName, String receiverEmail, String receiverImageUrl, String receiverRole, String subject, String message);
+    Message saveMessage(Message message);
 
     /**
-     * Récupère tous les messages d'un utilisateur.
+     * Récupère tous les messages d'un utilisateur (Inbox).
      */
     List<Message> getMessages(String userUuid);
 
     /**
-     * Récupère les messages d'une conversation.
+     * Récupère les messages d'une conversation spécifique.
      */
     List<Message> getConversations(String userUuid, String conversationId);
 

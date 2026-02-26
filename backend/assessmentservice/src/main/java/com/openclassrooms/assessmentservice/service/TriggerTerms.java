@@ -7,8 +7,7 @@ import java.util.stream.Collectors;
 
 /**
  * Termes déclencheurs pour l'évaluation du risque de diabète.
- *
- * Ces termes sont recherchés dans les notes médicales (insensible à la casse).
+ * Ces termes sont recherchés dans les notes médicales
  *
  * @author Kardigué MAGASSA
  * @version 1.0

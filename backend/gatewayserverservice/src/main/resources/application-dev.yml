@@ -22,6 +22,8 @@ logging:
     reactor.netty: INFO
     # Utile pour débugger les problèmes de Load Balancing en local
     org.springframework.cloud.loadbalancer: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
 
 # OPTIONNEL: Si tu veux que Swagger en local soit plus rapide à charger
 springdoc:

@@ -1,23 +1,22 @@
 package com.openclassrooms.assessmentservice.service;
 
 import com.openclassrooms.assessmentservice.model.Assessment;
-
-import java.util.concurrent.CompletableFuture;
+import reactor.core.publisher.Mono;
 
 /**
- * Service d'évaluation du risque de diabète.
+ * Service d'évaluation du risque de diabète Full Réactif
  *
  * @author Kardigué MAGASSA
- * @version 1.0
- * @since 2026-02-09
+ * @version 2.0
+ * @since 2026-02-25
  */
 public interface AssessmentService {
 
     /**
-     * Évalue le risque de diabète pour un patient de manière asynchrone.
+     * Évalue le risque de diabète pour un patient de manière réactive.
      *
      * @param patientUuid UUID du patient
-     * @return CompletableFuture contenant l'évaluation complète du risque
+     * @return Mono<Assessment> contenant l'évaluation complète du risque
      */
-    CompletableFuture<Assessment> assessDiabetesRisk(String patientUuid);
+    Mono<Assessment> assessDiabetesRisk(String patientUuid);
 }

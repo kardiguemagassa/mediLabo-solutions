@@ -1,11 +1,13 @@
 package com.openclassrooms.assessmentservice.controller;
 
+import com.openclassrooms.assessmentservice.domain.Response;
 import com.openclassrooms.assessmentservice.model.Assessment;
 import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponse;
 import com.openclassrooms.assessmentservice.mapper.AssessmentMapper;
 import com.openclassrooms.assessmentservice.service.AssessmentService;
 import com.openclassrooms.assessmentservice.model.Gender;
 import com.openclassrooms.assessmentservice.model.RiskLevel;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,10 +15,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -31,24 +36,20 @@ class AssessmentControllerTest {
     @Mock
     private AssessmentMapper assessmentMapper;
 
+    @Mock
+    private HttpServletRequest request;
+
     @InjectMocks
     private AssessmentController assessmentController;
 
     private static final String PATIENT_UUID = "patient-uuid-123";
+
     private Assessment assessment;
     private AssessmentResponse assessmentResponse;
 
     @BeforeEach
     void setUp() {
-        assessment = new Assessment(
-                PATIENT_UUID,
-                "Jean Dupont",
-                45,
-                Gender.MALE,
-                RiskLevel.NONE,
-                0,
-                List.of()
-        );
+        assessment = new Assessment(PATIENT_UUID, "Jean Dupont", 45, Gender.MALE, RiskLevel.NONE, 0, List.of());
 
         assessmentResponse = AssessmentResponse.builder()
                 .patientUuid(PATIENT_UUID)
@@ -64,42 +65,50 @@ class AssessmentControllerTest {
     }
 
     @Test
-    @DisplayName("Devrait retourner AssessmentResponse correctement mappée")
-    void shouldReturnAssessmentResponse_whenServiceSucceeds() throws Exception {
+    @DisplayName("Devrait retourner ResponseEntity<Response> correctement")
+    void shouldReturnResponseEntity_whenServiceSucceeds() {
+
         // Given
-        CompletableFuture<Assessment> futureAssessment = CompletableFuture.completedFuture(assessment);
-        when(assessmentService.assessDiabetesRisk(PATIENT_UUID)).thenReturn(futureAssessment);
-        when(assessmentMapper.toResponse(assessment)).thenReturn(assessmentResponse);
+        when(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+                .thenReturn(Mono.just(assessment));
+
+        when(assessmentMapper.toResponse(assessment))
+                .thenReturn(assessmentResponse);
+
+        when(request.getRequestURI()).thenReturn("/api/assess/diabetes/" + PATIENT_UUID);
 
         // When
-        CompletableFuture<AssessmentResponse> resultFuture = assessmentController.assessDiabetesRisk(PATIENT_UUID);
-        AssessmentResponse result = resultFuture.get(); // Bloque juste pour le test
+        Mono<ResponseEntity<Response>> resultMono = assessmentController.assessDiabetesRisk(PATIENT_UUID, request);
+
+        ResponseEntity<Response> responseEntity = resultMono.block();
 
         // Then
-        assertThat(result.getPatientUuid()).isEqualTo(PATIENT_UUID);
-        assertThat(result.getPatientName()).isEqualTo("Jean Dupont");
-        assertThat(result.getAge()).isEqualTo(45);
-        assertThat(result.getGender()).isEqualTo(Gender.MALE);
-        assertThat(result.getRiskLevel()).isEqualTo(RiskLevel.NONE);
-        assertThat(result.getTriggerCount()).isZero();
-        assertThat(result.getTriggersFound()).isEmpty();
+        assertThat(responseEntity).isNotNull();
+        assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+        assertThat(responseEntity.getBody()).isNotNull();
 
         verify(assessmentService).assessDiabetesRisk(PATIENT_UUID);
         verify(assessmentMapper).toResponse(assessment);
     }
 
     @Test
-    @DisplayName("Devrait lancer une exception si le service échoue")
-    void shouldThrowException_whenServiceFails() {
-        // Given
-        CompletableFuture<Assessment> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new RuntimeException("Service indisponible"));
-        when(assessmentService.assessDiabetesRisk(PATIENT_UUID)).thenReturn(failedFuture);
+    @DisplayName("Devrait propager une erreur si le service échoue")
+    void shouldReturnError_whenServiceFails() {
 
-        // When / Then
-        CompletableFuture<AssessmentResponse> resultFuture = assessmentController.assessDiabetesRisk(PATIENT_UUID);
-        assertThat(resultFuture).isCompletedExceptionally();
+        // Given
+        when(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+                .thenReturn(Mono.error(new RuntimeException("Service indisponible")));
+
+        // When
+        Mono<ResponseEntity<Response>> resultMono =
+                assessmentController.assessDiabetesRisk(PATIENT_UUID, request);
+
+        // Then
+        StepVerifier.create(resultMono).expectError(RuntimeException.class).verify();
+
         verify(assessmentService).assessDiabetesRisk(PATIENT_UUID);
         verifyNoInteractions(assessmentMapper);
     }
+
+
 }

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * Calcule le niveau de risque de diabète selon les règles métier.
- *
  * Règles :
  * - NONE : 0-1 déclencheur
  * - BORDERLINE : 2-5 déclencheurs ET âge > 30 ans

@@ -1,6 +1,5 @@
 package com.openclassrooms.notesservice.service.implementation;
 
-import com.openclassrooms.notesservice.client.PatientServiceClient;
 import com.openclassrooms.notesservice.config.FileStorageConfig;
 import com.openclassrooms.notesservice.dto.FileResponse;
 import com.openclassrooms.notesservice.dto.PatientInfo;
@@ -12,6 +11,7 @@ import com.openclassrooms.notesservice.model.Note;
 import com.openclassrooms.notesservice.repository.NoteRepository;
 import com.openclassrooms.notesservice.service.FileStorageService;
 import com.openclassrooms.notesservice.service.NoteFileService;
+import com.openclassrooms.notesservice.service.PatientServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,18 +19,25 @@ import org.springframework.core.io.Resource;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
- * Implémentation du service de gestion des fichiers attachés aux notes.
+ * Implémentation réactive du service de gestion des fichiers attachés aux notes.
+ *
+ * ARCHITECTURE RÉACTIVE:
+ * - Mono.fromCallable() : Encapsule les appels bloquants (MongoDB, FileSystem)
+ * - subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
+ * - Publication d'événements Kafka de manière réactive
  *
  * @author Kardigué MAGASSA
- * @version 1.0
- * @since 2026-02-07
+ * @version 2.0
+ * @since 2026-02-25
  */
 @Slf4j
 @Service
@@ -43,139 +50,225 @@ public class NoteFileServiceImpl implements NoteFileService {
     private final PatientServiceClient patientServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
+    // ==================== UPLOAD FILE ====================
+
+    /**
+     * Upload un fichier et l'attache à une note.
+     *
+     * FLUX:
+     * 1. Récupération de la note
+     * 2. Stockage du fichier physiquement
+     * 3. Création de l'attachment
+     * 4. Ajout à la note et sauvegarde MongoDB
+     * 5. Publication de l'événement Kafka (async)
+     * 6. Retour du FileResponse
+     */
     @Override
-    public FileResponse uploadFile(String noteUuid, MultipartFile file, Jwt jwt) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    public Mono<FileResponse> uploadFile(String noteUuid, MultipartFile file, Jwt jwt) {
+        log.debug("Uploading file to note: {}", noteUuid);
 
-        // Stocker le fichier physiquement
-        FileStorageService.StoredFileInfo storedInfo = fileStorageService.storeFile(noteUuid, file);
+        return findNoteByUuid(noteUuid)
+                .flatMap(note -> Mono.fromCallable(() -> {
+                            // Stocker le fichier physiquement
+                            FileStorageService.StoredFileInfo storedInfo = fileStorageService.storeFile(noteUuid, file);
 
-        // Créer l'attachment
-        FileAttachment attachment = FileAttachment.builder()
-                .fileUuid(storedInfo.getFileUuid())
-                .originalName(storedInfo.getOriginalName())
-                .storedName(storedInfo.getStoredName())
-                .extension(storedInfo.getExtension())
-                .contentType(storedInfo.getContentType())
-                .size(storedInfo.getSize())
-                .formattedSize(storedInfo.getFormattedSize())
-                .uri(storedInfo.getRelativePath())
-                .uploadedByUuid(jwt.getSubject())
-                .uploadedByName(extractName(jwt))
-                .uploadedByRole(extractRole(jwt))
-                .uploadedAt(LocalDateTime.now())
-                .build();
+                            // Créer l'attachment
+                            FileAttachment attachment = FileAttachment.builder()
+                                    .fileUuid(storedInfo.getFileUuid())
+                                    .originalName(storedInfo.getOriginalName())
+                                    .storedName(storedInfo.getStoredName())
+                                    .extension(storedInfo.getExtension())
+                                    .contentType(storedInfo.getContentType())
+                                    .size(storedInfo.getSize())
+                                    .formattedSize(storedInfo.getFormattedSize())
+                                    .uri(storedInfo.getRelativePath())
+                                    .uploadedByUuid(jwt.getSubject())
+                                    .uploadedByName(extractName(jwt))
+                                    .uploadedByRole(extractRole(jwt))
+                                    .uploadedAt(LocalDateTime.now())
+                                    .build();
 
-        // Ajouter à la note
-        note.addFile(attachment);
-        noteRepository.save(note);
+                            // Ajouter à la note
+                            note.addFile(attachment);
+                            noteRepository.save(note);
 
-        log.info("Fichier uploadé: {} pour la note: {}", storedInfo.getOriginalName(), noteUuid);
+                            log.info("Fichier uploadé: {} pour la note: {}", storedInfo.getOriginalName(), noteUuid);
 
-        // Publier l'événement Kafka avec les infos patient
-        publishFileUploadedEvent(note, attachment);
-
-        return mapToFileResponse(attachment, noteUuid);
+                            // Retourner un tuple (note, attachment) pour l'événement
+                            return new NoteFileContext(note, attachment);
+                        })
+                        .subscribeOn(Schedulers.boundedElastic())
+                        // Publier l'événement de manière réactive (fire and forget)
+                        .doOnSuccess(context -> publishFileUploadedEvent(context.note(), context.attachment()))
+                        .map(context -> mapToFileResponse(context.attachment(), noteUuid)));
     }
 
-    @Override
-    public List<FileResponse> getFiles(String noteUuid) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    // GET FILES
 
-        return note.getFiles().stream()
-                .map(f -> mapToFileResponse(f, noteUuid))
-                .toList();
+    /**
+     * Liste tous les fichiers d'une note.
+     */
+    @Override
+    public Flux<FileResponse> getFiles(String noteUuid) {
+        log.debug("Getting files for note: {}", noteUuid);
+
+        return findNoteByUuid(noteUuid)
+                .flatMapMany(note -> Flux.fromIterable(note.getFiles()))
+                .map(file -> mapToFileResponse(file, noteUuid));
     }
 
+    // DOWNLOAD FILE
+
+    /**
+     * Télécharge un fichier.
+     */
     @Override
-    public FileDownload downloadFile(String noteUuid, String fileUuid) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    public Mono<FileDownload> downloadFile(String noteUuid, String fileUuid) {
+        log.debug("Downloading file: {} from note: {}", fileUuid, noteUuid);
 
-        FileAttachment attachment = note.findFile(fileUuid);
-        if (attachment == null) {
-            throw new ApiException("Fichier non trouvé: " + fileUuid);
-        }
+        return findNoteByUuid(noteUuid)
+                .flatMap(note -> {
+                    FileAttachment attachment = note.findFile(fileUuid);
+                    if (attachment == null) {
+                        return Mono.error(new ApiException("Fichier non trouvé: " + fileUuid));
+                    }
 
-        Resource resource = fileStorageService.loadFileAsResource(
-                noteUuid,
-                attachment.getFileUuid(),
-                attachment.getExtension()
-        );
+                    // Charger le fichier depuis le filesystem
+                    return Mono.fromCallable(() -> {
+                                Resource resource = fileStorageService.loadFileAsResource(
+                                        noteUuid,
+                                        attachment.getFileUuid(),
+                                        attachment.getExtension()
+                                );
 
-        return FileDownload.builder()
-                .resource(resource)
-                .filename(attachment.getOriginalName())
-                .contentType(attachment.getContentType())
-                .build();
+                                return FileDownload.builder()
+                                        .resource(resource)
+                                        .filename(attachment.getOriginalName())
+                                        .contentType(attachment.getContentType())
+                                        .build();
+                            })
+                            .subscribeOn(Schedulers.boundedElastic());
+                });
     }
 
+    // DELETE FILE
+
+    /**
+     * Supprime un fichier d'une note.
+     *
+     * FLUX:
+     * 1. Récupération de la note
+     * 2. Recherche du fichier
+     * 3. Vérification des droits (propriétaire ou praticien)
+     * 4. Suppression physique
+     * 5. Retrait de la note et sauvegarde
+     */
     @Override
-    public void deleteFile(String noteUuid, String fileUuid, Jwt jwt) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    public Mono<Void> deleteFile(String noteUuid, String fileUuid, Jwt jwt) {
+        log.debug("Deleting file: {} from note: {}", fileUuid, noteUuid);
 
-        FileAttachment attachment = note.findFile(fileUuid);
-        if (attachment == null) {
-            throw new ApiException("Fichier non trouvé: " + fileUuid);
-        }
+        return findNoteByUuid(noteUuid)
+                .flatMap(note -> {
+                    FileAttachment attachment = note.findFile(fileUuid);
+                    if (attachment == null) {
+                        return Mono.error(new ApiException("Fichier non trouvé: " + fileUuid));
+                    }
 
-        // Vérifier les droits (propriétaire du fichier ou praticien de la note)
-        String userUuid = jwt.getSubject();
-        if (!attachment.getUploadedByUuid().equals(userUuid)
-                && !note.getPractitionerUuid().equals(userUuid)) {
-            throw new ApiException("Non autorisé à supprimer ce fichier");
-        }
+                    // Vérifier les droits
+                    String userUuid = jwt.getSubject();
+                    if (!attachment.getUploadedByUuid().equals(userUuid)
+                            && !note.getPractitionerUuid().equals(userUuid)) {
+                        return Mono.error(new ApiException("Non autorisé à supprimer ce fichier"));
+                    }
 
-        // Supprimer le fichier physique
-        fileStorageService.deleteFile(noteUuid, fileUuid, attachment.getExtension());
+                    return Mono.fromCallable(() -> {
+                                // Supprimer le fichier physique
+                                fileStorageService.deleteFile(noteUuid, fileUuid, attachment.getExtension());
 
-        // Retirer de la note
-        note.removeFile(fileUuid);
-        noteRepository.save(note);
+                                // Retirer de la note
+                                note.removeFile(fileUuid);
+                                noteRepository.save(note);
 
-        log.info("Fichier supprimé: {} de la note: {}", fileUuid, noteUuid);
+                                log.info("Fichier supprimé: {} de la note: {}", fileUuid, noteUuid);
+                                return note;
+                            })
+                            .doOnSuccess(n -> publishFileDeletedEvent(n, attachment))
+                            .subscribeOn(Schedulers.boundedElastic());
+                })
+                .then();
+    }
+
+    private void publishFileDeletedEvent(Note note, FileAttachment file) {
+        patientServiceClient.getPatientContactInfo(note.getPatientUuid())
+                .subscribe(
+                        patient -> {
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("name", patient != null ? patient.getFullName() : null);
+                            data.put("email", patient != null ? patient.getEmail() : null);
+                            data.put("recordNumber", note.getNoteUuid());
+                            data.put("subject", "Fichier supprimé");
+                            data.put("uploaderName", file.getUploadedByName());
+                            data.put("date", LocalDateTime.now().toString());
+                            data.put("files", file.getOriginalName());
+
+                            Event event = Event.builder()
+                                    .eventType(EventType.FILE_DELETED)
+                                    .data(data)
+                                    .build();
+                            eventPublisher.publishEvent(event);
+                            log.debug("FILE_DELETED event published for note: {}", note.getNoteUuid());
+                        },
+                        error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage())
+                );
     }
 
     // PRIVATE METHODS
 
     /**
+     * Recherche une note par UUID.
+     */
+    private Mono<Note> findNoteByUuid(String noteUuid) {
+        return Mono.fromCallable(() -> noteRepository.findByNoteUuidAndActiveTrue(noteUuid))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional
+                        .map(Mono::just)
+                        .orElseGet(() -> Mono.error(new ApiException("Note non trouvée: " + noteUuid))));
+    }
+
+    /**
      * Publie un événement FILE_UPLOADED avec les infos patient.
-     * Structure alignée avec NotificationService.
+     * Exécution asynchrone (fire and forget).
      */
     private void publishFileUploadedEvent(Note note, FileAttachment file) {
-        patientServiceClient.getPatientContactInfoAsync(note.getPatientUuid())
-                .thenAccept(patientOpt -> {String patientEmail = null; String patientName = null;
+        patientServiceClient.getPatientContactInfo(note.getPatientUuid())
+                .subscribe(
+                        patient -> {
+                            Map<String, Object> data = buildEventData(note, file, patient);
+                            Event event = Event.builder()
+                                    .eventType(EventType.FILE_UPLOADED)
+                                    .data(data)
+                                    .build();
+                            eventPublisher.publishEvent(event);
+                            log.debug("FILE_UPLOADED event published for note: {}", note.getNoteUuid());
+                        },
+                        error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage()),
+                        () -> log.debug("No patient info found for event, skipping notification")
+                );
+    }
 
-                    if (patientOpt.isPresent()) {
-                        PatientInfo patient = patientOpt.get();
-                        patientEmail = patient.getEmail();
-                        patientName = patient.getFullName();
-                    } else {
-                        log.warn("Could not fetch patient info for event, patientUuid: {}", note.getPatientUuid());
-                    }
-
-                    // Structure alignée avec NotificationService
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("name", patientName);
-                    data.put("email", patientEmail);
-                    data.put("recordNumber", note.getNoteUuid());
-                    data.put("subject", "Note médicale - " + note.getPatientUuid());
-                    data.put("uploaderName", file.getUploadedByName());
-                    data.put("date", LocalDateTime.now().toString());
-                    data.put("files", file.getOriginalName());
-
-                    Event event = Event.builder().eventType(EventType.FILE_UPLOADED).data(data).build();
-
-                    eventPublisher.publishEvent(event);
-                    log.debug("FILE_UPLOADED event published for note: {}", note.getNoteUuid());
-                })
-                .exceptionally(ex -> {
-                    log.error("Erreur lors de la publication de l'événement Kafka: {}", ex.getMessage());
-                    return null;
-                });
+    /**
+     * Construit les données de l'événement.
+     */
+    private Map<String, Object> buildEventData(Note note, FileAttachment file, PatientInfo patient) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("name", patient != null ? patient.getFullName() : null);
+        data.put("email", patient != null ? patient.getEmail() : null);
+        data.put("recordNumber", note.getNoteUuid());
+        data.put("subject", "Note médicale - " + note.getPatientUuid());
+        data.put("uploaderName", file.getUploadedByName());
+        data.put("date", LocalDateTime.now().toString());
+        data.put("files", file.getOriginalName());
+        return data;
     }
 
     /**
@@ -230,4 +323,9 @@ public class NoteFileServiceImpl implements NoteFileService {
         }
         return "USER";
     }
+
+    /**
+     * Record interne pour transporter note et attachment ensemble.
+     */
+    private record NoteFileContext(Note note, FileAttachment attachment) {}
 }

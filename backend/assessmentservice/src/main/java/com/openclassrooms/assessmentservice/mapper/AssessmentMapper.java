@@ -2,7 +2,6 @@ package com.openclassrooms.assessmentservice.mapper;
 
 import com.openclassrooms.assessmentservice.model.Assessment;
 import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponse;
-import com.openclassrooms.assessmentservice.model.Gender;
 import com.openclassrooms.assessmentservice.model.RiskLevel;
 import org.springframework.stereotype.Component;
 

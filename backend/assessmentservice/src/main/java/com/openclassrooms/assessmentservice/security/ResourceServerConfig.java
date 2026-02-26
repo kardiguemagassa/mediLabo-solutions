@@ -1,6 +1,5 @@
 package com.openclassrooms.assessmentservice.security;
 
-
 import com.openclassrooms.assessmentservice.handler.CustomAccessDeniedHandler;
 import com.openclassrooms.assessmentservice.handler.CustomAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;

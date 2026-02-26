@@ -22,6 +22,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -119,7 +121,7 @@ class NoteControllerTest {
 
             // Given
             setupMockAuthentication();
-            when(noteService.createNote(any(NoteRequest.class), eq(PRACTITIONER_UUID), any(String.class))).thenReturn(noteResponse);
+            when(noteService.createNote(any(NoteRequest.class), eq(PRACTITIONER_UUID), any(String.class))).thenReturn(Mono.just(noteResponse));
 
             // When & Then
             mockMvc.perform(post("/api/notes")
@@ -196,7 +198,7 @@ class NoteControllerTest {
             log.info("Testing getNoteByUuid with existing note");
 
             // Given
-            when(noteService.getNoteByUuid(NOTE_UUID)).thenReturn(noteResponse);
+            when(noteService.getNoteByUuid(NOTE_UUID)).thenReturn(Mono.just(noteResponse));
 
             // When & Then
             mockMvc.perform(get("/api/notes/{noteUuid}", NOTE_UUID))
@@ -253,8 +255,7 @@ class NoteControllerTest {
                     .updatedAt(LocalDateTime.now())
                     .build();
 
-            when(noteService.getNotesByPatientUuid(PATIENT_UUID))
-                    .thenReturn(List.of(noteResponse, note2));
+            when(noteService.getNotesByPatientUuid(PATIENT_UUID)).thenReturn((Flux<NoteResponse>) List.of(noteResponse, note2));
 
             // When & Then
             mockMvc.perform(get("/api/notes/patient/{patientUuid}", PATIENT_UUID))
@@ -273,8 +274,7 @@ class NoteControllerTest {
             log.info("Testing getNotesByPatientUuid with no notes");
 
             // Given
-            when(noteService.getNotesByPatientUuid("patient-no-notes"))
-                    .thenReturn(Collections.emptyList());
+            when(noteService.getNotesByPatientUuid("patient-no-notes")).thenReturn((Flux<NoteResponse>) Collections.emptyList());
 
             // When & Then
             mockMvc.perform(get("/api/notes/patient/{patientUuid}", "patient-no-notes"))
@@ -298,8 +298,7 @@ class NoteControllerTest {
             log.info("Testing getNotesByPractitionerUuid");
 
             // Given
-            when(noteService.getNotesByPractitionerUuid(PRACTITIONER_UUID))
-                    .thenReturn(List.of(noteResponse));
+            when(noteService.getNotesByPractitionerUuid(PRACTITIONER_UUID)).thenReturn((Flux<NoteResponse>) List.of(noteResponse));
 
             // When & Then
             mockMvc.perform(get("/api/notes/practitioner/{practitionerUuid}", PRACTITIONER_UUID))
@@ -326,8 +325,7 @@ class NoteControllerTest {
 
             // Given
             when(authentication.getName()).thenReturn(PRACTITIONER_UUID);
-            when(noteService.getNotesByPractitionerUuid(PRACTITIONER_UUID))
-                    .thenReturn(List.of(noteResponse));
+            when(noteService.getNotesByPractitionerUuid(PRACTITIONER_UUID)).thenReturn((Flux<NoteResponse>) List.of(noteResponse));
 
             // When & Then
             mockMvc.perform(get("/api/notes/my-notes")
@@ -368,8 +366,7 @@ class NoteControllerTest {
                     .build();
 
             when(authentication.getName()).thenReturn(PRACTITIONER_UUID);
-            when(noteService.updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq(PRACTITIONER_UUID)))
-                    .thenReturn(updatedResponse);
+            when(noteService.updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq(PRACTITIONER_UUID))).thenReturn(Mono.just(updatedResponse));
 
             // When & Then
             mockMvc.perform(put("/api/notes/{noteUuid}", NOTE_UUID)
@@ -500,7 +497,7 @@ class NoteControllerTest {
             log.info("Testing countNotesByPatientUuid");
 
             // Given
-            when(noteService.countNotesByPatientUuid(PATIENT_UUID)).thenReturn(5L);
+            when(noteService.countNotesByPatientUuid(PATIENT_UUID)).thenReturn(Mono.just(5L));
 
             // When & Then
             mockMvc.perform(get("/api/notes/count/patient/{patientUuid}", PATIENT_UUID))
@@ -519,7 +516,7 @@ class NoteControllerTest {
             log.info("Testing countNotesByPatientUuid with no notes");
 
             // Given
-            when(noteService.countNotesByPatientUuid("patient-no-notes")).thenReturn(0L);
+            when(noteService.countNotesByPatientUuid("patient-no-notes")).thenReturn(Mono.just(0L));
 
             // When & Then
             mockMvc.perform(get("/api/notes/count/patient/{patientUuid}", "patient-no-notes"))

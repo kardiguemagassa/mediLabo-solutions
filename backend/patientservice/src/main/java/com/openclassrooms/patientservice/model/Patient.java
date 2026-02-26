@@ -27,8 +27,8 @@ public class Patient {
 
     private Long patientId;
     private String patientUuid;
-    private String userUuid;  // Référence Authorization Server
-    // Données médicales
+    private String userUuid;
+    // Données démographiques & médicales
     private LocalDate dateOfBirth;
     private String gender;
     private String bloodType;
@@ -45,15 +45,16 @@ public class Patient {
     private String medicalRecordNumber;
     private String insuranceNumber;
     private String insuranceProvider;
-    // Métadonnees
+    private String insurancePolicyNumber;
+    // Métadonnées
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    //MÉTHODES MÉTIER
+
     public int getAge() {
-        if (dateOfBirth == null) {
-            return 0;
-        }
+        if (dateOfBirth == null) return 0;
         return Period.between(dateOfBirth, LocalDate.now()).getYears();
     }
 
@@ -61,9 +62,9 @@ public class Patient {
         if (heightCm == null || weightKg == null || heightCm == 0) {
             return null;
         }
-        double heightM = heightCm / 100.0;
-        double bmi = weightKg.doubleValue() / (heightM * heightM);
-        return BigDecimal.valueOf(bmi).setScale(2, RoundingMode.HALF_UP);
+        // Conversion cm -> m (ex: 180 -> 1.8)
+        BigDecimal heightM = BigDecimal.valueOf(heightCm).divide(BigDecimal.valueOf(100));
+        // Formule : poids / (taille * taille)
+        return weightKg.divide(heightM.multiply(heightM), 2, RoundingMode.HALF_UP);
     }
-    private String insurancePolicyNumber;
 }

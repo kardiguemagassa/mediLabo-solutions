@@ -1,24 +1,42 @@
 package com.openclassrooms.notificationservice.service;
 
-import com.openclassrooms.notificationservice.model.Message;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
+import com.openclassrooms.notificationservice.dtorequest.UserRequest;
+import com.openclassrooms.notificationservice.dtoresponse.MessageResponse;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
- * Service pour la gestion des messages et notifications.
+ * Service de gestion des notifications et messages.
  *
  * @author Kardigué MAGASSA
- * @version 2.0
+ * @version 2.1
  * @since 2026-02-09
  */
 public interface NotificationService {
 
     /**
-     * Envoie un message de manière asynchrone.
+     * Envoie un message de manière réactive.
      */
-    CompletableFuture<Message> sendMessage(String senderUuid, String senderName, String senderEmail, String senderImageUrl, String senderRole, String receiverEmail, String subject, String messageContent);
-    List<Message> getMessages(String userUuid);
-    List<Message> getConversation(String userUuid, String conversationId);
-    Integer getUnreadCount(String userUuid);
+    Mono<MessageResponse> sendMessage(MessageRequest request, UserRequest sender);
+
+    /**
+     * Récupère tous les messages d'un utilisateur (Inbox).
+     */
+    Flux<MessageResponse> getMessages(String userUuid);
+
+    /**
+     * Récupère les messages d'une conversation.
+     */
+    Flux<MessageResponse> getConversation(String userUuid, String conversationId);
+
+    /**
+     * Compte les messages non lus.
+     */
+    Mono<Integer> getUnreadCount(String userUuid);
+
+    /**
+     * Marque un message comme lu.
+     */
+    Mono<Void> markMessageAsRead(String userUuid, Long messageId);
 }

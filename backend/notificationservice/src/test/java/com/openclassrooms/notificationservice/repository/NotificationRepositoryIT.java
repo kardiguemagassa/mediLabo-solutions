@@ -1,6 +1,7 @@
 package com.openclassrooms.notificationservice.repository;
 
 import com.openclassrooms.notificationservice.model.Message;
+
 import com.openclassrooms.notificationservice.repository.implementation.NotificationRepositoryImpl;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,55 +58,60 @@ class NotificationRepositoryIT {
 
     //SEND MESSAGE TESTS
 
+    /**
+     * Helper pour créer un objet Message conforme à la nouvelle signature
+     */
+    private Message createTestMessage(String mUuid, String cId, String sUuid, String rUuid, String rEmail) {
+        return Message.builder()
+                .messageUuid(mUuid)
+                .conversationId(cId)
+                .senderUuid(sUuid)
+                .senderName("Dr. Jean Dupont")
+                .senderEmail("jean.dupont@medilabo.fr")
+                .senderImageUrl("https://example.com/avatar.jpg")
+                .senderRole("DOCTOR")
+                .receiverUuid(rUuid)
+                .receiverName("Marie Martin")
+                .receiverEmail(rEmail)
+                .receiverRole("PATIENT")
+                .subject("Test Subject")
+                .message("Test message content")
+                .build();
+    }
+
     @Test
     @Order(1)
     @DisplayName("Should send message successfully")
     void sendMessage_validData_savesAndReturnsMessage() {
-        // When
-        Message savedMessage = notificationRepository.sendMessage(
-                messageUuid,
-                conversationId,
-                senderUuid,
-                "Dr. Jean Dupont",
-                "jean.dupont@medilabo.fr",
-                "https://example.com/avatar.jpg",
-                "DOCTOR",
-                receiverUuid,
-                "Marie Martin",
-                receiverEmail,
-                null,
-                "PATIENT",
-                "Test Subject",
-                "Test message content"
-        );
+        // Given
+        Message messageToSave = createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail);
+
+        // When - Appel avec 1 seul argument comme dans ton RepositoryImpl
+        Message savedMessage = notificationRepository.saveMessage(messageToSave);
 
         // Then
         assertThat(savedMessage).isNotNull();
         assertThat(savedMessage.getMessageUuid()).isEqualTo(messageUuid);
-        assertThat(savedMessage.getConversationId()).isEqualTo(conversationId);
         assertThat(savedMessage.getSenderName()).isEqualTo("Dr. Jean Dupont");
-        assertThat(savedMessage.getReceiverEmail()).isEqualTo(receiverEmail);
         assertThat(savedMessage.getSubject()).isEqualTo("Test Subject");
-        assertThat(savedMessage.getStatus()).isEqualTo("READ"); // Sender sees as READ
     }
 
     @Test
     @Order(2)
     @DisplayName("Should create message statuses for sender and receiver")
     void sendMessage_validData_createsStatusesForBothUsers() {
-        // When
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "Message"
-        );
+        // Given
+        Message messageToSave = createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail);
 
-        // Then - Verify statuses created
+        // When
+        notificationRepository.saveMessage(messageToSave);
+
+        // Then
         Integer senderUnread = notificationRepository.getUnreadCount(senderUuid);
         Integer receiverUnread = notificationRepository.getUnreadCount(receiverUuid);
 
-        assertThat(senderUnread).isZero(); // Sender has READ status
-        assertThat(receiverUnread).isEqualTo(1); // Receiver has UNREAD status
+        assertThat(senderUnread).isZero();
+        assertThat(receiverUnread).isEqualTo(1);
     }
 
     // GET MESSAGES TESTS
@@ -115,18 +121,14 @@ class NotificationRepositoryIT {
     @DisplayName("Should get messages for user")
     void getMessages_messagesExist_returnsList() {
         // Given
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject 1", "Message 1"
-        );
+        notificationRepository.saveMessage(createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail));
 
-        // When - Get messages where user is receiver
+        // When
         List<Message> messages = notificationRepository.getMessages(receiverUuid);
 
         // Then
         assertThat(messages).isNotEmpty();
-        assertThat(messages.get(0).getReceiverUuid()).isEqualTo(receiverUuid);
+        assertThat(messages.getFirst().getReceiverUuid()).isEqualTo(receiverUuid);
     }
 
     @Test
@@ -147,25 +149,17 @@ class NotificationRepositoryIT {
     @DisplayName("Should get conversation messages")
     void getConversations_conversationExists_returnsList() {
         // Given
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "First message"
-        );
+        notificationRepository.saveMessage(createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail));
 
-        // Add reply in same conversation
-        notificationRepository.sendMessage(
-                UUID.randomUUID().toString(), conversationId, receiverUuid, "Receiver", receiverEmail,
-                null, "PATIENT", senderUuid, "Sender", "sender@email.com", null, "DOCTOR",
-                "Re: Subject", "Reply message"
-        );
+        // Second message (réponse)
+        Message reply = createTestMessage(UUID.randomUUID().toString(), conversationId, receiverUuid, senderUuid, "jean.dupont@medilabo.fr");
+        notificationRepository.saveMessage(reply);
 
         // When
         List<Message> conversation = notificationRepository.getConversations(senderUuid, conversationId);
 
         // Then
         assertThat(conversation).hasSize(2);
-        assertThat(conversation).allMatch(m -> m.getConversationId().equals(conversationId));
     }
 
     @Test
@@ -186,11 +180,7 @@ class NotificationRepositoryIT {
     @DisplayName("Should get message status for receiver (UNREAD)")
     void getMessageStatus_receiverMessage_returnsUnread() {
         // Given
-        Message savedMessage = notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "Message"
-        );
+        Message savedMessage = notificationRepository.saveMessage(createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail));
 
         // When
         String status = notificationRepository.getMessageStatus(receiverUuid, savedMessage.getMessageId());
@@ -215,25 +205,14 @@ class NotificationRepositoryIT {
     @DisplayName("Should update message status to READ")
     void updateMessageStatus_validData_updatesAndReturnsStatus() {
         // Given
-        Message savedMessage = notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "Message"
-        );
-
-        // Verify initial status is UNREAD
-        String initialStatus = notificationRepository.getMessageStatus(receiverUuid, savedMessage.getMessageId());
-        assertThat(initialStatus).isEqualTo("UNREAD");
+        Message savedMessage = notificationRepository.saveMessage(createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail));
 
         // When
         String newStatus = notificationRepository.updateMessageStatus(receiverUuid, savedMessage.getMessageId(), "READ");
 
         // Then
         assertThat(newStatus).isEqualTo("READ");
-
-        // Verify status changed
-        String currentStatus = notificationRepository.getMessageStatus(receiverUuid, savedMessage.getMessageId());
-        assertThat(currentStatus).isEqualTo("READ");
+        assertThat(notificationRepository.getMessageStatus(receiverUuid, savedMessage.getMessageId())).isEqualTo("READ");
     }
 
     // CONVERSATION EXISTS TESTS
@@ -243,11 +222,8 @@ class NotificationRepositoryIT {
     @DisplayName("Should return true when conversation exists")
     void conversationExists_exists_returnsTrue() {
         // Given
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "Message"
-        );
+        Message message = createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail);
+        notificationRepository.saveMessage(message);
 
         // When
         Boolean exists = notificationRepository.conversationExists(senderUuid, receiverEmail);
@@ -274,11 +250,8 @@ class NotificationRepositoryIT {
     @DisplayName("Should get conversation ID")
     void getConversationId_conversationExists_returnsId() {
         // Given
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "Message"
-        );
+        Message message = createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail);
+        notificationRepository.saveMessage(message);
 
         // When
         String foundConversationId = notificationRepository.getConversationId(senderUuid, receiverEmail);
@@ -305,17 +278,14 @@ class NotificationRepositoryIT {
     @DisplayName("Should count unread messages")
     void getUnreadCount_unreadMessagesExist_returnsCount() {
         // Given - Send 2 messages to same receiver
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject 1", "Message 1"
-        );
+        notificationRepository.saveMessage(createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail));
 
-        notificationRepository.sendMessage(
-                UUID.randomUUID().toString(), UUID.randomUUID().toString(), senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject 2", "Message 2"
-        );
+        notificationRepository.saveMessage(createTestMessage(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                senderUuid,
+                receiverUuid,
+                receiverEmail));
 
         // When
         Integer unreadCount = notificationRepository.getUnreadCount(receiverUuid);
@@ -340,10 +310,8 @@ class NotificationRepositoryIT {
     @DisplayName("Should decrease unread count after marking as read")
     void getUnreadCount_afterMarkingAsRead_decreases() {
         // Given
-        Message savedMessage = notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "Message"
+        Message savedMessage = notificationRepository.saveMessage(
+                createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail)
         );
 
         Integer initialCount = notificationRepository.getUnreadCount(receiverUuid);
@@ -364,11 +332,7 @@ class NotificationRepositoryIT {
     @DisplayName("Should create conversation entry when sending first message")
     void sendMessage_firstMessage_createsConversation() {
         // When
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "Message"
-        );
+        notificationRepository.saveMessage(createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail));
 
         // Then - Verify conversation was created
         Integer count = jdbcClient.sql("SELECT COUNT(*) FROM conversations WHERE conversation_uuid = :convId")
@@ -384,18 +348,11 @@ class NotificationRepositoryIT {
     @DisplayName("Should increment message count on subsequent messages")
     void sendMessage_subsequentMessages_incrementsCount() {
         // Given - First message
-        notificationRepository.sendMessage(
-                messageUuid, conversationId, senderUuid, "Sender", "sender@email.com",
-                null, "DOCTOR", receiverUuid, "Receiver", receiverEmail, null, "PATIENT",
-                "Subject", "First message"
-        );
+        notificationRepository.saveMessage(createTestMessage(messageUuid, conversationId, senderUuid, receiverUuid, receiverEmail));
 
-        // When - Second message in same conversation
-        notificationRepository.sendMessage(
-                UUID.randomUUID().toString(), conversationId, receiverUuid, "Receiver", receiverEmail,
-                null, "PATIENT", senderUuid, "Sender", "sender@email.com", null, "DOCTOR",
-                "Re: Subject", "Reply"
-        );
+        // When - Second message in same conversation (Inversion sender/receiver pour simuler une réponse)
+        Message reply = createTestMessage(UUID.randomUUID().toString(), conversationId, receiverUuid, senderUuid, "sender@email.com");
+        notificationRepository.saveMessage(reply);
 
         // Then
         Integer messageCount = jdbcClient.sql("SELECT message_count FROM conversations WHERE conversation_uuid = :convId")

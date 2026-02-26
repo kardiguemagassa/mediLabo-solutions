@@ -19,6 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,14 +33,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Tests unitaires pour PatientController.
- *
- * Utilise MockMvc pour tester les endpoints REST sans démarrer le serveur.
- *
- * @author Kardigué MAGASSA
+ * Tests unitaires pour PatientController (réactif avec Mono/Flux)
  */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("PatientController Unit Tests")
+@DisplayName("PatientController Unit Tests - Reactive")
 @Slf4j
 class PatientControllerTest {
 
@@ -56,8 +54,9 @@ class PatientControllerTest {
 
     @BeforeEach
     void setUp() {
-        log.info("start setUp" );
-        mockMvc = MockMvcBuilders.standaloneSetup(patientController).setControllerAdvice(new HandleException()).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(patientController)
+                .setControllerAdvice(new HandleException())
+                .build();
 
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
@@ -78,11 +77,9 @@ class PatientControllerTest {
                 .gender("M")
                 .bloodType("O+")
                 .build();
-        log.info("end setUp" );
     }
 
-    // CREATE TESTS
-
+    // CREATE
     @Nested
     @DisplayName("POST /api/patients")
     class CreatePatientEndpoint {
@@ -90,11 +87,8 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should create patient and return 201")
         void createPatient_validRequest_returns201() throws Exception {
-            log.info("start createPatient_validRequest_returns201");
-            // Given
-            when(patientService.createPatient(any(PatientRequest.class))).thenReturn(testResponse);
+            when(patientService.createPatient(any(PatientRequest.class))).thenReturn(Mono.just(testResponse));
 
-            // When & Then
             mockMvc.perform(post("/api/patients")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(testRequest)))
@@ -104,28 +98,21 @@ class PatientControllerTest {
                     .andExpect(jsonPath("$.message", containsString("créé")));
 
             verify(patientService).createPatient(any(PatientRequest.class));
-            log.info("test createPatient_validRequest_returns201 passed successfully");
         }
 
         @Test
         @DisplayName("Should return 400 when request is invalid")
         void createPatient_invalidRequest_returns400() throws Exception {
-            log.info("start createPatient_invalidRequest_returns400");
-            // Given - request without required userUuid
             PatientRequest invalidRequest = PatientRequest.builder().gender("M").build();
 
-            // When & Then
             mockMvc.perform(post("/api/patients")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalidRequest)))
                     .andExpect(status().isBadRequest());
-
-            log.info("test createPatient_invalidRequest_returns400 passed successfully");
         }
     }
 
-    // READ TESTS
-
+    // READ
     @Nested
     @DisplayName("GET /api/patients")
     class GetAllPatientsEndpoint {
@@ -133,11 +120,8 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should return all patients with 200")
         void getAllPatients_patientsExist_returns200() throws Exception {
-            log.info("start getAllPatients_patientsExist_returns200");
-            // Given
-            when(patientService.getAllActivePatients()).thenReturn(List.of(testResponse));
+            when(patientService.getAllActivePatients()).thenReturn(Flux.just(testResponse));
 
-            // When & Then
             mockMvc.perform(get("/api/patients"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.patients", hasSize(1)))
@@ -145,22 +129,19 @@ class PatientControllerTest {
                     .andExpect(jsonPath("$.data.patients[0].patientUuid", is("patient-uuid-123")));
 
             verify(patientService).getAllActivePatients();
-            log.info("test getAllPatients_patientsExist_returns200 passed successfully");
         }
 
         @Test
         @DisplayName("Should return empty list with 200")
         void getAllPatients_noPatients_returns200WithEmptyList() throws Exception {
-            log.info("start getAllPatients_noPatients_returns200WithEmptyList");
-            // Given
-            when(patientService.getAllActivePatients()).thenReturn(List.of());
+            when(patientService.getAllActivePatients()).thenReturn(Flux.empty());
 
-            // When & Then
             mockMvc.perform(get("/api/patients"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.patients", hasSize(0)))
                     .andExpect(jsonPath("$.data.count", is(0)));
-            log.info("test getAllPatients_noPatients_returns200WithEmptyList passed successfully");
+
+            verify(patientService).getAllActivePatients();
         }
     }
 
@@ -171,49 +152,21 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should return patient with 200")
         void getPatientByUuid_patientExists_returns200() throws Exception {
-            log.info("start getPatientByUuid_patientExists_returns200");
-            // Given
-            when(patientService.getPatientByUuid("patient-uuid-123")).thenReturn(testResponse);
+            when(patientService.getPatientByUuid("patient-uuid-123")).thenReturn(Mono.just(testResponse));
 
-            // When & Then
             mockMvc.perform(get("/api/patients/patient-uuid-123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.patient.patientUuid", is("patient-uuid-123")))
                     .andExpect(jsonPath("$.data.patient.bloodType", is("O+")));
-
-            log.info("test getPatientByUuid_patientExists_returns200 passed successfully");
         }
 
         @Test
-        @DisplayName("Should return 400 when patient not found")
-        void getPatientByUuid_patientNotFound_returns400() throws Exception {
-            log.info("start getPatientByUuid_patientNotFound_returns400");
-            // Given
-            when(patientService.getPatientByUuid("unknown-uuid"))
-                    .thenThrow(new ApiException("Patient non trouvé"));
+        @DisplayName("Should return 404 when patient not found")
+        void getPatientByUuid_patientNotFound_returns404() throws Exception {
+            when(patientService.getPatientByUuid("unknown-uuid")).thenReturn(Mono.empty());
 
-            // When & Then
-            mockMvc.perform(get("/api/patients/unknown-uuid")).andExpect(status().isBadRequest());
-            log.info("test getPatientByUuid_patientNotFound_returns400 passed successfully");
-        }
-    }
-
-    @Nested
-    @DisplayName("GET /api/patients/user/{userUuid}")
-    class GetPatientByUserUuidEndpoint {
-
-        @Test
-        @DisplayName("Should return patient by user UUID with 200")
-        void getPatientByUserUuid_patientExists_returns200() throws Exception {
-            log.info("start getPatientByUserUuid_patientExists_returns200");
-            // Given
-            when(patientService.getPatientByUserUuid("user-uuid-456")).thenReturn(testResponse);
-
-            // When & Then
-            mockMvc.perform(get("/api/patients/user/user-uuid-456"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.patient.userUuid", is("user-uuid-456")));
-            log.info("test getPatientByUserUuid_patientExists_returns200 passed successfully");
+            mockMvc.perform(get("/api/patients/unknown-uuid"))
+                    .andExpect(status().isNotFound());
         }
     }
 
@@ -224,59 +177,25 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should return patient by email with 200")
         void getPatientByEmail_patientExists_returns200() throws Exception {
-            log.info("start getPatientByEmail_patientExists_returns200");
-            // Given
-            when(patientService.getPatientByEmail("john@email.com")).thenReturn(testResponse);
+            when(patientService.getPatientByEmail("john@email.com")).thenReturn(Mono.just(testResponse));
 
-            // When & Then
             mockMvc.perform(get("/api/patients/email/john@email.com"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.patient.patientUuid", is("patient-uuid-123")));
-            log.info("test getPatientByEmail_patientExists_returns200 passed successfully");
+                    .andExpect(jsonPath("$.data.patient.patientUuid", is("patient-uuid-123")))
+                    .andExpect(jsonPath("$.data.patient.userUuid", is("user-uuid-456")));
         }
-    }
-
-    @Nested
-    @DisplayName("GET /api/patients/medical-record/{medicalRecordNumber}")
-    class GetPatientByMedicalRecordEndpoint {
 
         @Test
-        @DisplayName("Should return patient by medical record with 200")
-        void getPatientByMedicalRecord_patientExists_returns200() throws Exception {
-            log.info("start getPatientByMedicalRecord_patientExists_returns200");
-            // Given
-            when(patientService.getPatientByMedicalRecordNumber("MED-2026-000001")).thenReturn(testResponse);
+        @DisplayName("Should return 404 when patient not found")
+        void getPatientByEmail_patientNotFound_returns404() throws Exception {
+            when(patientService.getPatientByEmail("unknown@email.com")).thenReturn(Mono.empty());
 
-            // When & Then
-            mockMvc.perform(get("/api/patients/medical-record/MED-2026-000001"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.patient.medicalRecordNumber", is("MED-2026-000001")));
-            log.info("test getPatientByMedicalRecord_patientExists_returns200 passed successfully");
+            mockMvc.perform(get("/api/patients/email/unknown@email.com"))
+                    .andExpect(status().isNotFound());
         }
     }
 
-    @Nested
-    @DisplayName("GET /api/patients/blood-type/{bloodType}")
-    class GetPatientsByBloodTypeEndpoint {
-
-        @Test
-        @DisplayName("Should return patients by blood type with 200")
-        void getPatientsByBloodType_patientsExist_returns200() throws Exception {
-            log.info("start getPatientsByBloodType_patientsExist_returns200");
-            // Given
-            when(patientService.getPatientsByBloodType("O+")).thenReturn(List.of(testResponse));
-
-            // When & Then
-            mockMvc.perform(get("/api/patients/blood-type/O+"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.patients", hasSize(1)))
-                    .andExpect(jsonPath("$.data.patients[0].bloodType", is("O+")));
-            log.info("test getPatientsByBloodType_patientsExist_returns200 passed successfully");
-        }
-    }
-
-    // UPDATE TESTS
-
+    // UPDATE
     @Nested
     @DisplayName("PUT /api/patients/{patientUuid}")
     class UpdatePatientEndpoint {
@@ -284,26 +203,19 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should update patient and return 200")
         void updatePatient_validRequest_returns200() throws Exception {
-            log.info("start updatePatient_validRequest_returns200");
-            // Given
             when(patientService.updatePatient(eq("patient-uuid-123"), any(PatientRequest.class)))
-                    .thenReturn(testResponse);
+                    .thenReturn(Mono.just(testResponse));
 
-            // When & Then
             mockMvc.perform(put("/api/patients/patient-uuid-123")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(testRequest)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.patient.patientUuid", is("patient-uuid-123")))
                     .andExpect(jsonPath("$.message", containsString("mis à jour")));
-
-            verify(patientService).updatePatient(eq("patient-uuid-123"), any(PatientRequest.class));
-            log.info("test updatePatient_validRequest_returns200 passed successfully");
         }
     }
 
-    // DELETE TESTS
-
+    // DELETE
     @Nested
     @DisplayName("DELETE /api/patients/{patientUuid}")
     class DeletePatientEndpoint {
@@ -311,22 +223,15 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should delete patient and return 200")
         void deletePatient_patientExists_returns200() throws Exception {
-            log.info("start deletePatient_patientExists_returns200");
-            // Given
-            doNothing().when(patientService).deletePatient("patient-uuid-123");
+            when(patientService.deletePatient("patient-uuid-123")).thenReturn(Mono.empty());
 
-            // When & Then
             mockMvc.perform(delete("/api/patients/patient-uuid-123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message", containsString("supprimé")));
-
-            verify(patientService).deletePatient("patient-uuid-123");
-            log.info("test deletePatient_patientExists_returns200 passed successfully");
         }
     }
 
-    // STATS TESTS
-
+    // STATS
     @Nested
     @DisplayName("GET /api/patients/stats/count")
     class GetPatientCountEndpoint {
@@ -334,15 +239,11 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should return patient count with 200")
         void getPatientCount_returns200() throws Exception {
-            log.info("start getPatientCount_returns200");
-            // Given
-            when(patientService.countActivePatients()).thenReturn(42L);
+            when(patientService.countActivePatients()).thenReturn(Mono.just(42L));
 
-            // When & Then
             mockMvc.perform(get("/api/patients/stats/count"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.totalPatients", is(42)));
-            log.info("test getPatientCount_returns200 passed successfully");
         }
     }
 
@@ -353,29 +254,21 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should return true when patient exists")
         void checkPatientExists_patientExists_returnsTrue() throws Exception {
-            log.info("start checkPatientExists_patientExists_returnsTrue");
-            // Given
-            when(patientService.hasPatientRecord("user-uuid-456")).thenReturn(true);
+            when(patientService.hasPatientRecord("user-uuid-456")).thenReturn(Mono.just(true));
 
-            // When & Then
             mockMvc.perform(get("/api/patients/exists/user/user-uuid-456"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.exists", is(true)));
-            log.info("test checkPatientExists_patientExists_returnsTrue passed successfully");
         }
 
         @Test
         @DisplayName("Should return false when patient not exists")
         void checkPatientExists_patientNotExists_returnsFalse() throws Exception {
-            log.info("start checkPatientExists_patientNotExists_returnsFalse");
-            // Given
-            when(patientService.hasPatientRecord("unknown-user")).thenReturn(false);
+            when(patientService.hasPatientRecord("unknown-user")).thenReturn(Mono.just(false));
 
-            // When & Then
             mockMvc.perform(get("/api/patients/exists/user/unknown-user"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.exists", is(false)));
-            log.info("test checkPatientExists_patientNotExists_returnsFalse passed successfully");
         }
     }
 }

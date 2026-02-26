@@ -13,10 +13,10 @@ spring:
 eureka:
   client:
     service-url:
-      # On utilise les variables injectées par le compose
+      # variables injectées par le compose
       defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT}/eureka/
   instance:
-    # TRÈS IMPORTANT : Utilise l'IP dans le réseau Docker pour éviter les lags DNS
+    # IP dans le réseau Docker pour éviter les lags DNS
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.uuid}
 

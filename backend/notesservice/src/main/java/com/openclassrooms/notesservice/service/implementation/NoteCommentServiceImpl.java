@@ -1,6 +1,5 @@
 package com.openclassrooms.notesservice.service.implementation;
 
-import com.openclassrooms.notesservice.client.PatientServiceClient;
 import com.openclassrooms.notesservice.dto.CommentRequest;
 import com.openclassrooms.notesservice.dto.CommentResponse;
 import com.openclassrooms.notesservice.dto.PatientInfo;
@@ -11,24 +10,32 @@ import com.openclassrooms.notesservice.model.Comment;
 import com.openclassrooms.notesservice.model.Note;
 import com.openclassrooms.notesservice.repository.NoteRepository;
 import com.openclassrooms.notesservice.service.NoteCommentService;
+import com.openclassrooms.notesservice.service.PatientServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Implémentation du service de gestion des commentaires sur les notes.
+ * Implémentation réactive du service de gestion des commentaires.
+ *
+ * ARCHITECTURE RÉACTIVE:
+ * - Mono.fromCallable() : Encapsule les appels MongoDB bloquants
+ * - subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
+ * - Publication d'événements Kafka de manière réactive
  *
  * @author Kardigué MAGASSA
- * @version 1.0
- * @since 2026-02-07
+ * @version 2.0
+ * @since 2026-02-25
  */
 @Slf4j
 @Service
@@ -39,130 +46,249 @@ public class NoteCommentServiceImpl implements NoteCommentService {
     private final PatientServiceClient patientServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
+    // ADD COMMENT
+
+    /**
+     * Ajoute un commentaire à une note.
+     *
+     * FLUX:
+     * 1. Récupération de la note
+     * 2. Construction du commentaire
+     * 3. Ajout à la note et sauvegarde
+     * 4. Publication de l'événement Kafka (async)
+     * 5. Retour du CommentResponse
+     */
     @Override
-    public CommentResponse addComment(String noteUuid, CommentRequest request, Jwt jwt) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    public Mono<CommentResponse> addComment(String noteUuid, CommentRequest request, Jwt jwt) {
+        log.debug("Adding comment to note: {}", noteUuid);
 
-        Comment comment = Comment.builder()
-                .commentUuid(UUID.randomUUID().toString())
-                .content(request.getContent())
-                .authorUuid(jwt.getSubject())
-                .authorName(extractName(jwt))
-                .authorRole(extractRole(jwt))
-                .authorImageUrl(jwt.getClaimAsString("imageUrl"))
-                .edited(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        return findNoteByUuid(noteUuid)
+                .flatMap(note -> {
+                    // Construction du commentaire
+                    Comment comment = Comment.builder()
+                            .commentUuid(UUID.randomUUID().toString())
+                            .content(request.getContent())
+                            .authorUuid(jwt.getSubject())
+                            .authorName(extractName(jwt))
+                            .authorRole(extractRole(jwt))
+                            .authorImageUrl(jwt.getClaimAsString("imageUrl"))
+                            .edited(false)
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
+                            .build();
 
-        note.addComment(comment);
-        noteRepository.save(note);
+                    // Ajout à la note
+                    note.addComment(comment);
 
-        log.info("Commentaire ajouté à la note: {} par: {}", noteUuid, comment.getAuthorName());
-
-        // Publier l'événement Kafka avec les infos patient
-        publishCommentCreatedEvent(note, comment);
-
-        return mapToCommentResponse(comment);
+                    // Sauvegarde MongoDB
+                    return Mono.fromCallable(() -> {
+                                noteRepository.save(note);
+                                log.info("Commentaire ajouté à la note: {} par: {}", noteUuid, comment.getAuthorName());
+                                return comment;
+                            })
+                            .subscribeOn(Schedulers.boundedElastic())
+                            // Publier l'événement de manière réactive (fire and forget)
+                            .doOnSuccess(savedComment -> publishCommentCreatedEvent(note, savedComment))
+                            .map(this::mapToCommentResponse);
+                });
     }
 
-    @Override
-    public List<CommentResponse> getComments(String noteUuid) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    // GET COMMENTS
 
-        return note.getComments().stream()
-                .map(this::mapToCommentResponse)
-                .toList();
+    /**
+     * Liste tous les commentaires d'une note.
+     */
+    @Override
+    public Flux<CommentResponse> getComments(String noteUuid) {
+        log.debug("Getting comments for note: {}", noteUuid);
+
+        return findNoteByUuid(noteUuid)
+                // Convertir la liste de commentaires en Flux
+                .flatMapMany(note -> Flux.fromIterable(note.getComments()))
+                // Mapper chaque Comment vers CommentResponse
+                .map(this::mapToCommentResponse);
     }
 
+    // UPDATE COMMENT
+
+    /**
+     * Met à jour un commentaire.
+     *
+     * FLUX:
+     * 1. Récupération de la note
+     * 2. Recherche du commentaire
+     * 3. Vérification des droits (auteur uniquement)
+     * 4. Mise à jour et sauvegarde
+     */
     @Override
-    public CommentResponse updateComment(String noteUuid, String commentUuid, CommentRequest request, Jwt jwt) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    public Mono<CommentResponse> updateComment(String noteUuid, String commentUuid, CommentRequest request, Jwt jwt) {
+        log.debug("Updating comment: {} on note: {}", commentUuid, noteUuid);
 
-        Comment comment = note.findComment(commentUuid);
-        if (comment == null) {
-            throw new ApiException("Commentaire non trouvé: " + commentUuid);
-        }
+        return findNoteByUuid(noteUuid)
+                .flatMap(note -> {
+                    // Recherche du commentaire
+                    Comment comment = note.findComment(commentUuid);
+                    if (comment == null) {
+                        return Mono.error(new ApiException("Commentaire non trouvé: " + commentUuid));
+                    }
 
-        // Vérifier que l'utilisateur est l'auteur du commentaire
-        if (!comment.getAuthorUuid().equals(jwt.getSubject())) {
-            throw new ApiException("Non autorisé à modifier ce commentaire");
-        }
+                    // Vérification des droits
+                    if (!comment.getAuthorUuid().equals(jwt.getSubject())) {
+                        return Mono.error(new ApiException("Non autorisé à modifier ce commentaire"));
+                    }
 
-        comment.setContent(request.getContent());
-        comment.setEdited(true);
-        comment.setUpdatedAt(LocalDateTime.now());
+                    // Mise à jour
+                    comment.setContent(request.getContent());
+                    comment.setEdited(true);
+                    comment.setUpdatedAt(LocalDateTime.now());
 
-        noteRepository.save(note);
-
-        log.info("Commentaire modifié: {} sur la note: {}", commentUuid, noteUuid);
-
-        return mapToCommentResponse(comment);
+                    // Sauvegarde
+                    return Mono.fromCallable(() -> {
+                                noteRepository.save(note);
+                                log.info("Commentaire modifié: {} sur la note: {}", commentUuid, noteUuid);
+                                return mapToCommentResponse(comment);
+                            })
+                            .doOnSuccess(response -> publishCommentUpdatedEvent(note, comment))
+                            .subscribeOn(Schedulers.boundedElastic());
+                });
     }
 
+    // DELETE COMMENT
+
+    /**
+     * Supprime un commentaire.
+     *
+     * FLUX:
+     * 1. Récupération de la note
+     * 2. Recherche du commentaire
+     * 3. Vérification des droits (auteur ou praticien de la note)
+     * 4. Suppression et sauvegarde
+     */
     @Override
-    public void deleteComment(String noteUuid, String commentUuid, Jwt jwt) {
-        Note note = noteRepository.findByNoteUuidAndActiveTrue(noteUuid)
-                .orElseThrow(() -> new ApiException("Note non trouvée: " + noteUuid));
+    public Mono<Void> deleteComment(String noteUuid, String commentUuid, Jwt jwt) {
+        log.debug("Deleting comment: {} from note: {}", commentUuid, noteUuid);
 
-        Comment comment = note.findComment(commentUuid);
-        if (comment == null) {
-            throw new ApiException("Commentaire non trouvé: " + commentUuid);
-        }
+        return findNoteByUuid(noteUuid)
+                .flatMap(note -> {
+                    // Recherche du commentaire
+                    Comment comment = note.findComment(commentUuid);
+                    if (comment == null) {
+                        return Mono.error(new ApiException("Commentaire non trouvé: " + commentUuid));
+                    }
 
-        // Vérifier les droits (auteur du commentaire ou praticien de la note)
-        String userUuid = jwt.getSubject();
-        if (!comment.getAuthorUuid().equals(userUuid)
-                && !note.getPractitionerUuid().equals(userUuid)) {
-            throw new ApiException("Non autorisé à supprimer ce commentaire");
-        }
+                    // Vérification des droits
+                    String userUuid = jwt.getSubject();
+                    if (!comment.getAuthorUuid().equals(userUuid)
+                            && !note.getPractitionerUuid().equals(userUuid)) {
+                        return Mono.error(new ApiException("Non autorisé à supprimer ce commentaire"));
+                    }
 
-        note.removeComment(commentUuid);
-        noteRepository.save(note);
+                    // Suppression
+                    note.removeComment(commentUuid);
 
-        log.info("Commentaire supprimé: {} de la note: {}", commentUuid, noteUuid);
+                    return Mono.fromCallable(() -> {
+                                noteRepository.save(note);
+                                log.info("Commentaire supprimé: {} de la note: {}", commentUuid, noteUuid);
+                                return note;
+                            })
+                            .doOnSuccess(n -> publishCommentDeletedEvent(n, comment))
+                            .subscribeOn(Schedulers.boundedElastic());
+                })
+                .then();
     }
 
     // PRIVATE METHODS
 
     /**
+     * Recherche une note par UUID.
+     * Méthode utilitaire pour éviter la duplication.
+     */
+    private Mono<Note> findNoteByUuid(String noteUuid) {
+        return Mono.fromCallable(() -> noteRepository.findByNoteUuidAndActiveTrue(noteUuid))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional
+                        .map(Mono::just)
+                        .orElseGet(() -> Mono.error(new ApiException("Note non trouvée: " + noteUuid))));
+    }
+
+    /**
      * Publie un événement COMMENT_CREATED avec les infos patient.
-     * Structure alignée avec NotificationService.
+     * Exécution asynchrone (fire and forget).
      */
     private void publishCommentCreatedEvent(Note note, Comment comment) {
-        patientServiceClient.getPatientContactInfoAsync(note.getPatientUuid())
-                .thenAccept(patientOpt -> {String patientEmail = null; String patientName = null;
+        patientServiceClient.getPatientContactInfo(note.getPatientUuid())
+                .subscribe(
+                        patient -> {
+                            Map<String, Object> data = buildEventData(note, comment, patient);
+                            Event event = Event.builder()
+                                    .eventType(EventType.COMMENT_CREATED)
+                                    .data(data)
+                                    .build();
+                            eventPublisher.publishEvent(event);
+                            log.debug("COMMENT_CREATED event published for note: {}", note.getNoteUuid());
+                        },
+                        error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage()),
+                        () -> log.debug("No patient info found for event, skipping notification")
+                );
+    }
 
-                    if (patientOpt.isPresent()) {
-                        PatientInfo patient = patientOpt.get();
-                        patientEmail = patient.getEmail();
-                        patientName = patient.getFullName();
-                    } else {
-                        log.warn("Could not fetch patient info for event, patientUuid: {}", note.getPatientUuid());
-                    }
+    /**
+     * Construit les données de l'événement.
+     */
+    private Map<String, Object> buildEventData(Note note, Comment comment, PatientInfo patient) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("name", patient != null ? patient.getFullName() : null);
+        data.put("email", patient != null ? patient.getEmail() : null);
+        data.put("recordNumber", note.getNoteUuid());
+        data.put("subject", "Note médicale - " + note.getPatientUuid());
+        data.put("senderName", comment.getAuthorName());
+        data.put("date", LocalDateTime.now().toString());
+        data.put("comment", truncateContent(comment.getContent(), 200));
+        return data;
+    }
 
-                    // Structure alignée avec NotificationService
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("name", patientName);
-                    data.put("email", patientEmail);
-                    data.put("recordNumber", note.getNoteUuid());
-                    data.put("subject", "Note médicale - " + note.getPatientUuid());
-                    data.put("senderName", comment.getAuthorName());
-                    data.put("date", LocalDateTime.now().toString());
-                    data.put("comment", truncateContent(comment.getContent(), 200));
+    private void publishCommentUpdatedEvent(Note note, Comment comment) {
+        patientServiceClient.getPatientContactInfo(note.getPatientUuid())
+                .subscribe(
+                        patient -> {
+                            Map<String, Object> data = buildCommentEventData(note, comment, patient, "modifié");
+                            Event event = Event.builder()
+                                    .eventType(EventType.COMMENT_UPDATED)
+                                    .data(data)
+                                    .build();
+                            eventPublisher.publishEvent(event);
+                            log.debug("COMMENT_UPDATED event published for note: {}", note.getNoteUuid());
+                        },
+                        error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage())
+                );
+    }
 
-                    Event event = Event.builder().eventType(EventType.COMMENT_CREATED).data(data).build();
+    private void publishCommentDeletedEvent(Note note, Comment comment) {
+        patientServiceClient.getPatientContactInfo(note.getPatientUuid())
+                .subscribe(
+                        patient -> {
+                            Map<String, Object> data = buildCommentEventData(note, comment, patient, "supprimé");
+                            Event event = Event.builder()
+                                    .eventType(EventType.COMMENT_DELETED)
+                                    .data(data)
+                                    .build();
+                            eventPublisher.publishEvent(event);
+                            log.debug("COMMENT_DELETED event published for note: {}", note.getNoteUuid());
+                        },
+                        error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage())
+                );
+    }
 
-                    eventPublisher.publishEvent(event);
-                    log.debug("COMMENT_CREATED event published for note: {}", note.getNoteUuid());
-                })
-                .exceptionally(ex -> {
-                    log.error("Erreur asynchrone lors de la récupération patient: {}", ex.getMessage());
-                    return null;
-                });
+    private Map<String, Object> buildCommentEventData(Note note, Comment comment, PatientInfo patient, String action) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("name", patient != null ? patient.getFullName() : null);
+        data.put("email", patient != null ? patient.getEmail() : null);
+        data.put("recordNumber", note.getNoteUuid());
+        data.put("subject", "Commentaire " + action);
+        data.put("senderName", comment.getAuthorName());
+        data.put("date", LocalDateTime.now().toString());
+        data.put("comment", truncateContent(comment.getContent(), 200));
+        return data;
     }
 
     /**

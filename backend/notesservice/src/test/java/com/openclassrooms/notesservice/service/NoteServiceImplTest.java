@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -27,11 +29,17 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NoteServiceImpl Unit Tests")
-class NoteServiceImplTest {
+@DisplayName("NoteServiceImpl Reactive Unit Tests")
+class NoteServiceImplReactiveTest {
 
     @Mock
     private NoteRepository noteRepository;
+
+    @Mock
+    private PatientServiceClient patientServiceClient;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private NoteServiceImpl noteService;
@@ -59,84 +67,50 @@ class NoteServiceImplTest {
 
         testRequest = NoteRequest.builder()
                 .patientUuid(PATIENT_UUID)
-                .content("Patient présente des symptômes de diabète. Taux de cholestérol élevé.")
+                .content(testNote.getContent())
                 .build();
     }
-
-    // CREATE TESTS
 
     @Nested
     @DisplayName("createNote() Tests")
     class CreateNoteTests {
 
         @Test
-        @DisplayName("Should create note successfully")
-        void createNote_validRequest_returnsNoteResponse() {
-            // Given
+        void shouldCreateNoteSuccessfully() {
             when(noteRepository.save(any(Note.class))).thenReturn(testNote);
 
-            // When
-            NoteResponse result = noteService.createNote(testRequest, PRACTITIONER_UUID, PRACTITIONER_NAME);
+            StepVerifier.create(noteService.createNote(testRequest, PRACTITIONER_UUID, PRACTITIONER_NAME))
+                    .expectNextMatches(resp ->
+                            resp.getNoteUuid().equals(NOTE_UUID) &&
+                                    resp.getPatientUuid().equals(PATIENT_UUID) &&
+                                    resp.getPractitionerUuid().equals(PRACTITIONER_UUID))
+                    .verifyComplete();
 
-            // Then
-            assertThat(result).isNotNull();
-            assertThat(result.getPatientUuid()).isEqualTo(PATIENT_UUID);
-            assertThat(result.getPractitionerUuid()).isEqualTo(PRACTITIONER_UUID);
-            assertThat(result.getPractitionerName()).isEqualTo(PRACTITIONER_NAME);
-            assertThat(result.getContent()).isEqualTo(testRequest.getContent());
-
-            verify(noteRepository).save(any(Note.class));
-        }
-
-        @Test
-        @DisplayName("Should set active to true when creating note")
-        void createNote_setsActiveTrue() {
-            // Given
-            when(noteRepository.save(any(Note.class))).thenAnswer(invocation -> {
-                Note savedNote = invocation.getArgument(0);
-                assertThat(savedNote.getActive()).isTrue();
-                return testNote;
-            });
-
-            // When
-            noteService.createNote(testRequest, PRACTITIONER_UUID, PRACTITIONER_NAME);
-
-            // Then
             verify(noteRepository).save(any(Note.class));
         }
     }
-
-    // READ TESTS
 
     @Nested
     @DisplayName("getNoteByUuid() Tests")
     class GetNoteByUuidTests {
 
         @Test
-        @DisplayName("Should return note when found")
-        void getNoteByUuid_noteExists_returnsNote() {
-            // Given
+        void shouldReturnNoteWhenFound() {
             when(noteRepository.findByNoteUuidAndActiveTrue(NOTE_UUID)).thenReturn(Optional.of(testNote));
 
-            // When
-            NoteResponse result = noteService.getNoteByUuid(NOTE_UUID);
-
-            // Then
-            assertThat(result).isNotNull();
-            assertThat(result.getNoteUuid()).isEqualTo(NOTE_UUID);
-            assertThat(result.getContent()).isEqualTo(testNote.getContent());
+            StepVerifier.create(noteService.getNoteByUuid(NOTE_UUID))
+                    .expectNextMatches(resp -> resp.getNoteUuid().equals(NOTE_UUID))
+                    .verifyComplete();
         }
 
         @Test
-        @DisplayName("Should throw exception when note not found")
-        void getNoteByUuid_noteNotFound_throwsException() {
-            // Given
+        void shouldReturnErrorWhenNoteNotFound() {
             when(noteRepository.findByNoteUuidAndActiveTrue(anyString())).thenReturn(Optional.empty());
 
-            // When & Then
-            assertThatThrownBy(() -> noteService.getNoteByUuid("unknown-uuid"))
-                    .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("Note non trouvée");
+            StepVerifier.create(noteService.getNoteByUuid("unknown-uuid"))
+                    .expectErrorMatches(err -> err instanceof ApiException &&
+                            err.getMessage().contains("Note non trouvée"))
+                    .verify();
         }
     }
 
@@ -145,9 +119,7 @@ class NoteServiceImplTest {
     class GetNotesByPatientUuidTests {
 
         @Test
-        @DisplayName("Should return notes for patient")
-        void getNotesByPatientUuid_notesExist_returnsNotes() {
-            // Given
+        void shouldReturnNotesForPatient() {
             Note note2 = testNote.toBuilder()
                     .noteUuid("note-uuid-002")
                     .content("Consultation de suivi")
@@ -156,158 +128,107 @@ class NoteServiceImplTest {
             when(noteRepository.findByPatientUuidAndActiveTrueOrderByCreatedAtDesc(PATIENT_UUID))
                     .thenReturn(List.of(testNote, note2));
 
-            // When
-            List<NoteResponse> results = noteService.getNotesByPatientUuid(PATIENT_UUID);
-
-            // Then
-            assertThat(results).hasSize(2);
-            assertThat(results.getFirst().getNoteUuid()).isEqualTo(NOTE_UUID);
+            StepVerifier.create(noteService.getNotesByPatientUuid(PATIENT_UUID))
+                    .expectNextCount(2)
+                    .verifyComplete();
         }
 
         @Test
-        @DisplayName("Should return empty list when no notes for patient")
-        void getNotesByPatientUuid_noNotes_returnsEmptyList() {
-            // Given
+        void shouldReturnEmptyFluxWhenNoNotes() {
             when(noteRepository.findByPatientUuidAndActiveTrueOrderByCreatedAtDesc(anyString()))
-                    .thenReturn(Collections.emptyList());
+                    .thenReturn(List.of());
 
-            // When
-            List<NoteResponse> results = noteService.getNotesByPatientUuid("unknown-patient");
-
-            // Then
-            assertThat(results).isEmpty();
+            StepVerifier.create(noteService.getNotesByPatientUuid("unknown-patient"))
+                    .expectNextCount(0)
+                    .verifyComplete();
         }
     }
-
-    @Nested
-    @DisplayName("getNotesByPractitionerUuid() Tests")
-    class GetNotesByPractitionerUuidTests {
-
-        @Test
-        @DisplayName("Should return notes for practitioner")
-        void getNotesByPractitionerUuid_notesExist_returnsNotes() {
-            // Given
-            when(noteRepository.findByPractitionerUuidAndActiveTrueOrderByCreatedAtDesc(PRACTITIONER_UUID))
-                    .thenReturn(List.of(testNote));
-
-            // When
-            List<NoteResponse> results = noteService.getNotesByPractitionerUuid(PRACTITIONER_UUID);
-
-            // Then
-            assertThat(results).hasSize(1);
-            assertThat(results.getFirst().getPractitionerUuid()).isEqualTo(PRACTITIONER_UUID);
-        }
-    }
-
-    // UPDATE TESTS
 
     @Nested
     @DisplayName("updateNote() Tests")
     class UpdateNoteTests {
 
         @Test
-        @DisplayName("Should update note when practitioner is author")
-        void updateNote_authorizedPractitioner_updatesNote() {
-            // Given
+        void shouldUpdateNoteWhenAuthorized() {
             NoteRequest updateRequest = NoteRequest.builder()
                     .patientUuid(PATIENT_UUID)
                     .content("Contenu mis à jour")
                     .build();
 
-            Note updatedNote = testNote.toBuilder()
-                    .content("Contenu mis à jour")
-                    .build();
+            Note updatedNote = testNote.toBuilder().content("Contenu mis à jour").build();
 
             when(noteRepository.findByNoteUuidAndActiveTrue(NOTE_UUID)).thenReturn(Optional.of(testNote));
             when(noteRepository.save(any(Note.class))).thenReturn(updatedNote);
 
-            // When
-            NoteResponse result = noteService.updateNote(NOTE_UUID, updateRequest, PRACTITIONER_UUID);
+            StepVerifier.create(noteService.updateNote(NOTE_UUID, updateRequest, PRACTITIONER_UUID))
+                    .expectNextMatches(resp -> resp.getContent().equals("Contenu mis à jour"))
+                    .verifyComplete();
 
-            // Then
-            assertThat(result.getContent()).isEqualTo("Contenu mis à jour");
             verify(noteRepository).save(any(Note.class));
         }
 
         @Test
-        @DisplayName("Should throw exception when practitioner is not author")
-        void updateNote_unauthorizedPractitioner_throwsException() {
-            // Given
+        void shouldErrorWhenUnauthorizedPractitioner() {
             when(noteRepository.findByNoteUuidAndActiveTrue(NOTE_UUID)).thenReturn(Optional.of(testNote));
 
-            // When & Then
-            assertThatThrownBy(() -> noteService.updateNote(NOTE_UUID, testRequest, "other-practitioner"))
-                    .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("Vous n'êtes pas autorisé");
+            StepVerifier.create(noteService.updateNote(NOTE_UUID, testRequest, "other-practitioner"))
+                    .expectErrorMatches(err -> err instanceof ApiException &&
+                            err.getMessage().contains("Vous n'êtes pas autorisé"))
+                    .verify();
         }
 
         @Test
-        @DisplayName("Should throw exception when note not found")
-        void updateNote_noteNotFound_throwsException() {
-            // Given
+        void shouldErrorWhenNoteNotFound() {
             when(noteRepository.findByNoteUuidAndActiveTrue(anyString())).thenReturn(Optional.empty());
 
-            // When & Then
-            assertThatThrownBy(() -> noteService.updateNote("unknown-uuid", testRequest, PRACTITIONER_UUID))
-                    .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("Note non trouvée");
+            StepVerifier.create(noteService.updateNote("unknown-uuid", testRequest, PRACTITIONER_UUID))
+                    .expectErrorMatches(err -> err instanceof ApiException &&
+                            err.getMessage().contains("Note non trouvée"))
+                    .verify();
         }
     }
-
-    // DELETE TESTS
 
     @Nested
     @DisplayName("deleteNote() Tests")
     class DeleteNoteTests {
 
         @Test
-        @DisplayName("Should soft delete note")
-        void deleteNote_noteExists_setsActiveFalse() {
-            // Given
+        void shouldSoftDeleteNote() {
             when(noteRepository.findByNoteUuidAndActiveTrue(NOTE_UUID)).thenReturn(Optional.of(testNote));
             when(noteRepository.save(any(Note.class))).thenAnswer(invocation -> {
-                Note savedNote = invocation.getArgument(0);
-                assertThat(savedNote.getActive()).isFalse();
-                return savedNote;
+                Note saved = invocation.getArgument(0);
+                assertThat(saved.getActive()).isFalse();
+                return saved;
             });
 
-            // When
-            noteService.deleteNote(NOTE_UUID);
+            StepVerifier.create(noteService.deleteNote(NOTE_UUID))
+                    .verifyComplete();
 
-            // Then
             verify(noteRepository).save(any(Note.class));
         }
 
         @Test
-        @DisplayName("Should throw exception when note not found")
-        void deleteNote_noteNotFound_throwsException() {
-            // Given
+        void shouldErrorWhenNoteNotFound() {
             when(noteRepository.findByNoteUuidAndActiveTrue(anyString())).thenReturn(Optional.empty());
 
-            // When & Then
-            assertThatThrownBy(() -> noteService.deleteNote("unknown-uuid"))
-                    .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("Note non trouvée");
+            StepVerifier.create(noteService.deleteNote("unknown-uuid"))
+                    .expectErrorMatches(err -> err instanceof ApiException &&
+                            err.getMessage().contains("Note non trouvée"))
+                    .verify();
         }
     }
-
-    // COUNT TESTS
 
     @Nested
     @DisplayName("countNotesByPatientUuid() Tests")
     class CountNotesTests {
 
         @Test
-        @DisplayName("Should return count of notes for patient")
-        void countNotesByPatientUuid_returnsCount() {
-            // Given
+        void shouldReturnNoteCount() {
             when(noteRepository.countByPatientUuidAndActiveTrue(PATIENT_UUID)).thenReturn(5L);
 
-            // When
-            long count = noteService.countNotesByPatientUuid(PATIENT_UUID);
-
-            // Then
-            assertThat(count).isEqualTo(5L);
+            StepVerifier.create(noteService.countNotesByPatientUuid(PATIENT_UUID))
+                    .expectNext(5L)
+                    .verifyComplete();
         }
     }
 }

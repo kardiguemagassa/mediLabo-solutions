@@ -2,8 +2,6 @@ package com.openclassrooms.notesservice.controller;
 
 import com.openclassrooms.notesservice.domain.Response;
 import com.openclassrooms.notesservice.dto.CommentRequest;
-import com.openclassrooms.notesservice.dto.CommentResponse;
-import com.openclassrooms.notesservice.dto.FileResponse;
 import com.openclassrooms.notesservice.service.NoteCommentService;
 import com.openclassrooms.notesservice.service.NoteFileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,8 +24,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
 
 import static com.openclassrooms.notesservice.constant.Role.*;
@@ -35,11 +33,15 @@ import static com.openclassrooms.notesservice.util.RequestUtils.getResponse;
 import static org.springframework.http.HttpStatus.*;
 
 /**
- * Controller REST pour la gestion des fichiers et commentaires des notes.
+ * Controller REST réactif pour la gestion des fichiers et commentaires des notes.
+ *
+ * ARCHITECTURE RÉACTIVE:
+ * - Toutes les méthodes retournent Mono<ResponseEntity<...>>
+ * - Les Flux sont collectés en List via .collectList()
  *
  * @author Kardigué MAGASSA
- * @version 1.0
- * @since 2026-02-07
+ * @version 2.0
+ * @since 2026-02-25
  */
 @Tag(name = "Note Attachments", description = "Gestion des fichiers et commentaires des notes médicales")
 @SecurityRequirement(name = "bearerAuth")
@@ -52,7 +54,7 @@ public class NoteAttachmentController {
     private final NoteFileService noteFileService;
     private final NoteCommentService noteCommentService;
 
-    // FICHIERS
+    // ==================== FICHIERS ====================
 
     @Operation(summary = "Upload un fichier", description = "Attache un fichier à une note médicale")
     @ApiResponses({
@@ -63,15 +65,17 @@ public class NoteAttachmentController {
     })
     @PostMapping(value = "/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> uploadFile(
+    public Mono<ResponseEntity<Response>> uploadFile(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
             @Parameter(description = "Fichier à uploader") @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
+
         log.info("Upload fichier pour note: {} par: {}", noteUuid, jwt.getSubject());
-        FileResponse response = noteFileService.uploadFile(noteUuid, file, jwt);
-        return ResponseEntity.ok(getResponse(request, Map.of("file", response), "Fichier uploadé avec succès", OK));
+
+        return noteFileService.uploadFile(noteUuid, file, jwt)
+                .map(fileResponse -> ResponseEntity.ok(
+                        getResponse(request, Map.of("file", fileResponse), "Fichier uploadé avec succès", OK)));
     }
 
     @Operation(summary = "Liste les fichiers", description = "Récupère tous les fichiers attachés à une note")
@@ -81,14 +85,17 @@ public class NoteAttachmentController {
     })
     @GetMapping("/files")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> getFiles(
+    public Mono<ResponseEntity<Response>> getFiles(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
+
         log.debug("Liste des fichiers pour note: {}", noteUuid);
-        List<FileResponse> files = noteFileService.getFiles(noteUuid);
-        return ResponseEntity.ok(getResponse(request, Map.of("files", files, "count", files.size()),
-                "Fichiers récupérés avec succès", OK));
+
+        return noteFileService.getFiles(noteUuid)
+                .collectList()
+                .map(files -> ResponseEntity.ok(
+                        getResponse(request, Map.of("files", files, "count", files.size()),
+                                "Fichiers récupérés avec succès", OK)));
     }
 
     @Operation(summary = "Télécharge un fichier", description = "Télécharge un fichier attaché à une note")
@@ -99,18 +106,18 @@ public class NoteAttachmentController {
     })
     @GetMapping("/files/{fileUuid}/download")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Resource> downloadFile(
+    public Mono<ResponseEntity<Resource>> downloadFile(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
-            @Parameter(description = "UUID du fichier") @PathVariable String fileUuid
-    ) {
+            @Parameter(description = "UUID du fichier") @PathVariable String fileUuid) {
+
         log.debug("Téléchargement fichier: {} de la note: {}", fileUuid, noteUuid);
 
-        NoteFileService.FileDownload download = noteFileService.downloadFile(noteUuid, fileUuid);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(download.getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + download.getFilename() + "\"")
-                .body(download.getResource());
+        return noteFileService.downloadFile(noteUuid, fileUuid)
+                .map(download -> ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(download.getContentType()))
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + download.getFilename() + "\"")
+                        .body(download.getResource()));
     }
 
     @Operation(summary = "Supprime un fichier", description = "Supprime un fichier attaché à une note")
@@ -121,18 +128,20 @@ public class NoteAttachmentController {
     })
     @DeleteMapping("/files/{fileUuid}")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> deleteFile(
+    public Mono<ResponseEntity<Response>> deleteFile(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
             @Parameter(description = "UUID du fichier") @PathVariable String fileUuid,
             @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
+
         log.info("Suppression fichier: {} de la note: {} par: {}", fileUuid, noteUuid, jwt.getSubject());
-        noteFileService.deleteFile(noteUuid, fileUuid, jwt);
-        return ResponseEntity.ok(getResponse(request, Map.of(), "Fichier supprimé avec succès", OK));
+
+        return noteFileService.deleteFile(noteUuid, fileUuid, jwt)
+                .then(Mono.just(ResponseEntity.ok(
+                        getResponse(request, Map.of(), "Fichier supprimé avec succès", OK))));
     }
 
-    // COMMENTAIRES
+    // ==================== COMMENTAIRES ====================
 
     @Operation(summary = "Ajoute un commentaire", description = "Ajoute un commentaire à une note médicale")
     @ApiResponses({
@@ -142,15 +151,17 @@ public class NoteAttachmentController {
     })
     @PostMapping("/comments")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> addComment(
+    public Mono<ResponseEntity<Response>> addComment(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
             @Valid @RequestBody CommentRequest commentRequest,
             @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
+
         log.info("Ajout commentaire sur note: {} par: {}", noteUuid, jwt.getSubject());
-        CommentResponse response = noteCommentService.addComment(noteUuid, commentRequest, jwt);
-        return ResponseEntity.ok(getResponse(request, Map.of("comment", response), "Commentaire ajouté avec succès", OK));
+
+        return noteCommentService.addComment(noteUuid, commentRequest, jwt)
+                .map(comment -> ResponseEntity.ok(
+                        getResponse(request, Map.of("comment", comment), "Commentaire ajouté avec succès", OK)));
     }
 
     @Operation(summary = "Liste les commentaires", description = "Récupère tous les commentaires d'une note")
@@ -160,14 +171,17 @@ public class NoteAttachmentController {
     })
     @GetMapping("/comments")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> getComments(
+    public Mono<ResponseEntity<Response>> getComments(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
+
         log.debug("Liste des commentaires pour note: {}", noteUuid);
-        List<CommentResponse> comments = noteCommentService.getComments(noteUuid);
-        return ResponseEntity.ok(getResponse(request, Map.of("comments", comments, "count", comments.size()),
-                "Commentaires récupérés avec succès", OK));
+
+        return noteCommentService.getComments(noteUuid)
+                .collectList()
+                .map(comments -> ResponseEntity.ok(
+                        getResponse(request, Map.of("comments", comments, "count", comments.size()),
+                                "Commentaires récupérés avec succès", OK)));
     }
 
     @Operation(summary = "Modifie un commentaire", description = "Modifie un commentaire existant")
@@ -178,16 +192,18 @@ public class NoteAttachmentController {
     })
     @PutMapping("/comments/{commentUuid}")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> updateComment(
+    public Mono<ResponseEntity<Response>> updateComment(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
             @Parameter(description = "UUID du commentaire") @PathVariable String commentUuid,
             @Valid @RequestBody CommentRequest commentRequest,
             @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
+
         log.info("Modification commentaire: {} sur note: {} par: {}", commentUuid, noteUuid, jwt.getSubject());
-        CommentResponse response = noteCommentService.updateComment(noteUuid, commentUuid, commentRequest, jwt);
-        return ResponseEntity.ok(getResponse(request, Map.of("comment", response), "Commentaire modifié avec succès", OK));
+
+        return noteCommentService.updateComment(noteUuid, commentUuid, commentRequest, jwt)
+                .map(comment -> ResponseEntity.ok(
+                        getResponse(request, Map.of("comment", comment), "Commentaire modifié avec succès", OK)));
     }
 
     @Operation(summary = "Supprime un commentaire", description = "Supprime un commentaire d'une note")
@@ -198,14 +214,16 @@ public class NoteAttachmentController {
     })
     @DeleteMapping("/comments/{commentUuid}")
     @PreAuthorize(ALL_STAFF)
-    public ResponseEntity<Response> deleteComment(
+    public Mono<ResponseEntity<Response>> deleteComment(
             @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
             @Parameter(description = "UUID du commentaire") @PathVariable String commentUuid,
             @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
+
         log.info("Suppression commentaire: {} de la note: {} par: {}", commentUuid, noteUuid, jwt.getSubject());
-        noteCommentService.deleteComment(noteUuid, commentUuid, jwt);
-        return ResponseEntity.ok(getResponse(request, Map.of(), "Commentaire supprimé avec succès", OK));
+
+        return noteCommentService.deleteComment(noteUuid, commentUuid, jwt)
+                .then(Mono.just(ResponseEntity.ok(
+                        getResponse(request, Map.of(), "Commentaire supprimé avec succès", OK))));
     }
 }

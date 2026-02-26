@@ -1,5 +1,6 @@
 package com.openclassrooms.notificationservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
  * Utilisé pour transporter les informations via Kafka.
  *
  * @author Kardigué MAGASSA
- * @version 2.0
+ * @version 2.1
  * @since 2026-02-09
  */
 @Getter
@@ -17,6 +18,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Data {
 
     private String name;
@@ -27,7 +29,6 @@ public class Data {
     private String appointmentTime;
     private String doctorName;
     private String department;
-    // Lieu du RDV
     private String location;
     // NOTES MÉDICALES
     private String noteUuid;
@@ -42,12 +43,18 @@ public class Data {
     private String sampleDate;
     private String laboratory;
     // ÉVALUATION RISQUE DIABÈTE
-    private String riskLevel;           // Niveau de risque (NONE, BORDERLINE, DANGER, EARLY_ONSET)
-    private String assessmentDate;      // Date de l'évaluation
-    private Integer triggerCount;       // Nombre de facteurs de risque
-    private Integer patientAge;         // Âge du patient
-    private List<String> triggers;      // Liste des facteurs de risque détectés
-    private String recommendation;      // Recommandation médicale
+    private String patientUuid;
+    private String riskLevel;
+    private String riskLevelDescription;
+    private String assessmentDate;
+    private String assessedAt;            // depuis AssessmentService
+    private Integer triggerCount;
+    private Integer patientAge;
+    private Integer age;                  // depuis AssessmentService
+    private String gender;
+    private List<String> triggers;
+    private List<String> triggersFound;   // depuis AssessmentService
+    private String recommendation;
     // MESSAGES
     private String senderName;
     private String senderRole;
