@@ -133,13 +133,12 @@ class RequestUtilsTest {
         Response response = RequestUtils.getResponse(mockRequest, data, message, status);
 
         // Then
-        // Note: Le record Response a 'code' (int) et 'status' (HttpStatus) séparés
-        assertThat(response.statusCode()).isEqualTo(200);  // 'code' est un int
-        assertThat(response.status()).isEqualTo(HttpStatus.OK);  // 'status' est un HttpStatus
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.status()).isEqualTo(HttpStatus.OK);
         assertThat(response.message()).isEqualTo(message);
         assertThat(response.path()).isEqualTo("/api/v1/patients");
 
-        // Pour Map<?, ?>
         Map<?, ?> responseData = response.data();
 
         assertThat(responseData.get("id")).isEqualTo(123);

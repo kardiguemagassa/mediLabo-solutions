@@ -70,8 +70,7 @@ public class ResourceServerConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .accessDeniedHandler(new CustomAccessDeniedHandler())
                         .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
-                        .jwt(jwt -> jwt
-                                .jwkSetUri(jwkSetUri)
+                        .jwt(jwt -> jwt.jwkSetUri(jwkSetUri)
                                 .jwtAuthenticationConverter(new JwtConverter())));
 
         return http.build();

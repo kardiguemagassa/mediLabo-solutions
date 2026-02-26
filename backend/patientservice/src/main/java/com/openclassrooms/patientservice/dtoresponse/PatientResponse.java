@@ -27,40 +27,27 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PatientResponse {
-
-    // Identifiants (jamais exposer patientId interne)
     private String patientUuid;
     private String userUuid;
     private String medicalRecordNumber;
-
-    // Données démographiques
     private LocalDate dateOfBirth;
-    private Integer age;  // Calculé
+    private Integer age;
     private String gender;
-
-    // Données médicales
     private String bloodType;
     private Integer heightCm;
     private BigDecimal weightKg;
-    private BigDecimal bmi;  // Calculé
+    private BigDecimal bmi;
     private String allergies;
     private String chronicConditions;
     private String currentMedications;
-
-    // Contact d'urgence
     private String emergencyContactName;
     private String emergencyContactPhone;
     private String emergencyContactRelationship;
-
-    // Assurance
     private String insuranceNumber;
     private String insuranceProvider;
-
-    // Métadonnées
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // Informations utilisateur enrichies (optionnel, depuis Auth Server)
+    // User Info  enrich
     private UserInfo userInfo;
 
     /**

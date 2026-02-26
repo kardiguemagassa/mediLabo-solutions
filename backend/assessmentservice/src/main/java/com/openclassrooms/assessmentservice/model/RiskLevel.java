@@ -15,7 +15,7 @@ public enum RiskLevel {
     BORDERLINE("Risque limité"),
     IN_DANGER("Danger"),
     EARLY_ONSET("Apparition précoce"),
-    UNKNOWN("Inconnu");  // Utilisé en cas d'erreur de service
+    UNKNOWN("Inconnu");  // erreur de service
 
     private final String description;
 

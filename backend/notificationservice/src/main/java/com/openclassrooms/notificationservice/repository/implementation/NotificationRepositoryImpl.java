@@ -30,31 +30,17 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     private final JdbcClient jdbc;
 
     @Override
-    public Message sendMessage(String messageUuid, String conversationId, String senderUuid, String senderName, String senderEmail, String senderImageUrl, String senderRole, String receiverUuid, String receiverName, String receiverEmail, String receiverImageUrl, String receiverRole, String subject, String message) {
+    public Message saveMessage(Message message) {
         try {
-            var params = new HashMap<String, Object>();
-            params.put("messageUuid", messageUuid);
-            params.put("conversationId", conversationId);
-            params.put("senderUuid", senderUuid);
-            params.put("senderName", senderName);
-            params.put("senderEmail", senderEmail);
-            params.put("senderImageUrl", senderImageUrl);
-            params.put("senderRole", senderRole);
-            params.put("receiverUuid", receiverUuid);
-            params.put("receiverName", receiverName);
-            params.put("receiverEmail", receiverEmail);
-            params.put("receiverImageUrl", receiverImageUrl);
-            params.put("receiverRole", receiverRole);
-            params.put("subject", subject);
-            params.put("message", message);
+            log.debug("Sauvegarde d'un nouveau message pour la conversation: {}", message.getConversationId());
 
-            return jdbc.sql(CREATE_MESSAGE_FUNCTION).params(params).query(Message.class).single();
+            return jdbc.sql(CREATE_MESSAGE_FUNCTION).paramSource(message).query(Message.class).single();
         } catch (EmptyResultDataAccessException exception) {
-            log.error("Erreur création message: {}", exception.getMessage());
-            throw new ApiException("Impossible de créer le message. Veuillez réessayer.");
+            log.error("La fonction SQL n'a retourné aucun résultat pour le message UUID: {}", message.getMessageUuid());
+            throw new ApiException("Erreur lors de la création du message en base de données.");
         } catch (Exception exception) {
-            log.error("Erreur inattendue: {}", exception.getMessage(), exception);
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+            log.error("Erreur technique lors de la sauvegarde JDBC : {}", exception.getMessage(), exception);
+            throw new ApiException("Une erreur inattendue s'est produite. Veuillez réessayer.");
         }
     }
 

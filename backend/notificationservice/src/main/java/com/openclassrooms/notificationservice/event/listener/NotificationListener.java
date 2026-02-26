@@ -78,6 +78,26 @@ public class NotificationListener {
                 );
             }
 
+            case PATIENT_UPDATED -> {
+                log.info("Traitement PATIENT_UPDATED pour: {}", data.getEmail());
+                emailService.sendPatientUpdatedEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getRecordNumber(),
+                        data.getDate()
+                );
+            }
+
+            case PATIENT_DELETED -> {
+                log.info("Traitement PATIENT_DELETED pour: {}", data.getEmail());
+                emailService.sendPatientDeletedEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getRecordNumber(),
+                        data.getDate()
+                );
+            }
+
             // RENDEZ-VOUS
             case APPOINTMENT_CREATED -> {
                 log.info("Traitement APPOINTMENT_CREATED pour: {}", data.getEmail());
@@ -115,6 +135,53 @@ public class NotificationListener {
                         data.getDepartment(),
                         data.getDate(),
                         data.getNotePreview()
+                );
+            }
+
+            case NOTE_UPDATED -> {
+                log.info("Traitement NOTE_UPDATED pour: {}", data.getEmail());
+                emailService.sendNoteUpdatedEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getPatientNumber(),
+                        data.getDoctorName(),
+                        data.getDate(),
+                        data.getNotePreview()
+                );
+            }
+
+            case COMMENT_UPDATED -> {
+                log.info("Traitement COMMENT_UPDATED pour: {}", data.getEmail());
+                emailService.sendCommentUpdatedEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getRecordNumber(),
+                        data.getSenderName(),
+                        data.getDate(),
+                        data.getComment()
+                );
+            }
+
+            case COMMENT_DELETED -> {
+                log.info("Traitement COMMENT_DELETED pour: {}", data.getEmail());
+                emailService.sendCommentDeletedEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getRecordNumber(),
+                        data.getSenderName(),
+                        data.getDate()
+                );
+            }
+
+            case FILE_DELETED -> {
+                log.info("Traitement FILE_DELETED pour: {}", data.getEmail());
+                emailService.sendFileDeletedEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getRecordNumber(),
+                        data.getUploaderName(),
+                        data.getDate(),
+                        data.getFiles()
                 );
             }
 
@@ -169,6 +236,20 @@ public class NotificationListener {
                         data.getPatientAge(),
                         data.getTriggers(),
                         data.getRecommendation()
+                );
+            }
+
+            case ASSESSMENT_COMPLETED -> {
+                log.info("Traitement ASSESSMENT_COMPLETED pour: {} - Niveau: {}", data.getEmail(), data.getRiskLevel());
+                emailService.sendAssessmentCompletedEmail(
+                        data.getName(),
+                        data.getEmail(),
+                        data.getRiskLevel(),
+                        data.getRiskLevelDescription(),
+                        data.getAssessedAt(),
+                        data.getTriggerCount(),
+                        data.getAge(),
+                        data.getTriggersFound()
                 );
             }
 

@@ -75,17 +75,9 @@ public class WebClientInterceptor {
     public static ExchangeFilterFunction handleError() {
         return ExchangeFilterFunction.ofResponseProcessor(response -> {
             if (response.statusCode().isError()) {
-                return response.bodyToMono(String.class)
-                        .flatMap(body -> {
-                            log.error("Error response: {} - {}", response.statusCode(), body);
-                            return Mono.error(new WebClientResponseException(
-                                    response.statusCode().value(),
-                                    response.statusCode().toString(),
-                                    response.headers().asHttpHeaders(),
-                                    body.getBytes(),
-                                    null
-                            ));
-                        });
+                HttpStatus status = (HttpStatus) response.statusCode();
+                log.error("Error response: {}", status);
+                return Mono.just(response);
             }
             return Mono.just(response);
         });

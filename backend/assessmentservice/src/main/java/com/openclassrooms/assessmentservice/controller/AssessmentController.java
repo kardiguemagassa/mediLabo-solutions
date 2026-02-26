@@ -1,6 +1,6 @@
 package com.openclassrooms.assessmentservice.controller;
 
-import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponse;
+import com.openclassrooms.assessmentservice.domain.Response;
 import com.openclassrooms.assessmentservice.mapper.AssessmentMapper;
 import com.openclassrooms.assessmentservice.service.AssessmentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,34 +9,49 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.util.concurrent.CompletableFuture;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+import static com.openclassrooms.assessmentservice.util.RequestUtils.getResponse;
+import static org.springframework.http.HttpStatus.OK;
 
 /**
- * Controller REST pour l'évaluation du risque de diabète.
- * Utilise l'API asynchrone et délègue la gestion des exceptions au HandleException.
- * http://localhost:8083/swagger-ui/index.html#/
- * http://localhost:8083/v3/api-docs
- * http://localhost:8083/v3/api-docs.yaml
- * http://localhost:8083/actuator/health
+ * Controller REST réactif pour l'évaluation du risque de diabète.
+ * ARCHITECTURE RÉACTIVE:
+ * - Retourne Mono<ResponseEntity<Response>>
+ * - Le JWT est propagé automatiquement via WebClientInterceptor
  *
  * @author Kardigué MAGASSA
- * @version 1.0
- * @since 2026-02-09
+ * @version 2.0
+ * @since 2026-02-25
  */
 @Tag(name = "Assessment", description = "API d'évaluation du risque de diabète")
 @SecurityRequirement(name = "bearerAuth")
 @Slf4j
 @RestController
-@RequestMapping("/api/assess")
+@RequestMapping("/api/assessments")
 @RequiredArgsConstructor
 public class AssessmentController {
 
     private final AssessmentService assessmentService;
     private final AssessmentMapper assessmentMapper;
 
+    /**
+     * Évalue le risque de diabète pour un patient.
+     * FLUX:
+     * 1. Réception de la requête avec JWT dans le header
+     * 2. Spring Security extrait le JWT et le met dans SecurityContext
+     * 3. AssessmentService appelle PatientService et NotesService
+     * 4. WebClientInterceptor propage automatiquement le JWT à chaque appel
+     * 5. Résultat retourné au client
+     */
     @Operation(
             summary = "Évaluer le risque de diabète",
             description = "Calcule le niveau de risque de diabète pour un patient " +
@@ -48,11 +63,16 @@ public class AssessmentController {
             @ApiResponse(responseCode = "503", description = "Service externe indisponible")
     })
     @GetMapping("/diabetes/{patientUuid}")
-    public CompletableFuture<AssessmentResponse> assessDiabetesRisk(@Parameter(description = "UUID du patient", required = true) @PathVariable String patientUuid) {
+    //@PreAuthorize("hasAnyAuthority('assessment:read', 'SUPER_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<ResponseEntity<Response>> assessDiabetesRisk(@Parameter(description = "UUID du patient", required = true) @PathVariable String patientUuid, HttpServletRequest request) {
 
         log.info("Received diabetes assessment request for patient: {}", patientUuid);
 
-        // Appel asynchrone du service
-        return assessmentService.assessDiabetesRisk(patientUuid).thenApply(assessmentMapper::toResponse);
+        return assessmentService.assessDiabetesRisk(patientUuid).map(assessmentMapper::toResponse)
+                .map(assessmentResponse -> ResponseEntity.ok(getResponse(request, Map.of("assessment", assessmentResponse),
+                        "Évaluation du risque effectuée avec succès", OK)))
+                .doOnSuccess(response -> log.info("Assessment completed for patient: {}", patientUuid))
+                .doOnError(error -> log.error("Assessment failed for patient {}: {}", patientUuid, error.getMessage()));
     }
 }

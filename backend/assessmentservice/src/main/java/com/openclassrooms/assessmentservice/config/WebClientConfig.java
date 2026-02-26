@@ -6,7 +6,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced; // Import important
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -18,11 +18,17 @@ import reactor.netty.http.client.HttpClient;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Configuration WebClient pour la communication inter-services.
+ *
+ * @author Kardigué MAGASSA
+ * @version 2.0
+ * @since 2026-02-25
+ */
 @Slf4j
 @Configuration
 public class WebClientConfig {
 
-    // On utilise maintenant les noms enregistrés dans Eureka par défaut
     @Value("${services.patient.name:PATIENTSERVICE}")
     private String patientServiceName;
 
@@ -33,39 +39,43 @@ public class WebClientConfig {
     private int defaultTimeout;
 
     /**
-     * Builder de base partagé.
-     * L'annotation @LoadBalanced permet d'utiliser "http://PATIENTSERVICE"
+     * Builder de base partagé avec LoadBalancer.
      */
     @Bean
     @LoadBalanced
-    public WebClient.Builder commonWebClientBuilder() {
+    public WebClient.Builder loadBalancedWebClientBuilder() {
         return WebClient.builder()
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .filter(WebClientInterceptor.jwtAuthorizationFilter())
                 .filter(WebClientInterceptor.logRequest())
-                .filter(WebClientInterceptor.logResponse());
+                .filter(WebClientInterceptor.logResponse())
+                .filter(WebClientInterceptor.handleError());
     }
 
-    @Bean
-    public WebClient patientWebClient(WebClient.Builder commonWebClientBuilder) {
-        // L'URL devient http://PATIENTSERVICE
+    /**
+     * WebClient pour PatientService.
+     */
+    @Bean("patientServiceWebClient")
+    public WebClient patientServiceWebClient(WebClient.Builder loadBalancedWebClientBuilder) {
         String url = "http://" + patientServiceName;
-        log.info("Configuring LoadBalanced WebClient for: {}", url);
+        log.info("Configuring LoadBalanced WebClient for PatientService: {}", url);
 
-        return commonWebClientBuilder.clone()
+        return loadBalancedWebClientBuilder.clone()
                 .baseUrl(url)
                 .clientConnector(new ReactorClientHttpConnector(createHttpClient(defaultTimeout)))
                 .build();
     }
 
-    @Bean
-    public WebClient notesWebClient(WebClient.Builder commonWebClientBuilder) {
-        // L'URL devient http://NOTESSERVICE
+    /**
+     * WebClient pour NotesService.
+     */
+    @Bean("notesServiceWebClient")
+    public WebClient notesServiceWebClient(WebClient.Builder loadBalancedWebClientBuilder) {
         String url = "http://" + notesServiceName;
-        log.info("Configuring LoadBalanced WebClient for: {}", url);
+        log.info("Configuring LoadBalanced WebClient for NotesService: {}", url);
 
-        return commonWebClientBuilder.clone()
+        return loadBalancedWebClientBuilder.clone()
                 .baseUrl(url)
                 .clientConnector(new ReactorClientHttpConnector(createHttpClient(defaultTimeout)))
                 .build();

@@ -38,7 +38,7 @@ public class WebClientConfig {
     /**
      * WebClient pour communiquer avec Authorization Server.
      */
-    @Bean
+    @Bean("authServerWebClient")
     public WebClient authServerWebClient(WebClient.Builder builder) {
         log.info("Configuring WebClient for Authorization Server: {}", authorizationServerUrl);
 
@@ -52,6 +52,7 @@ public class WebClientConfig {
                 .filter(WebClientInterceptor.jwtAuthorizationFilter())
                 .filter(WebClientInterceptor.logRequest())
                 .filter(WebClientInterceptor.logResponse())
+                .filter(WebClientInterceptor.handleError())
                 .build();
     }
 

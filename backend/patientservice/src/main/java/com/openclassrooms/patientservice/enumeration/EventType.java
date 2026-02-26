@@ -1,5 +1,3 @@
 package com.openclassrooms.patientservice.enumeration;
 
-public enum EventType {
-    PATIENT_CREATED,COMMENT_CREATED, FILE_UPLOADED, ACCOUNT_VERIFIED
-}
+public enum EventType {PATIENT_CREATED, PATIENT_UPDATED, PATIENT_DELETED}

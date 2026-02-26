@@ -42,6 +42,7 @@ spring:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.value.default.type: com.openclassrooms.notificationservice.domain.Notification
         spring.json.type.mapping: Notification:com.openclassrooms.notificationservice.domain.Notification
+        #spring.json.trusted.packages: com.openclassrooms.notificationservice.domain
         spring.json.trusted.packages: "*"
 
   # EMAIL CONFIGURATION
@@ -110,7 +111,7 @@ resilience4j:
         cancelRunningFuture: true
 
 
-# SERVICES CONFIGURATION
+# SERVICES CONFIGURATION     AUTH_SERVER_URL
 services:
   authorization-server:
     url: ${AUTH_SERVER_URL:http://localhost:9001}

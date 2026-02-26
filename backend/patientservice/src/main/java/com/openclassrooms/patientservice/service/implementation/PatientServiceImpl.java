@@ -15,25 +15,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
 import java.time.Year;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import static com.openclassrooms.patientservice.enumeration.EventType.PATIENT_CREATED;
+import static com.openclassrooms.patientservice.enumeration.EventType.*;
 
 /**
- * Implémentation du service Patient.
- *
- * Responsabilités :
- * - Validation métier
- * - Orchestration des appels repository et services externes
- * - Transformation Entity <-> DTO
- * - Gestion des erreurs métier
+ * Implémentation du service Patient (Full Réactif).
  *
  * @author Kardigué MAGASSA
- * @version 2.0
+ * @version 2.1
  * @since 2026-01-09
  */
 @Slf4j
@@ -47,222 +43,233 @@ public class PatientServiceImpl implements PatientService {
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
 
-
-    // CRUD OPERATIONS
+    //  CRUD OPERATIONS
 
     @Override
     @Transactional
-    public PatientResponse createPatient(PatientRequest request) {
+    public Mono<PatientResponse> createPatient(PatientRequest request) {
         log.info("Creating patient for user: {}", request.getUserUuid());
 
-        if (patientRepository.existsPatientByUserUuid(request.getUserUuid())) {
-            throw new ApiException("Un dossier patient existe déjà pour cet utilisateur");
-        }
+        return Mono.fromCallable(() -> patientRepository.existsPatientByUserUuid(request.getUserUuid()))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(new ApiException("Un dossier patient existe déjà pour cet utilisateur"));
+                    }
+                    return userService.getUserByUuid(request.getUserUuid());
+                })
+                .flatMap(user -> {
+                    String medicalRecordNumber = generateUniqueMedicalRecordNumber();
 
-        UserRequest user = userService.getUserByUuid(request.getUserUuid());
-        String medicalRecordNumber = generateUniqueMedicalRecordNumber();
-        Patient patient = patientMapper.toEntity(request, medicalRecordNumber);
-        Patient savedPatient = patientRepository.savePatient(patient);
+                    return Mono.fromCallable(() -> {
+                                Patient patient = patientMapper.toEntity(request, medicalRecordNumber);
+                                Patient savedPatient = patientRepository.savePatient(patient);
 
-        // Publier l'événement avec la structure attendue par NotificationService
-        eventPublisher.publishEvent(Event.builder()
-                .eventType(PATIENT_CREATED)
-                .data(Map.of(
-                        "email", user.getEmail(),
-                        "name", user.getFirstName() + " " + user.getLastName(),
-                        "recordNumber", medicalRecordNumber,
-                        "subject", "Bienvenue chez MediLabo"
-                ))
-                .build());
+                                // Publier l'événement
+                                eventPublisher.publishEvent(Event.builder()
+                                        .eventType(PATIENT_CREATED)
+                                        .data(Map.of(
+                                                "email", user.getEmail(),
+                                                "name", user.getFirstName() + " " + user.getLastName(),
+                                                "recordNumber", medicalRecordNumber,
+                                                "subject", "Bienvenue chez MediLabo"
+                                        ))
+                                        .build());
 
-        log.info("Patient created successfully: {}", savedPatient.getPatientUuid());
-        return patientMapper.toResponse(savedPatient);
+                                log.info("Patient created successfully: {}", savedPatient.getPatientUuid());
+                                return patientMapper.toResponse(savedPatient);
+                            })
+                            .subscribeOn(Schedulers.boundedElastic());
+                });
     }
 
     @Override
-    public PatientResponse getPatientByUuid(String patientUuid) {
+    public Mono<PatientResponse> getPatientByUuid(String patientUuid) {
         log.debug("Fetching patient by UUID: {}", patientUuid);
 
-        Patient patient = patientRepository.findByPatientUuid(patientUuid)
-                .orElseThrow(() -> new ApiException("Patient non trouvé: " + patientUuid));
-
-        // Enrichir avec les infos utilisateur
-        return enrichWithUserInfo(patient);
+        return Mono.fromCallable(() -> patientRepository.findByPatientUuid(patientUuid))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional
+                        .map(Mono::just)
+                        .orElseGet(() -> Mono.error(new ApiException("Patient non trouvé: " + patientUuid))))
+                .flatMap(this::enrichWithUserInfo);
     }
 
     @Override
-    public PatientResponse getPatientByUserUuid(String userUuid) {
+    public Mono<PatientResponse> getPatientByUserUuid(String userUuid) {
         log.debug("Fetching patient for user: {}", userUuid);
 
-        Patient patient = patientRepository.findByUserUuid(userUuid)
-                .orElseThrow(() -> new ApiException("Aucun dossier patient pour cet utilisateur"));
-
-        // Enrichir avec les infos utilisateur
-        return enrichWithUserInfo(patient);
+        return Mono.fromCallable(() -> patientRepository.findByUserUuid(userUuid))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional
+                        .map(Mono::just)
+                        .orElseGet(() -> Mono.error(new ApiException("Aucun dossier patient pour cet utilisateur"))))
+                .flatMap(this::enrichWithUserInfo);
     }
 
-    // Méthode utilitaire privée
-    private PatientResponse enrichWithUserInfo(Patient patient) {
-        try {
-            UserRequest user = userService.getUserByUuid(patient.getUserUuid());
-            return patientMapper.toResponseWithUserInfo(patient, user);
-        } catch (ApiException e) {
-            //log.warn("Could not fetch user info for patient: {}", patient.getPatientUuid());
-            log.error("Erreur détaillée lors de l'enrichissement : ", e);
-            return patientMapper.toResponse(patient);
-        }
-    }
-
-    /**
-     * Récupère un patient par email.
-     *
-     * Flow:
-     * 1. Appeler Authorization Server pour obtenir l'utilisateur par email
-     * 2. Récupérer le userUuid
-     * 3. Chercher le patient par userUuid
-     */
     @Override
-    public PatientResponse getPatientByEmail(String email) {
+    public Mono<PatientResponse> getPatientByEmail(String email) {
         log.debug("Fetching patient by email: {}", email);
 
-        // 1. Appeler Authorization Server pour obtenir l'utilisateur
-        Optional<UserRequest> userOptional = userService.getUserByEmail(email);
-
-        if (userOptional.isEmpty()) {
-            throw new ApiException("Aucun utilisateur trouvé avec cet email: " + email);
-        }
-
-        UserRequest user = userOptional.get();
-        String userUuid = user.getUserUuid();
-
-        // 2. Chercher le patient par userUuid
-        Patient patient = patientRepository.findByUserUuid(userUuid)
-                .orElseThrow(() -> new ApiException("Aucun dossier patient pour l'email: " + email));
-
-        // 3. Retourner avec les infos utilisateur enrichies
-        return patientMapper.toResponseWithUserInfo(patient, user);
+        return userService.getUserByEmail(email)
+                .switchIfEmpty(Mono.error(new ApiException("Aucun utilisateur trouvé avec cet email: " + email)))
+                .flatMap(user -> Mono.fromCallable(() -> patientRepository.findByUserUuid(user.getUserUuid()))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .flatMap(optional -> optional
+                                .map(patient -> Mono.just(patientMapper.toResponseWithUserInfo(patient, user)))
+                                .orElseGet(() -> Mono.error(new ApiException("Aucun dossier patient pour l'email: " + email)))));
     }
 
     @Override
-    public List<PatientResponse> getAllActivePatients() {
+    public Flux<PatientResponse> getAllActivePatients() {
         log.debug("Fetching all active patients");
 
-        List<Patient> patients = patientRepository.findAllPatientByActiveTrue();
-
-        // Pour chaque patient, enrichir avec les infos utilisateur on optimise appel http
-        return patients.stream()
-                .map(patient -> {
-                    try {
-                        return enrichWithUserInfo(patient);
-                    } catch (Exception e) {
-                        log.warn("Could not enrich patient {}: {}", patient.getPatientUuid(), e.getMessage());
-                        return patientMapper.toResponse(patient);
-                    }
-                })
-                .toList();
+        return Mono.fromCallable(patientRepository::findAllPatientByActiveTrue)
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable)
+                .flatMap(patient -> enrichWithUserInfo(patient)
+                        .onErrorResume(e -> {
+                            log.warn("Could not enrich patient {}: {}", patient.getPatientUuid(), e.getMessage());
+                            return Mono.just(patientMapper.toResponse(patient));
+                        }));
     }
 
     @Override
     @Transactional
-    public PatientResponse updatePatient(String patientUuid, PatientRequest request) {
+    public Mono<PatientResponse> updatePatient(String patientUuid, PatientRequest request) {
         log.info("Updating patient: {}", patientUuid);
 
-        // Récupérer le patient existant
-        Patient existingPatient = patientRepository.findByPatientUuid(patientUuid)
-                .orElseThrow(() -> new ApiException("Patient non trouvé: " + patientUuid));
+        return Mono.fromCallable(() -> patientRepository.findByPatientUuid(patientUuid))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional
+                        .map(Mono::just)
+                        .orElseGet(() -> Mono.error(new ApiException("Patient non trouvé: " + patientUuid))))
+                .flatMap(existingPatient ->
+                        userService.getUserByUuid(existingPatient.getUserUuid())
+                                .flatMap(user -> Mono.fromCallable(() -> {
+                                            Patient updatedPatient = patientMapper.updateEntity(existingPatient, request);
+                                            Patient savedPatient = patientRepository.updatePatient(updatedPatient);
 
-        // Mettre à jour les champs
-        Patient updatedPatient = patientMapper.updateEntity(existingPatient, request);
+                                            // Publier l'événement PATIENT_UPDATED
+                                            publishPatientUpdatedEvent(user.getEmail(),
+                                                    user.getFirstName() + " " + user.getLastName(),
+                                                    savedPatient.getMedicalRecordNumber());
 
-        // Persister
-        Patient savedPatient = patientRepository.updatePatient(updatedPatient);
-        log.info("Patient updated successfully: {}", patientUuid);
-
-        log.info("Patient updated successfully: {}", patientUuid);
-
-        return enrichWithUserInfo(savedPatient);
+                                            log.info("Patient updated successfully: {}", patientUuid);
+                                            return patientMapper.toResponseWithUserInfo(savedPatient, user);
+                                        })
+                                        .subscribeOn(Schedulers.boundedElastic()))
+                );
     }
 
     @Override
     @Transactional
-    public void deletePatient(String patientUuid) {
+    public Mono<Void> deletePatient(String patientUuid) {
         log.info("Soft deleting patient: {}", patientUuid);
 
-        // Vérifier que le patient existe
-        if (patientRepository.findByPatientUuid(patientUuid).isEmpty()) {
-            throw new ApiException("Patient non trouvé: " + patientUuid);
-        }
+        return Mono.fromCallable(() -> patientRepository.findByPatientUuid(patientUuid))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> {
+                    if (optional.isEmpty()) {
+                        return Mono.error(new ApiException("Patient non trouvé: " + patientUuid));
+                    }
 
-        boolean deleted = patientRepository.softDeletePatientByPatientUuid(patientUuid);
+                    Patient patient = optional.get();
 
-        if (!deleted) {
-            throw new ApiException("Erreur lors de la suppression du patient");
-        }
+                    // Récupérer les infos utilisateur pour l'email
+                    return userService.getUserByUuid(patient.getUserUuid())
+                            .flatMap(user -> Mono.fromCallable(() -> {
+                                        boolean deleted = patientRepository.softDeletePatientByPatientUuid(patientUuid);
 
-        log.info("Patient deleted successfully: {}", patientUuid);
+                                        if (deleted) {
+                                            // Publier l'événement PATIENT_DELETED
+                                            publishPatientDeletedEvent(user.getEmail(),
+                                                    user.getFirstName() + " " + user.getLastName(),
+                                                    patient.getMedicalRecordNumber());
+                                        }
+
+                                        return deleted;
+                                    })
+                                    .subscribeOn(Schedulers.boundedElastic()));
+                })
+                .flatMap(deleted -> {
+                    if (!deleted) {
+                        return Mono.error(new ApiException("Erreur lors de la suppression du patient"));
+                    }
+                    log.info("Patient deleted successfully: {}", patientUuid);
+                    return Mono.empty();
+                });
     }
 
     @Override
     @Transactional
-    public PatientResponse restorePatient(String patientUuid) {
+    public Mono<PatientResponse> restorePatient(String patientUuid) {
         log.info("Restoring patient: {}", patientUuid);
 
-        // Vérifier que le patient existe et est bien supprimé
-        Patient patient = patientRepository.findSoftDeletedByPatientUuid(patientUuid)
-                .orElseThrow(() -> new ApiException("Patient supprimé non trouvé: " + patientUuid));
-
-        boolean restored = patientRepository.restorePatientByPatientUuid(patientUuid);
-
-        if (!restored) {
-            throw new ApiException("Erreur lors de la restauration du patient");
-        }
-
-        log.info("Patient restored successfully: {}", patientUuid);
-
-        return enrichWithUserInfo(patient);
+        return Mono.fromCallable(() -> patientRepository.findSoftDeletedByPatientUuid(patientUuid))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional
+                        .map(Mono::just)
+                        .orElseGet(() -> Mono.error(new ApiException("Patient supprimé non trouvé: " + patientUuid))))
+                .flatMap(patient -> Mono.fromCallable(() -> patientRepository.restorePatientByPatientUuid(patientUuid))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .flatMap(restored -> {
+                            if (!restored) {
+                                return Mono.error(new ApiException("Erreur lors de la restauration du patient"));
+                            }
+                            log.info("Patient restored successfully: {}", patientUuid);
+                            return enrichWithUserInfo(patient);
+                        }));
     }
 
     // QUERY OPERATIONS
 
     @Override
-    public PatientResponse getPatientByMedicalRecordNumber(String medicalRecordNumber) {
+    public Mono<PatientResponse> getPatientByMedicalRecordNumber(String medicalRecordNumber) {
         log.debug("Fetching patient by medical record: {}", medicalRecordNumber);
 
-        Patient patient = patientRepository.findPatientByMedicalRecordNumber(medicalRecordNumber)
-                .orElseThrow(() -> new ApiException("Dossier médical non trouvé: " + medicalRecordNumber));
-
-        return enrichWithUserInfo(patient);
+        return Mono.fromCallable(() -> patientRepository.findPatientByMedicalRecordNumber(medicalRecordNumber))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional
+                        .map(Mono::just)
+                        .orElseGet(() -> Mono.error(new ApiException("Dossier médical non trouvé: " + medicalRecordNumber))))
+                .flatMap(this::enrichWithUserInfo);
     }
 
     @Override
-    public List<PatientResponse> getPatientsByBloodType(String bloodType) {
+    public Flux<PatientResponse> getPatientsByBloodType(String bloodType) {
         log.debug("Fetching patients by blood type: {}", bloodType);
 
-        List<Patient> patients = patientRepository.findPatientByBloodTypeAndActiveTrue(bloodType);
-
-        return patientMapper.toResponseList(patients);
+        return Mono.fromCallable(() -> patientRepository.findPatientByBloodTypeAndActiveTrue(bloodType))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable)
+                .map(patientMapper::toResponse);
     }
 
     // UTILITY OPERATIONS
 
     @Override
-    public boolean hasPatientRecord(String userUuid) {
-        return patientRepository.existsPatientByUserUuid(userUuid);
+    public Mono<Boolean> hasPatientRecord(String userUuid) {
+        return Mono.fromCallable(() -> patientRepository.existsPatientByUserUuid(userUuid))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
-    public long countActivePatients() {
-        return patientRepository.countPatientByActiveTrue();
+    public Mono<Long> countActivePatients() {
+        return Mono.fromCallable(patientRepository::countPatientByActiveTrue).subscribeOn(Schedulers.boundedElastic());
     }
 
-    // PRIVATE METHODS
+    //  PRIVATE METHODS
 
-    /**
-     * Génère un numéro de dossier médical unique.
-     * Format: MED-YYYY-XXXXXX
-     *
-     * @return numéro de dossier unique
-     */
+    private Mono<PatientResponse> enrichWithUserInfo(Patient patient) {
+        return userService.getUserByUuid(patient.getUserUuid())
+                .map(user -> patientMapper.toResponseWithUserInfo(patient, user))
+                .onErrorResume(e -> {
+                    log.warn("Could not fetch user info for patient {}: {}", patient.getPatientUuid(), e.getMessage());
+                    return Mono.just(patientMapper.toResponse(patient));
+                });
+    }
+
     private String generateUniqueMedicalRecordNumber() {
         String medicalRecordNumber;
         int attempts = 0;
@@ -284,5 +291,41 @@ public class PatientServiceImpl implements PatientService {
         int year = Year.now().getValue();
         int random = (int) (Math.random() * 999999);
         return String.format("MED-%d-%06d", year, random);
+    }
+
+    // EVENT PUBLISHING
+
+    private void publishPatientUpdatedEvent(String email, String name, String recordNumber) {
+        try {
+            eventPublisher.publishEvent(Event.builder()
+                    .eventType(PATIENT_UPDATED)
+                    .data(Map.of(
+                            "email", email,
+                            "name", name,
+                            "recordNumber", recordNumber,
+                            "date", LocalDateTime.now().toString()
+                    ))
+                    .build());
+            log.debug("PATIENT_UPDATED event published for: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to publish PATIENT_UPDATED event: {}", e.getMessage());
+        }
+    }
+
+    private void publishPatientDeletedEvent(String email, String name, String recordNumber) {
+        try {
+            eventPublisher.publishEvent(Event.builder()
+                    .eventType(PATIENT_DELETED)
+                    .data(Map.of(
+                            "email", email,
+                            "name", name,
+                            "recordNumber", recordNumber,
+                            "date", LocalDateTime.now().toString()
+                    ))
+                    .build());
+            log.debug("PATIENT_DELETED event published for: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to publish PATIENT_DELETED event: {}", e.getMessage());
+        }
     }
 }

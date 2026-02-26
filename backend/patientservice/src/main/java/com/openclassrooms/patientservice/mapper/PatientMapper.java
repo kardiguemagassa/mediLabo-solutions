@@ -57,6 +57,7 @@ public class PatientMapper {
      * @return entité mise à jour
      */
     public Patient updateEntity(Patient existing, PatientRequest request) {
+        if (request.getGender() !=null) existing.setGender(request.getGender());
         existing.setDateOfBirth(request.getDateOfBirth());
         existing.setGender(request.getGender());
         existing.setBloodType(request.getBloodType());

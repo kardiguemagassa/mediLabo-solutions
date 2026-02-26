@@ -1,12 +1,14 @@
 package com.openclassrooms.patientservice.security;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +32,7 @@ import java.util.stream.Stream;
  * @since 2026-01-09
  */
 @Slf4j
+@Component
 public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
     private static final String AUTHORITIES_CLAIM = "authorities";
@@ -37,7 +40,7 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
     private static final String SCOPE_CLAIM = "scope";
 
     @Override
-    public AbstractAuthenticationToken convert(Jwt jwt) {
+    public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
         Collection<GrantedAuthority> authorities = extractAllAuthorities(jwt);
 
         // Le subject contient le user_uuid

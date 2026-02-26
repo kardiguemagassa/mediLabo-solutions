@@ -1,7 +1,6 @@
 package com.openclassrooms.assessmentservice.dtoresponse;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
  * DTO représentant une note médicale du Notes Service.
  *
  * @author Kardigué MAGASSA
- * @version 1.0
+ * @version 1.1
  * @since 2026-02-09
  */
 @Data
@@ -26,7 +25,6 @@ public class NoteResponse {
     private String patientUuid;
     private String practitionerUuid;
     private String practitionerName;
-    @JsonProperty("note")
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

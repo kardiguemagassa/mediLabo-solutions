@@ -1,7 +1,5 @@
 package com.openclassrooms.patientservice.event;
 
-
-
 import com.openclassrooms.patientservice.enumeration.EventType;
 import lombok.*;
 

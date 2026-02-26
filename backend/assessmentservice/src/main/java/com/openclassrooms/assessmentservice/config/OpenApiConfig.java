@@ -30,7 +30,7 @@ public class OpenApiConfig {
                                                 .bearerFormat("JWT")
                                                 .description("Entrez le token JWT fourni par le service d'authentification"))
 
-                                // 2. Définition de schémas de réponses d'erreurs réutilisables (Standard d'entreprise)
+                                // 2. Définition de schémas de réponses d'erreurs réutilisables
                                 .addResponses("Unauthorized", new ApiResponse().description("Jeton invalide ou expiré"))
                                 .addResponses("Forbidden", new ApiResponse().description("Droits insuffisants pour accéder à cette ressource"))
                                 .addResponses("InternalError", new ApiResponse().description("Erreur interne du serveur - Contactez le support technique")))

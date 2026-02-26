@@ -13,9 +13,8 @@ public class Role {
 
     private Role() {}
 
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // RÔLES INDIVIDUELS
-    // ═══════════════════════════════════════════════════════════════════════════
 
     /**
      * Réservé aux administrateurs (SUPER_ADMIN, ADMIN).
@@ -32,9 +31,7 @@ public class Role {
      */
     public static final String ORGANIZER_ONLY = "hasAnyRole('SUPER_ADMIN', 'ORGANIZER')";
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // COMBINAISONS
-    // ═══════════════════════════════════════════════════════════════════════════
 
     /**
      * Tout le personnel médical et administratif.

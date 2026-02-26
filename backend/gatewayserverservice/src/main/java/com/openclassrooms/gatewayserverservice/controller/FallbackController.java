@@ -48,6 +48,13 @@ public class FallbackController {
         return buildFallbackResponse(exchange, "Le service d'évaluation santé est indisponible.");
     }
 
+    @Operation(summary = "Fallback Notifications", description = "Réponse de secours pour Notification-Service")
+    @ApiResponses(value = { @ApiResponse(responseCode = "503", content = @Content(schema = @Schema(implementation = Response.class))) })
+    @RequestMapping(value = "/notifications")
+    public Mono<ResponseEntity<Response>> notificationFallback(ServerWebExchange exchange) {
+        return buildFallbackResponse(exchange, "Le service de notification est indisponible pour le moment.");
+    }
+
     private Mono<ResponseEntity<Response>> buildFallbackResponse(ServerWebExchange exchange, String message) {
         HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
         Response apiResponse = RequestUtils.getResponse(exchange, Collections.emptyMap(), message, status);
