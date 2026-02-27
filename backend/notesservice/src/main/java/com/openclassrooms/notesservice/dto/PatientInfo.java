@@ -36,7 +36,7 @@ public class PatientInfo {
      * Informations utilisateur.
      */
     @Data
-    @Builder
+    @Builder(toBuilder = true)
     @NoArgsConstructor
     @AllArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)

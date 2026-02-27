@@ -137,8 +137,12 @@ class NotificationResourceTest {
         @Test
         @DisplayName("Devrait répondre à un message avec succès")
         void shouldReplyMessageSuccessfully() throws Exception {
+            // MessageRequest exige subject et receiverEmail via @NotBlank
+            // Pour une réponse, on doit quand même les fournir (même si logiquement inutiles)
             MessageRequest request = MessageRequest.builder()
                     .conversationId("conv-uuid-456")
+                    .receiverEmail("marie.martin@patient.fr")
+                    .subject("Re: Résultats d'analyses")
                     .message("Merci pour les résultats.")
                     .build();
 
@@ -146,7 +150,10 @@ class NotificationResourceTest {
                     .thenReturn(Mono.just(messageResponse));
 
             MvcResult mvcResult = mockMvc.perform(post("/api/notifications/reply")
-                            .with(jwt().jwt(jwt -> jwt.subject("sender-uuid")))
+                            .with(jwt().jwt(jwt -> jwt.subject("sender-uuid")
+                                    .claim("email", "jean.dupont@medilabo.fr")
+                                    .claim("firstName", "Jean")
+                                    .claim("lastName", "Dupont")))
                             .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -157,6 +164,27 @@ class NotificationResourceTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.message.messageUuid").value("msg-uuid-123"));
         }
+
+//        @Test
+//        @DisplayName("Devrait retourner 400 si conversationId manquant pour reply")
+//        void shouldReturn400WhenConversationIdMissing() throws Exception {
+//            // Pour une réponse, conversationId devrait être obligatoire
+//            MessageRequest request = MessageRequest.builder()
+//                    .receiverEmail("marie.martin@patient.fr")
+//                    .subject("Re: Sujet")
+//                    .message("Réponse sans conversationId")
+//                    // conversationId manquant
+//                    .build();
+//
+//            // Ce test dépend de la validation dans MessageRequest
+//            // Si conversationId n'est pas @NotBlank, ce test échouera
+//            mockMvc.perform(post("/api/notifications/reply")
+//                            .with(jwt().jwt(jwt -> jwt.subject("user-uuid")))
+//                            .with(csrf())
+//                            .contentType(MediaType.APPLICATION_JSON)
+//                            .content(objectMapper.writeValueAsString(request)))
+//                    .andExpect(status().isBadRequest()); // Ou isBadRequest() selon ta validation
+//        }
     }
 
     // ==================== GET MESSAGES ====================
