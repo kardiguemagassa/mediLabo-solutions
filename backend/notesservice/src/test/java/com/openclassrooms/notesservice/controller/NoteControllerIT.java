@@ -58,10 +58,10 @@ class NoteControllerIT {
         noteRepository.deleteAll();
     }
 
-    // HELPER METHODS
+    // ==================== HELPER METHODS ====================
 
     /**
-     * JWT praticien par défaut
+     * JWT praticien par défaut avec autorités requises
      */
     private SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor mockJwt() {
         return jwt()
@@ -70,7 +70,13 @@ class NoteControllerIT {
                         .claim("firstName", "Jean")
                         .claim("lastName", "Dupont")
                         .claim("role", "practitioner"))
-                .authorities(new SimpleGrantedAuthority("ROLE_PRACTITIONER"));
+                .authorities(
+                        new SimpleGrantedAuthority("ROLE_PRACTITIONER"),
+                        new SimpleGrantedAuthority("note:create"),
+                        new SimpleGrantedAuthority("note:read"),
+                        new SimpleGrantedAuthority("note:update"),
+                        new SimpleGrantedAuthority("note:delete")
+                );
     }
 
     /**
@@ -83,11 +89,17 @@ class NoteControllerIT {
                         .claim("firstName", firstName)
                         .claim("lastName", lastName)
                         .claim("role", "practitioner"))
-                .authorities(new SimpleGrantedAuthority("ROLE_PRACTITIONER"));
+                .authorities(
+                        new SimpleGrantedAuthority("ROLE_PRACTITIONER"),
+                        new SimpleGrantedAuthority("note:create"),
+                        new SimpleGrantedAuthority("note:read"),
+                        new SimpleGrantedAuthority("note:update"),
+                        new SimpleGrantedAuthority("note:delete")
+                );
     }
 
     /**
-     * JWT admin (pour les endpoints @PreAuthorize(ADMIN_ONLY))
+     * JWT admin
      */
     private SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor mockAdmin() {
         return jwt()
@@ -96,10 +108,24 @@ class NoteControllerIT {
                         .claim("firstName", "Admin")
                         .claim("lastName", "System")
                         .claim("role", "admin"))
-                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                .authorities(
+                        new SimpleGrantedAuthority("ROLE_ADMIN"),
+                        new SimpleGrantedAuthority("SUPER_ADMIN"),
+                        new SimpleGrantedAuthority("note:create"),
+                        new SimpleGrantedAuthority("note:read"),
+                        new SimpleGrantedAuthority("note:update"),
+                        new SimpleGrantedAuthority("note:delete")
+                );
     }
 
-    // SCÉNARIO CRUD COMPLETE
+    /**
+     * Effectue une requête async et retourne le résultat après dispatch
+     */
+    private MvcResult performAsyncAndDispatch(MvcResult mvcResult) throws Exception {
+        return mockMvc.perform(asyncDispatch(mvcResult)).andReturn();
+    }
+
+    // FULL CRUD SCENARIO
 
     @Nested
     @DisplayName("Full CRUD Scenario")
@@ -114,10 +140,14 @@ class NoteControllerIT {
                     .content("Initial observation: patient stable")
                     .build();
 
-            MvcResult createResult = mockMvc.perform(post("/api/notes")
+            MvcResult createAsyncResult = mockMvc.perform(post("/api/notes")
                             .with(mockJwt())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(createRequest)))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            MvcResult createResult = mockMvc.perform(asyncDispatch(createAsyncResult))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.note.noteUuid").exists())
                     .andExpect(jsonPath("$.data.note.patientUuid", is(PATIENT_UUID)))
@@ -130,8 +160,12 @@ class NoteControllerIT {
             assertThat(noteUuid).isNotBlank();
 
             // 2. READ
-            mockMvc.perform(get("/api/notes/{noteUuid}", noteUuid)
+            MvcResult readAsyncResult = mockMvc.perform(get("/api/notes/{noteUuid}", noteUuid)
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(readAsyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.note.noteUuid", is(noteUuid)))
                     .andExpect(jsonPath("$.data.note.content", is("Initial observation: patient stable")));
@@ -142,28 +176,44 @@ class NoteControllerIT {
                     .content("Updated observation: patient improving")
                     .build();
 
-            mockMvc.perform(put("/api/notes/{noteUuid}", noteUuid)
+            MvcResult updateAsyncResult = mockMvc.perform(put("/api/notes/{noteUuid}", noteUuid)
                             .with(mockJwt())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateRequest)))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(updateAsyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.note.content", is("Updated observation: patient improving")));
 
             // 4. VERIFY UPDATE
-            mockMvc.perform(get("/api/notes/{noteUuid}", noteUuid)
+            MvcResult verifyAsyncResult = mockMvc.perform(get("/api/notes/{noteUuid}", noteUuid)
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(verifyAsyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.note.content", is("Updated observation: patient improving")));
 
             // 5. DELETE (soft delete)
-            mockMvc.perform(delete("/api/notes/{noteUuid}", noteUuid)
+            MvcResult deleteAsyncResult = mockMvc.perform(delete("/api/notes/{noteUuid}", noteUuid)
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(deleteAsyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message", is("Note supprimée avec succès")));
 
-            // 6. VERIFY DELETE - ApiException → 400 BAD_REQUEST
-            mockMvc.perform(get("/api/notes/{noteUuid}", noteUuid)
+            // 6. VERIFY DELETE - Note non trouvée
+            MvcResult deletedAsyncResult = mockMvc.perform(get("/api/notes/{noteUuid}", noteUuid)
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(deletedAsyncResult))
                     .andExpect(status().isBadRequest());
 
             // 7. VERIFY DATABASE - La note existe toujours mais inactive
@@ -171,7 +221,7 @@ class NoteControllerIT {
         }
     }
 
-    // SCÉNARIOS MULTI-NOTES
+    // ==================== MULTI-NOTE SCENARIOS ====================
 
     @Nested
     @DisplayName("Multi-Note Scenarios")
@@ -180,27 +230,42 @@ class NoteControllerIT {
         @Test
         @DisplayName("Should manage multiple notes for same patient")
         void multipleNotesForPatient() throws Exception {
+            // Créer 3 notes
             for (int i = 1; i <= 3; i++) {
                 NoteRequest request = NoteRequest.builder()
                         .patientUuid(PATIENT_UUID)
                         .content("Note " + i + " for patient")
                         .build();
 
-                mockMvc.perform(post("/api/notes")
+                MvcResult asyncResult = mockMvc.perform(post("/api/notes")
                                 .with(mockJwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(request().asyncStarted())
+                        .andReturn();
+
+                mockMvc.perform(asyncDispatch(asyncResult))
                         .andExpect(status().isCreated());
             }
 
-            mockMvc.perform(get("/api/notes/patient/{patientUuid}", PATIENT_UUID)
+            // Vérifier la liste
+            MvcResult listAsyncResult = mockMvc.perform(get("/api/notes/patient/{patientUuid}", PATIENT_UUID)
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(listAsyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.notes", hasSize(3)))
                     .andExpect(jsonPath("$.data.count", is(3)));
 
-            mockMvc.perform(get("/api/notes/count/patient/{patientUuid}", PATIENT_UUID)
+            // Vérifier le comptage
+            MvcResult countAsyncResult = mockMvc.perform(get("/api/notes/count/patient/{patientUuid}", PATIENT_UUID)
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(countAsyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.noteCount", is(3)));
         }
@@ -214,10 +279,14 @@ class NoteControllerIT {
                     .content("Note from practitioner 1")
                     .build();
 
-            mockMvc.perform(post("/api/notes")
+            MvcResult async1 = mockMvc.perform(post("/api/notes")
                             .with(mockJwtAs("practitioner-1", "Jean", "Dupont"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request1)))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(async1))
                     .andExpect(status().isCreated());
 
             // Praticien 2 crée une note
@@ -226,28 +295,40 @@ class NoteControllerIT {
                     .content("Note from practitioner 2")
                     .build();
 
-            mockMvc.perform(post("/api/notes")
+            MvcResult async2 = mockMvc.perform(post("/api/notes")
                             .with(mockJwtAs("practitioner-2", "Marie", "Martin"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request2)))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(async2))
                     .andExpect(status().isCreated());
 
-            // Admin vérifie les notes du praticien 1 (ADMIN_ONLY)
-            mockMvc.perform(get("/api/notes/practitioner/{uuid}", "practitioner-1")
+            // Admin vérifie les notes du praticien 1
+            MvcResult practitionerAsync = mockMvc.perform(get("/api/notes/practitioner/{uuid}", "practitioner-1")
                             .with(mockAdmin()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(practitionerAsync))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.notes", hasSize(1)))
                     .andExpect(jsonPath("$.data.notes[0].content", is("Note from practitioner 1")));
 
-            // Le patient a bien 2 notes au total (ALL_STAFF)
-            mockMvc.perform(get("/api/notes/patient/{patientUuid}", PATIENT_UUID)
+            // Le patient a bien 2 notes au total
+            MvcResult patientAsync = mockMvc.perform(get("/api/notes/patient/{patientUuid}", PATIENT_UUID)
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(patientAsync))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.notes", hasSize(2)));
         }
     }
 
-    // SCÉNARIOS D'AUTORISATION
+    // ==================== AUTHORIZATION SCENARIOS ====================
 
     @Nested
     @DisplayName("Authorization Scenarios")
@@ -262,26 +343,34 @@ class NoteControllerIT {
                     .content("Original content")
                     .build();
 
-            MvcResult createResult = mockMvc.perform(post("/api/notes")
+            MvcResult createAsync = mockMvc.perform(post("/api/notes")
                             .with(mockJwtAs("author-uuid", "Jean", "Dupont"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(createRequest)))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            MvcResult createResult = mockMvc.perform(asyncDispatch(createAsync))
                     .andExpect(status().isCreated())
                     .andReturn();
 
             String noteUuid = objectMapper.readTree(createResult.getResponse().getContentAsString())
                     .path("data").path("note").path("noteUuid").asText();
 
-            // Praticien 2 essaie de modifier → ApiException → 400
+            // Praticien 2 essaie de modifier
             NoteRequest updateRequest = NoteRequest.builder()
                     .patientUuid(PATIENT_UUID)
                     .content("Trying to hijack this note")
                     .build();
 
-            mockMvc.perform(put("/api/notes/{noteUuid}", noteUuid)
+            MvcResult updateAsync = mockMvc.perform(put("/api/notes/{noteUuid}", noteUuid)
                             .with(mockJwtAs("other-uuid", "Autre", "Praticien"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateRequest)))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(updateAsync))
                     .andExpect(status().isBadRequest());
         }
 
@@ -301,7 +390,7 @@ class NoteControllerIT {
         }
     }
 
-    // SCÉNARIOS EDGE CASES
+    // ==================== EDGE CASES ====================
 
     @Nested
     @DisplayName("Edge Cases")
@@ -310,8 +399,12 @@ class NoteControllerIT {
         @Test
         @DisplayName("Should return empty list for unknown patient")
         void getNotes_unknownPatient_returnsEmptyList() throws Exception {
-            mockMvc.perform(get("/api/notes/patient/{patientUuid}", "unknown-patient")
+            MvcResult asyncResult = mockMvc.perform(get("/api/notes/patient/{patientUuid}", "unknown-patient")
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(asyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.notes", hasSize(0)))
                     .andExpect(jsonPath("$.data.count", is(0)));
@@ -320,8 +413,12 @@ class NoteControllerIT {
         @Test
         @DisplayName("Should return 0 count for unknown patient")
         void countNotes_unknownPatient_returnsZero() throws Exception {
-            mockMvc.perform(get("/api/notes/count/patient/{patientUuid}", "unknown-patient")
+            MvcResult asyncResult = mockMvc.perform(get("/api/notes/count/patient/{patientUuid}", "unknown-patient")
                             .with(mockJwt()))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(asyncResult))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.noteCount", is(0)));
         }

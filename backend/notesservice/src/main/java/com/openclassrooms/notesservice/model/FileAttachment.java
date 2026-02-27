@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @since 2026-02-07
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class FileAttachment {
