@@ -40,7 +40,7 @@ class ApiAuthenticationEventListenerTest {
 
             // 1. Mocks de sécurité
             Authentication auth = mock(Authentication.class);
-            // On utilise une vraie instance de token pour que l' "instanceof" dans ton code soit TRUE
+            // On utilise une vraie instance de token pour que l' "instanceof" dans le code soit TRUE
             UsernamePasswordAuthenticationToken principal = mock(UsernamePasswordAuthenticationToken.class);
             AuthenticationSuccessEvent event = new AuthenticationSuccessEvent(auth);
 
@@ -48,7 +48,6 @@ class ApiAuthenticationEventListenerTest {
             when(auth.getPrincipal()).thenReturn(principal);
 
             // 2. Mock du retour de UserUtils.getUser
-            // Note : Remplace "Object" par ton type réel (ex: UserDTO ou UserEntity)
             var mockUser = mock(com.openclassrooms.authorizationserverservice.model.User.class);
             when(mockUser.getUserId()).thenReturn(1L);
             when(mockUser.getUserUuid()).thenReturn("uuid-123");

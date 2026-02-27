@@ -1,10 +1,9 @@
-package com.openclassrooms.notificationservice.client;
+package com.openclassrooms.notificationservice.service.implementation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.notificationservice.domain.Response;
 import com.openclassrooms.notificationservice.dtorequest.UserRequest;
 import com.openclassrooms.notificationservice.exception.ApiException;
-import com.openclassrooms.notificationservice.service.implementation.UserServiceImpl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
@@ -15,7 +14,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -33,15 +31,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2026-02-09
  */
 @DisplayName("UserServiceImpl (AuthServerClient) Tests")
-class AuthServerClientTest {
+class UserServiceClientImplTest {
 
     private MockWebServer mockWebServer;
-    private UserServiceImpl userService;
+    private UserServiceClientImpl userService;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() throws IOException {
-        // ⭐ Créer un nouveau MockWebServer pour chaque test
         mockWebServer = new MockWebServer();
         mockWebServer.start();
 
@@ -51,7 +48,7 @@ class AuthServerClientTest {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build();
 
-        userService = new UserServiceImpl(webClient);
+        userService = new UserServiceClientImpl(webClient);
     }
 
     @AfterEach
@@ -60,7 +57,7 @@ class AuthServerClientTest {
         mockWebServer.shutdown();
     }
 
-    // ==================== Helper Methods ====================
+    // Helper Methods
 
     /**
      * Crée une Response valide contenant un user dans data.
@@ -71,14 +68,14 @@ class AuthServerClientTest {
                 LocalDateTime.now().toString(),
                 HttpStatus.OK.value(),
                 "/user/" + user.getUserUuid(),
-                HttpStatus.OK,  // ⭐ Utiliser OK au lieu de CREATED
+                HttpStatus.OK,
                 "User found",
                 "",
                 Map.of("user", user)
         );
     }
 
-    // ==================== getUserByEmail Tests ====================
+    // getUserByEmail Tests
 
     @Nested
     @DisplayName("getUserByEmail Tests")
@@ -186,40 +183,11 @@ class AuthServerClientTest {
         }
     }
 
-    // ==================== getUserByUuid Tests ====================
+    // getUserByUuid Tests
 
     @Nested
     @DisplayName("getUserByUuid Tests")
     class GetUserByUuidTests {
-
-//        @Test
-//        @DisplayName("Devrait retourner UserRequest quand l'utilisateur existe")
-//        void shouldReturnUserRequestWhenUserExists() throws Exception {
-//            // Given
-//            UserRequest expectedUser = UserRequest.builder()
-//                    .userUuid("user-uuid-456")
-//                    .firstName("Marie")
-//                    .lastName("Martin")
-//                    .email("marie.martin@patient.fr")
-//                    .role("PATIENT")
-//                    .build();
-//
-//            Response response = createValidResponse(expectedUser);
-//
-//            mockWebServer.enqueue(new MockResponse()
-//                    .setResponseCode(200)
-//                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-//                    .setBody(objectMapper.writeValueAsString(response)));
-//
-//            // When & Then
-//            StepVerifier.create(userService.getUserByUuid("user-uuid-456"))
-//                    .assertNext(user -> {
-//                        assertThat(user.getEmail()).isEqualTo("marie.martin@patient.fr");
-//                        assertThat(user.getUserUuid()).isEqualTo("user-uuid-456");
-//                        assertThat(user.getRole()).isEqualTo("PATIENT");
-//                    })
-//                    .verifyComplete();
-//        }
 
         @Test
         @DisplayName("Devrait retourner Mono vide quand l'utilisateur n'existe pas (404)")
@@ -270,7 +238,7 @@ class AuthServerClientTest {
         }
     }
 
-    // ==================== Fallback Tests (Direct) ====================
+    // Fallback Tests (Direct)
 
     @Nested
     @DisplayName("Fallback Methods Tests (Direct)")

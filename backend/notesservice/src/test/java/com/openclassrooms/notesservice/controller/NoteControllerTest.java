@@ -95,7 +95,7 @@ class NoteControllerTest {
         when(jwt.getClaimAsString("lastName")).thenReturn("Dupont");
     }
 
-    // ==================== CREATE NOTE TESTS ====================
+    // CREATE NOTE TESTS
 
     @Nested
     @DisplayName("POST /api/notes - Create Note")
@@ -144,7 +144,7 @@ class NoteControllerTest {
         }
     }
 
-    // ==================== GET NOTE BY UUID TESTS ====================
+    // GET NOTE BY UUID TESTS
 
     @Nested
     @DisplayName("GET /api/notes/{noteUuid} - Get Note by UUID")
@@ -189,7 +189,7 @@ class NoteControllerTest {
         }
     }
 
-    // ==================== GET NOTES BY PATIENT TESTS ====================
+    // GET NOTES BY PATIENT TESTS
 
     @Nested
     @DisplayName("GET /api/notes/patient/{patientUuid} - Get Notes by Patient")
@@ -240,7 +240,7 @@ class NoteControllerTest {
         }
     }
 
-    // ==================== GET NOTES BY PRACTITIONER TESTS ====================
+    // GET NOTES BY PRACTITIONER TESTS
 
     @Nested
     @DisplayName("GET /api/notes/practitioner/{practitionerUuid}")
@@ -266,7 +266,7 @@ class NoteControllerTest {
         }
     }
 
-    // ==================== GET MY NOTES TESTS ====================
+    // GET MY NOTES TESTS
 
     @Nested
     @DisplayName("GET /api/notes/my-notes")
@@ -293,7 +293,7 @@ class NoteControllerTest {
         }
     }
 
-    // ==================== UPDATE NOTE TESTS ====================
+    // UPDATE NOTE TESTS
 
     @Nested
     @DisplayName("PUT /api/notes/{noteUuid}")
@@ -366,7 +366,7 @@ class NoteControllerTest {
         }
     }
 
-    // ==================== DELETE NOTE TESTS ====================
+    // DELETE NOTE TESTS
 
     @Nested
     @DisplayName("DELETE /api/notes/{noteUuid}")
@@ -409,7 +409,7 @@ class NoteControllerTest {
         }
     }
 
-    // ==================== COUNT NOTES TESTS ====================
+    // COUNT NOTES TESTS
 
     @Nested
     @DisplayName("GET /api/notes/count/patient/{patientUuid}")

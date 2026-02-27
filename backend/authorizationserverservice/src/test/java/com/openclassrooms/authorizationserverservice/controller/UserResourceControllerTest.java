@@ -480,7 +480,6 @@ class UserResourceControllerTest {
         byte[] mockImageContent = "fake-image-content".getBytes();
 
         // 1. Définir le chemin COMPLET tel qu'attendu par ton code
-        // D'après ton log, c'est : /Users/kara/Downloads/uploads/
         Path directoryPath = Paths.get("/Users/kara/Downloads/uploads/");
         Path filePath = directoryPath.resolve(filename);
 

@@ -58,7 +58,7 @@ class NoteControllerIT {
         noteRepository.deleteAll();
     }
 
-    // ==================== HELPER METHODS ====================
+    // HELPER METHODS
 
     /**
      * JWT praticien par défaut avec autorités requises
@@ -221,7 +221,7 @@ class NoteControllerIT {
         }
     }
 
-    // ==================== MULTI-NOTE SCENARIOS ====================
+    // MULTI-NOTE SCENARIOS
 
     @Nested
     @DisplayName("Multi-Note Scenarios")
@@ -328,7 +328,7 @@ class NoteControllerIT {
         }
     }
 
-    // ==================== AUTHORIZATION SCENARIOS ====================
+    // AUTHORIZATION SCENARIOS
 
     @Nested
     @DisplayName("Authorization Scenarios")
@@ -390,7 +390,7 @@ class NoteControllerIT {
         }
     }
 
-    // ==================== EDGE CASES ====================
+    // EDGE CASES
 
     @Nested
     @DisplayName("Edge Cases")

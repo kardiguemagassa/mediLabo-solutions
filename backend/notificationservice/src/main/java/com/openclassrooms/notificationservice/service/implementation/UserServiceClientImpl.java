@@ -3,7 +3,7 @@ package com.openclassrooms.notificationservice.service.implementation;
 import com.openclassrooms.notificationservice.domain.Response;
 import com.openclassrooms.notificationservice.dtorequest.UserRequest;
 import com.openclassrooms.notificationservice.exception.ApiException;
-import com.openclassrooms.notificationservice.service.UserService;
+import com.openclassrooms.notificationservice.service.UserServiceClient;
 import com.openclassrooms.notificationservice.utils.RequestUtils;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -20,7 +20,7 @@ import java.time.Duration;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceClientImpl implements UserServiceClient {
 
     private final WebClient authServerWebClient;
     private static final String CIRCUIT_BREAKER_NAME = "authServerService";

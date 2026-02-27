@@ -108,11 +108,6 @@ class RequestUtilsTest {
 
         Response badResponse = RequestUtils.getResponse(exchange, Map.of("error", nonSerializable), "Fail", HttpStatus.OK);
 
-        // Comme writeResponse est privée, on teste l'effet de bord via la méthode publique qui l'appelle
-        // Mais attention : writeResponse est appelée à la fin.
-        // Si tu veux vraiment couvrir le catch interne, il faut que l'objet Response soit corrompu.
-
-        // Note : Souvent, on laisse cette ligne "non couverte" car elle ne survit qu'en cas de bug critique du moteur JSON.
     }
 
     @Test

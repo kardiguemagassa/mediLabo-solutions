@@ -218,7 +218,7 @@ class PatientServiceClientImplTest {
 
         // WHEN - Utiliser StepVerifier pour vérifier que le timeout est géré correctement
         StepVerifier.create(patientClient.getPatientByUuid("uuid-123")
-                        .onErrorResume(e -> Mono.empty()))  // Convertir l'erreur en Mono.empty()
+                        .onErrorResume(e -> Mono.empty()))
                 .expectNextCount(0)
                 .verifyComplete();
     }

@@ -20,7 +20,6 @@ class NotesserviceApplicationTests {
 	@DynamicPropertySource
 	static void setProperties(DynamicPropertyRegistry registry) {
 		registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-		// Surcharger database pour éviter le conflit avec database: ~
 		registry.add("spring.data.mongodb.database", () -> "test");
 	}
 

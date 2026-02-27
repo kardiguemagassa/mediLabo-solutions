@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.service;
+package com.openclassrooms.patientservice.service.implementation;
 
 import com.openclassrooms.patientservice.dtorequest.PatientRequest;
 import com.openclassrooms.patientservice.dtorequest.UserRequest;
@@ -7,7 +7,7 @@ import com.openclassrooms.patientservice.exception.ApiException;
 import com.openclassrooms.patientservice.mapper.PatientMapper;
 import com.openclassrooms.patientservice.model.Patient;
 import com.openclassrooms.patientservice.repository.PatientRepository;
-import com.openclassrooms.patientservice.service.implementation.PatientServiceImpl;
+import com.openclassrooms.patientservice.service.UserServiceClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -25,7 +24,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -35,7 +33,7 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PatientServiceImpl Reactive Unit Tests")
-class PatientServiceImplReactiveTest {
+class PatientServiceImplTest {
 
     @Mock
     private PatientRepository patientRepository;
@@ -44,7 +42,7 @@ class PatientServiceImplReactiveTest {
     private PatientMapper patientMapper;
 
     @Mock
-    private UserService userService;
+    private UserServiceClient userService;
 
     @Mock
     private org.springframework.context.ApplicationEventPublisher eventPublisher;
@@ -107,7 +105,7 @@ class PatientServiceImplReactiveTest {
                 .build();
     }
 
-    // ==================== CREATE ====================
+    //  CREATE
 
     @Nested
     @DisplayName("createPatient()")
@@ -150,7 +148,7 @@ class PatientServiceImplReactiveTest {
         }
     }
 
-    // ==================== READ ====================
+    //  READ
 
     @Nested
     @DisplayName("getPatientByUuid()")
@@ -251,7 +249,7 @@ class PatientServiceImplReactiveTest {
         }
     }
 
-    // ==================== UPDATE ====================
+    // UPDATE
 
     @Nested
     @DisplayName("updatePatient()")
@@ -273,7 +271,7 @@ class PatientServiceImplReactiveTest {
         }
     }
 
-    // ==================== DELETE ====================
+    //  DELETE
 
     @Nested
     @DisplayName("deletePatient()")
@@ -290,7 +288,7 @@ class PatientServiceImplReactiveTest {
         }
     }
 
-    // ==================== QUERY ====================
+    //  QUERY
 
     @Nested
     @DisplayName("getPatientByMedicalRecordNumber()")
@@ -325,7 +323,7 @@ class PatientServiceImplReactiveTest {
         }
     }
 
-    // ==================== UTILITY ====================
+    // UTILITY
 
     @Nested
     @DisplayName("Utility Methods")
@@ -335,18 +333,192 @@ class PatientServiceImplReactiveTest {
         void hasPatientRecord_true() {
             when(patientRepository.existsPatientByUserUuid("user-uuid-456")).thenReturn(true);
 
-            StepVerifier.create(patientService.hasPatientRecord("user-uuid-456"))
-                    .expectNext(true)
-                    .verifyComplete();
+            StepVerifier.create(patientService.hasPatientRecord("user-uuid-456")).expectNext(true).verifyComplete();
         }
 
         @Test
         void countActivePatients() {
             when(patientRepository.countPatientByActiveTrue()).thenReturn(42L);
 
-            StepVerifier.create(patientService.countActivePatients())
-                    .expectNext(42L)
-                    .verifyComplete();
+            StepVerifier.create(patientService.countActivePatients()).expectNext(42L).verifyComplete();
         }
     }
+
+    // RESTORE
+
+    @Nested
+    @DisplayName("restorePatient()")
+    class RestorePatientTests {
+
+        @Test
+        @DisplayName("Should restore patient successfully")
+        void restorePatient_success() {
+            // Given
+            Patient deletedPatient = testPatient.toBuilder().active(false).build();
+
+            when(patientRepository.findSoftDeletedByPatientUuid("patient-uuid-123"))
+                    .thenReturn(Optional.of(deletedPatient));
+            when(patientRepository.restorePatientByPatientUuid("patient-uuid-123"))
+                    .thenReturn(true);
+            when(userService.getUserByUuid("user-uuid-456"))
+                    .thenReturn(Mono.just(testUserRequest));
+            when(patientMapper.toResponseWithUserInfo(deletedPatient, testUserRequest))
+                    .thenReturn(testResponse);
+
+            // When & Then
+            StepVerifier.create(patientService.restorePatient("patient-uuid-123"))
+                    .expectNextMatches(resp -> resp.getPatientUuid().equals("patient-uuid-123"))
+                    .verifyComplete();
+
+            verify(patientRepository).findSoftDeletedByPatientUuid("patient-uuid-123");
+            verify(patientRepository).restorePatientByPatientUuid("patient-uuid-123");
+            verify(userService).getUserByUuid("user-uuid-456");
+        }
+
+        @Test
+        @DisplayName("Should throw exception when soft-deleted patient not found")
+        void restorePatient_patientNotFound_throwsException() {
+            // Given
+            when(patientRepository.findSoftDeletedByPatientUuid("unknown-uuid"))
+                    .thenReturn(Optional.empty());
+
+            // When & Then
+            StepVerifier.create(patientService.restorePatient("unknown-uuid"))
+                    .expectErrorMatches(e -> e instanceof ApiException &&
+                            e.getMessage().contains("Patient supprimé non trouvé"))
+                    .verify();
+
+            verify(patientRepository).findSoftDeletedByPatientUuid("unknown-uuid");
+            verify(patientRepository, never()).restorePatientByPatientUuid(anyString());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when restore operation fails")
+        void restorePatient_restoreFails_throwsException() {
+            // Given
+            Patient deletedPatient = testPatient.toBuilder().active(false).build();
+
+            when(patientRepository.findSoftDeletedByPatientUuid("patient-uuid-123"))
+                    .thenReturn(Optional.of(deletedPatient));
+            when(patientRepository.restorePatientByPatientUuid("patient-uuid-123"))
+                    .thenReturn(false);
+
+            // When & Then
+            StepVerifier.create(patientService.restorePatient("patient-uuid-123"))
+                    .expectErrorMatches(e -> e instanceof ApiException &&
+                            e.getMessage().contains("Erreur lors de la restauration"))
+                    .verify();
+
+            verify(patientRepository).findSoftDeletedByPatientUuid("patient-uuid-123");
+            verify(patientRepository).restorePatientByPatientUuid("patient-uuid-123");
+            verify(userService, never()).getUserByUuid(anyString());
+        }
+
+        @Test
+        @DisplayName("Should return response without user info when user service fails")
+        void restorePatient_userServiceFails_returnsBasicResponse() {
+            // Given
+            Patient deletedPatient = testPatient.toBuilder().active(false).build();
+
+            when(patientRepository.findSoftDeletedByPatientUuid("patient-uuid-123"))
+                    .thenReturn(Optional.of(deletedPatient));
+            when(patientRepository.restorePatientByPatientUuid("patient-uuid-123"))
+                    .thenReturn(true);
+           // onErrorResume dans enrichWithUserInfo
+            when(userService.getUserByUuid("user-uuid-456"))
+                    .thenReturn(Mono.error(new RuntimeException("User service unavailable")));
+            when(patientMapper.toResponse(deletedPatient))
+                    .thenReturn(testResponse);
+
+            // When & Then
+            StepVerifier.create(patientService.restorePatient("patient-uuid-123"))
+                    .expectNextMatches(resp -> resp.getPatientUuid().equals("patient-uuid-123")).verifyComplete();
+
+            verify(patientRepository).findSoftDeletedByPatientUuid("patient-uuid-123");
+            verify(patientRepository).restorePatientByPatientUuid("patient-uuid-123");
+            verify(userService).getUserByUuid("user-uuid-456");
+            verify(patientMapper).toResponse(deletedPatient);
+        }
+    }
+
+    //ENRICH WITH USER INFO - Error Cases
+
+    @Nested
+    @DisplayName("enrichWithUserInfo() - Error Handling")
+    class EnrichWithUserInfoErrorTests {
+
+        @Test
+        @DisplayName("Should return basic response when user service fails for getPatientByUuid")
+        void getPatientByUuid_userServiceFails_returnsBasicResponse() {
+            // Given
+            when(patientRepository.findByPatientUuid("patient-uuid-123"))
+                    .thenReturn(Optional.of(testPatient));
+            // UserService échoue
+            when(userService.getUserByUuid("user-uuid-456"))
+                    .thenReturn(Mono.error(new RuntimeException("User service unavailable")));
+            when(patientMapper.toResponse(testPatient)).thenReturn(testResponse);
+
+            // When & Then
+            StepVerifier.create(patientService.getPatientByUuid("patient-uuid-123"))
+                    .expectNextMatches(resp -> resp.getPatientUuid().equals("patient-uuid-123")).verifyComplete();
+
+            verify(patientRepository).findByPatientUuid("patient-uuid-123");
+            verify(userService).getUserByUuid("user-uuid-456");
+            verify(patientMapper).toResponse(testPatient);
+        }
+
+        @Test
+        @DisplayName("Should return basic response when user service fails for getPatientByUserUuid")
+        void getPatientByUserUuid_userServiceFails_returnsBasicResponse() {
+            // Given
+            when(patientRepository.findByUserUuid("user-uuid-456"))
+                    .thenReturn(Optional.of(testPatient));
+            when(userService.getUserByUuid("user-uuid-456"))
+                    .thenReturn(Mono.error(new ApiException("Service indisponible")));
+            when(patientMapper.toResponse(testPatient))
+                    .thenReturn(testResponse);
+
+            // When & Then
+            StepVerifier.create(patientService.getPatientByUserUuid("user-uuid-456"))
+                    .expectNextMatches(resp -> resp.getPatientUuid().equals("patient-uuid-123")).verifyComplete();
+
+            verify(patientMapper).toResponse(testPatient);
+        }
+
+        @Test
+        @DisplayName("Should return basic response when user service fails for getPatientByMedicalRecordNumber")
+        void getPatientByMedicalRecordNumber_userServiceFails_returnsBasicResponse() {
+            // Given
+            when(patientRepository.findPatientByMedicalRecordNumber("MED-2026-000001")).thenReturn(Optional.of(testPatient));
+            when(userService.getUserByUuid("user-uuid-456")).thenReturn(Mono.error(new RuntimeException("Connection refused")));
+            when(patientMapper.toResponse(testPatient)).thenReturn(testResponse);
+
+            // When & Then
+            StepVerifier.create(patientService.getPatientByMedicalRecordNumber("MED-2026-000001"))
+                    .expectNextMatches(resp -> resp.getMedicalRecordNumber().equals("MED-2026-000001")).verifyComplete();
+
+            verify(patientMapper).toResponse(testPatient);
+        }
+
+        @Test
+        @DisplayName("Should return basic responses when user service fails for getAllActivePatients")
+        void getAllActivePatients_userServiceFails_returnsBasicResponses() {
+            // Given
+            List<Patient> patients = List.of(testPatient);
+
+            when(patientRepository.findAllPatientByActiveTrue()).thenReturn(patients);
+            // UserService échoue pour chaque patient
+            when(userService.getUserByUuid("user-uuid-456")).thenReturn(Mono.error(new RuntimeException("User service unavailable")));
+            when(patientMapper.toResponse(testPatient)).thenReturn(testResponse);
+
+            // When & Then
+            StepVerifier.create(patientService.getAllActivePatients())
+                    .expectNextMatches(resp -> resp.getPatientUuid().equals("patient-uuid-123")).verifyComplete();
+
+            verify(patientRepository).findAllPatientByActiveTrue();
+            verify(userService).getUserByUuid("user-uuid-456");
+            verify(patientMapper).toResponse(testPatient);  // Fallback appelé
+        }
+    }
+
 }

@@ -83,7 +83,7 @@ class PatientRepositoryImplTest {
                 .hasMessage("Erreur lors de la création du patient");
     }
 
-    // ================= READ =================
+    // READ
 
     @Test
     void findByPatientUuid_shouldReturnPatient_whenFound() {
