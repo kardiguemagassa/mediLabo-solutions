@@ -19,7 +19,6 @@ class NotificationserviceApplicationTests {
 
 	@Test
 	void contextLoads() {
-		// Le contexte JDBC se charge correctement avec Testcontainers
 		assertThat(true).isTrue();
 	}
 }

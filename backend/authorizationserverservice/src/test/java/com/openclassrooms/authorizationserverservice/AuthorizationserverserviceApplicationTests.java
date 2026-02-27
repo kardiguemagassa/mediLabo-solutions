@@ -10,6 +10,5 @@ class AuthorizationserverserviceApplicationTests {
 
     @Test
     void contextLoads() {
-        // Test that the application context loads successfully
     }
 }

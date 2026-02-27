@@ -63,7 +63,7 @@ class NotificationResourceTest {
                 .build();
     }
 
-    // ==================== SEND MESSAGE ====================
+    // SEND MESSAGE
     @Nested
     @DisplayName("POST /api/notifications/messages - Envoyer un message")
     class SendMessageTests {
@@ -129,7 +129,7 @@ class NotificationResourceTest {
         }
     }
 
-    // ==================== REPLY MESSAGE ====================
+    // REPLY MESSAGE
     @Nested
     @DisplayName("POST /api/notifications/reply - Répondre à un message")
     class ReplyMessageTests {
@@ -164,30 +164,9 @@ class NotificationResourceTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.message.messageUuid").value("msg-uuid-123"));
         }
-
-//        @Test
-//        @DisplayName("Devrait retourner 400 si conversationId manquant pour reply")
-//        void shouldReturn400WhenConversationIdMissing() throws Exception {
-//            // Pour une réponse, conversationId devrait être obligatoire
-//            MessageRequest request = MessageRequest.builder()
-//                    .receiverEmail("marie.martin@patient.fr")
-//                    .subject("Re: Sujet")
-//                    .message("Réponse sans conversationId")
-//                    // conversationId manquant
-//                    .build();
-//
-//            // Ce test dépend de la validation dans MessageRequest
-//            // Si conversationId n'est pas @NotBlank, ce test échouera
-//            mockMvc.perform(post("/api/notifications/reply")
-//                            .with(jwt().jwt(jwt -> jwt.subject("user-uuid")))
-//                            .with(csrf())
-//                            .contentType(MediaType.APPLICATION_JSON)
-//                            .content(objectMapper.writeValueAsString(request)))
-//                    .andExpect(status().isBadRequest()); // Ou isBadRequest() selon ta validation
-//        }
     }
 
-    // ==================== GET MESSAGES ====================
+    // GET MESSAGES
     @Nested
     @DisplayName("GET /api/notifications/messages - Récupérer les messages")
     class GetMessagesTests {
@@ -231,7 +210,7 @@ class NotificationResourceTest {
         }
     }
 
-    // ==================== GET CONVERSATION ====================
+    // GET CONVERSATION
     @Nested
     @DisplayName("GET /api/notifications/messages/{conversationId} - Récupérer une conversation")
     class GetConversationTests {
@@ -253,7 +232,7 @@ class NotificationResourceTest {
         }
     }
 
-    // ==================== GET UNREAD COUNT ====================
+    // GET UNREAD COUNT
     @Nested
     @DisplayName("GET /api/notifications/messages/unread/count - Compteur messages non lus")
     class GetUnreadCountTests {
@@ -275,7 +254,7 @@ class NotificationResourceTest {
         }
     }
 
-    // ==================== MARK AS READ ====================
+    // MARK AS READ
     @Nested
     @DisplayName("PATCH /api/notifications/messages/{messageId}/read - Marquer comme lu")
     class MarkAsReadTests {

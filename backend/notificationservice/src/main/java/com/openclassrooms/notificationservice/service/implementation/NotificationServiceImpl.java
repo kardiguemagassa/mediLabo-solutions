@@ -8,7 +8,7 @@ import com.openclassrooms.notificationservice.mapper.MessageMapper;
 import com.openclassrooms.notificationservice.model.Message;
 import com.openclassrooms.notificationservice.repository.NotificationRepository;
 import com.openclassrooms.notificationservice.service.NotificationService;
-import com.openclassrooms.notificationservice.service.UserService;
+import com.openclassrooms.notificationservice.service.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,7 @@ import static com.openclassrooms.notificationservice.utils.NotificationUtils.ran
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserService userService;
+    private final UserServiceClient userService;
     private final MessageMapper messageMapper;
 
     // ==================== ENVOI DE MESSAGE ====================

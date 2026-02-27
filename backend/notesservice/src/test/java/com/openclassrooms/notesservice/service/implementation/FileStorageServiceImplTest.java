@@ -252,13 +252,6 @@ class FileStorageServiceImplTest {
             assertThat(FileStorageServiceImpl.formatFileSize(500)).isEqualTo("500 B");
         }
 
-//        @Test
-//        @DisplayName("Should format kilobytes correctly")
-//        void shouldFormatKilobytesCorrectly() {
-//            assertThat(FileStorageServiceImpl.formatFileSize(1024)).isEqualTo(String.format("%.of1 KB"));
-//            assertThat(FileStorageServiceImpl.formatFileSize(1536)).isEqualTo(String.format("%.of 1.5 KB"));
-//        }
-
         @Test
         @DisplayName("Should format megabytes correctly")
         void shouldFormatMegabytesCorrectly() {

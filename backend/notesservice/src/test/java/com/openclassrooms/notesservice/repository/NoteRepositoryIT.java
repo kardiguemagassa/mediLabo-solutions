@@ -79,7 +79,7 @@ class NoteRepositoryIT {
             assertThat(savedNote.getId()).isNotNull();
             assertThat(savedNote.getNoteUuid()).isEqualTo(testNote.getNoteUuid());
             assertThat(savedNote.getContent()).isEqualTo("Test note content");
-            assertThat(savedNote.getActive()).isTrue();  // Changé ici
+            assertThat(savedNote.getActive()).isTrue();
         }
 
         @Test
@@ -115,7 +115,7 @@ class NoteRepositoryIT {
             // Then
             assertThat(found).isPresent();
             assertThat(found.get().getNoteUuid()).isEqualTo(testNote.getNoteUuid());
-            assertThat(found.get().getActive()).isTrue();  // Changé ici
+            assertThat(found.get().getActive()).isTrue();
         }
 
         @Test
@@ -208,7 +208,7 @@ class NoteRepositoryIT {
 
             // Then
             assertThat(notes).hasSize(1);
-            assertThat(notes.get(0).getNoteUuid()).isEqualTo(testNote.getNoteUuid());
+            assertThat(notes.getFirst().getNoteUuid()).isEqualTo(testNote.getNoteUuid());
         }
     }
 
@@ -240,7 +240,7 @@ class NoteRepositoryIT {
 
             // Then
             assertThat(notes).hasSize(2);
-            assertThat(notes.get(0).getContent()).isEqualTo("Newer note from same practitioner");
+            assertThat(notes.getFirst().getContent()).isEqualTo("Newer note from same practitioner");
         }
 
         @Test

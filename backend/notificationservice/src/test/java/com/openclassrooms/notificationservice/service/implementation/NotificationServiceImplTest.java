@@ -1,4 +1,4 @@
-package com.openclassrooms.notificationservice.service;
+package com.openclassrooms.notificationservice.service.implementation;
 
 import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
 import com.openclassrooms.notificationservice.dtorequest.UserRequest;
@@ -7,8 +7,7 @@ import com.openclassrooms.notificationservice.exception.ApiException;
 import com.openclassrooms.notificationservice.mapper.MessageMapper;
 import com.openclassrooms.notificationservice.model.Message;
 import com.openclassrooms.notificationservice.repository.NotificationRepository;
-import com.openclassrooms.notificationservice.service.implementation.NotificationServiceImpl;
-import com.openclassrooms.notificationservice.service.implementation.UserServiceImpl;
+import com.openclassrooms.notificationservice.service.UserServiceClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +32,7 @@ class NotificationServiceImplTest {
     private NotificationRepository notificationRepository;
 
     @Mock
-    private UserService userService;
+    private UserServiceClient userService;
 
     @Mock
     private MessageMapper messageMapper;

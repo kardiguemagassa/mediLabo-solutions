@@ -1,7 +1,6 @@
 package com.openclassrooms.patientservice.service.implementation;
 
 import com.openclassrooms.patientservice.dtorequest.PatientRequest;
-import com.openclassrooms.patientservice.dtorequest.UserRequest;
 import com.openclassrooms.patientservice.dtoresponse.PatientResponse;
 import com.openclassrooms.patientservice.event.Event;
 import com.openclassrooms.patientservice.exception.ApiException;
@@ -9,7 +8,7 @@ import com.openclassrooms.patientservice.mapper.PatientMapper;
 import com.openclassrooms.patientservice.model.Patient;
 import com.openclassrooms.patientservice.repository.PatientRepository;
 import com.openclassrooms.patientservice.service.PatientService;
-import com.openclassrooms.patientservice.service.UserService;
+import com.openclassrooms.patientservice.service.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,7 +39,7 @@ public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
-    private final UserService userService;
+    private final UserServiceClient userService;
     private final ApplicationEventPublisher eventPublisher;
 
     //  CRUD OPERATIONS

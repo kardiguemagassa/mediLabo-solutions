@@ -69,6 +69,7 @@ class HandleExceptionTest {
                     ex, new org.springframework.http.HttpHeaders(), HttpStatus.BAD_REQUEST, mock(org.springframework.web.context.request.WebRequest.class));
 
             // 3. THEN : On vérifie que les messages d'erreurs ont été joints par une virgule
+            Assertions.assertNotNull(response);
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             mockedRequestUtils.verify(() -> RequestUtils.handleErrorResponse(
                     eq("L'email est requis, Le mot de passe est trop court"),
@@ -171,8 +172,7 @@ class HandleExceptionTest {
 
         try (MockedStatic<RequestUtils> mockedRequestUtils = mockStatic(RequestUtils.class)) {
             // On mocke la signature à 4 arguments utilisée dans HandleException
-            mockedRequestUtils.when(() -> RequestUtils.handleErrorResponse(any(), any(), any(), any()))
-                    .thenReturn(mockResponse);
+            mockedRequestUtils.when(() -> RequestUtils.handleErrorResponse(any(), any(), any(), any())).thenReturn(mockResponse);
 
             ResponseEntity<Response> response = handleException.badCredentialsException(ex);
 

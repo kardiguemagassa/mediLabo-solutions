@@ -93,8 +93,12 @@ public class PatientController {
 
         log.debug("Fetching patient: {}", patientUuid);
 
-        return patientService.getPatientByUuid(patientUuid).map(patient -> ResponseEntity.ok(
-                getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)));
+        return patientService.getPatientByUuid(patientUuid)
+                .map(patient -> ResponseEntity.ok(
+                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                // switchIfEmpty pour retourner 404
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
+                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer un patient via l'UUID utilisateur")
@@ -105,7 +109,9 @@ public class PatientController {
         log.debug("Fetching patient for user: {}", userUuid);
 
         return patientService.getPatientByUserUuid(userUuid).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)));
+                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
+                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer un patient par email",
@@ -117,8 +123,12 @@ public class PatientController {
 
         log.debug("Fetching patient by email: {}", email);
 
-        return patientService.getPatientByEmail(email).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)));
+        return patientService.getPatientByEmail(email)
+                .map(patient -> ResponseEntity.ok(
+                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                // switchIfEmpty pour retourner 404
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
+                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer son propre dossier patient",
@@ -130,8 +140,11 @@ public class PatientController {
         String userUuid = authentication.getName();
         log.debug("Fetching own patient record for user: {}", userUuid);
 
-        return patientService.getPatientByUserUuid(userUuid).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Dossier patient récupéré avec succès", OK)));
+        return patientService.getPatientByUserUuid(userUuid)
+                .map(patient -> ResponseEntity.ok(
+                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
+                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer un patient par numéro de dossier médical")
@@ -142,8 +155,11 @@ public class PatientController {
 
         log.debug("Fetching patient by medical record: {}", medicalRecordNumber);
 
-        return patientService.getPatientByMedicalRecordNumber(medicalRecordNumber).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)));
+        return patientService.getPatientByMedicalRecordNumber(medicalRecordNumber)
+                .map(patient -> ResponseEntity.ok(
+                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
+                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Rechercher des patients par groupe sanguin")
@@ -168,12 +184,14 @@ public class PatientController {
     @PutMapping("/{patientUuid}")
     @PreAuthorize(ALL_STAFF)
     public Mono<ResponseEntity<Response>> updatePatient(@Parameter(description = "UUID du patient") @PathVariable String patientUuid,
-            @Valid @RequestBody PatientRequest request, HttpServletRequest httpRequest) {
+            @Valid @RequestBody PatientRequest patientRequest, HttpServletRequest request) {
 
         log.info("Updating patient: {}", patientUuid);
 
-        return patientService.updatePatient(patientUuid, request).map(patient -> ResponseEntity.ok(
-                        getResponse(httpRequest, Map.of("patient", patient), "Patient mis à jour avec succès", OK)));
+        return patientService.updatePatient(patientUuid, patientRequest).map(patient -> ResponseEntity.ok(
+                        getResponse(request, Map.of("patient", patient), "Patient mis à jour avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
+                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     // DELETE
@@ -199,7 +217,9 @@ public class PatientController {
         log.info("Restoring patient: {}", patientUuid);
 
         return patientService.restorePatient(patientUuid).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient restauré avec succès", OK)));
+                        getResponse(request, Map.of("patient", patient), "Patient restauré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
+                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     // STATS & UTILS

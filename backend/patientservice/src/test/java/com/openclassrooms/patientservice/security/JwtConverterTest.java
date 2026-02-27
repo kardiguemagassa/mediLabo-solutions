@@ -262,8 +262,8 @@ class JwtConverterTest {
 
         // Simuler un claim authorities avec un type inattendu (nombre)
         when(jwt.getClaim("authorities")).thenReturn(123);
-        when(jwt.getClaim("roles")).thenReturn(Map.of("key", "value")); // Map au lieu de List
-        when(jwt.getClaim("scope")).thenReturn(42.5); // Double au lieu de String
+        when(jwt.getClaim("roles")).thenReturn(Map.of("key", "value"));
+        when(jwt.getClaim("scope")).thenReturn(42.5);
 
         // When
         AbstractAuthenticationToken result = jwtConverter.convert(jwt);

@@ -332,9 +332,6 @@ class RequestUtilsTest {
         IllegalArgumentException exception = new IllegalArgumentException("Invalid argument");
         when(request.getRequestURI()).thenReturn("/api/notes");
 
-        // Note: Cette exception tombera dans le cas "else" et retournera INTERNAL_SERVER_ERROR
-        // avec le message générique pour les erreurs 5xx
-
         // When
         RequestUtils.handleErrorResponse(request, response, exception);
 

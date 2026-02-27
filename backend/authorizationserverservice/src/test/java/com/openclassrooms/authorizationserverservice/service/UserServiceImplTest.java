@@ -735,30 +735,6 @@ class UserServiceImplTest {
         verify(userRepository).getCredential(uuid);
     }
 
-//    @Test
-//    @DisplayName("getUserInfoByUuid doit transformer un User en UserInfoDTO")
-//    void getUserInfoByUuid_ShouldReturnCorrectDto() {
-//        // GIVEN
-//        String uuid = "uuid-123";
-//        User user = new User();
-//        user.setUserUuid(uuid);
-//        user.setEmail("test@test.com");
-//        user.setRole("USER");
-//        user.setEnabled(true);
-//        user.setAccountNonLocked(true);
-//
-//        when(userRepository.getUserByUuid(uuid)).thenReturn(user);
-//
-//        // WHEN
-//        var result = userService.getUserInfoByUuid(uuid);
-//
-//        // THEN
-//        assertThat(result.getUserUuid()).isEqualTo(uuid);
-//        assertThat(result.getEmail()).isEqualTo("test@test.com");
-//        assertThat(result.getRole()).isEqualTo("USER");
-//        assertThat(result.getEnabled()).isTrue();
-//    }
-
     @Test
     @DisplayName("getMediLaboSupports doit retourner la liste des supports")
     void getMediLaboSupports_ShouldInvokeRepository() {
@@ -948,6 +924,5 @@ class UserServiceImplTest {
         // THEN
         assertThat(exists).isFalse();
     }
-
 
 }

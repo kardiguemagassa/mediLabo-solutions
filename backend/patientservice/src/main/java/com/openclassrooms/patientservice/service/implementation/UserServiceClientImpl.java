@@ -3,7 +3,7 @@ package com.openclassrooms.patientservice.service.implementation;
 import com.openclassrooms.patientservice.domain.Response;
 import com.openclassrooms.patientservice.dtorequest.UserRequest;
 import com.openclassrooms.patientservice.exception.ApiException;
-import com.openclassrooms.patientservice.service.UserService;
+import com.openclassrooms.patientservice.service.UserServiceClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ import static com.openclassrooms.patientservice.util.RequestUtils.convertRespons
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceClientImpl implements UserServiceClient {
 
     private final WebClient authServerWebClient;
     private static final String CIRCUIT_BREAKER_NAME = "authServerService";
