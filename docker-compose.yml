@@ -24,7 +24,7 @@ x-common-java: &common-java
       limits:
         memory: 768M
         cpus: '0.5'
-      reservations:    # Corrigé : bien aligné sous limits
+      reservations:   
         memory: 256M
 
 # LES SERVICES
@@ -248,7 +248,7 @@ services:
       resources:
         limits:
           memory: 512M
-          cpus: '0.5'  # Corrigé : 128M n'existe pas pour le CPU
+          cpus: '0.5'  # limite à 50% d'un CPU
         reservations:
           memory: 128M
     environment:

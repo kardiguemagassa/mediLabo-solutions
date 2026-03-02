@@ -100,11 +100,23 @@ spring:
           uri: lb://NOTIFICATIONSERVICE
           predicates:
             - Path=/api/notifications/**
+          metadata:
+            response-timeout: 15000   # 15s
+            connect-timeout: 30000
           filters:
             - name: CircuitBreaker
               args:
                 name: notificationServiceCircuitBreaker
                 fallbackUri: forward:/fallback/notifications
+            - name: Retry
+              args:
+                retries: 3
+                series: SERVER_ERROR
+                statuses: SERVICE_UNAVAILABLE, BAD_GATEWAY, GATEWAY_TIMEOUT
+                backoff:
+                  firstBackoff: 1s
+                  maxBackoff: 5s
+                  factor: 2
 
       globalcors:
         cors-configurations:
