@@ -49,6 +49,7 @@ pipeline {
         DOCKER_REGISTRY = "${config.dockerRegistry}"
         CONTAINER_TAG   = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
         MAVEN_OPTS      = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository -Xmx1024m"
+        TESTCONTAINERS_RYUK_DISABLED = "true" // Désactive Ryuk pour éviter les problèmes de permissions dans Docker-in-Docker
     }
 
     options {
