@@ -24,7 +24,8 @@ spring:
 eureka:
   instance:
     # 1. Plus fiable dans un réseau Docker Bridge/Overlay
-    prefer-ip-address: true
+    prefer-ip-address: false
+    hostname: notes-service
     # 2. Permet de différencier plusieurs instances du même service
     instance-id: ${spring.application.name}:${random.uuid}
     # 3. On réduit les délais pour que le Gateway détecte plus vite si un service tombe

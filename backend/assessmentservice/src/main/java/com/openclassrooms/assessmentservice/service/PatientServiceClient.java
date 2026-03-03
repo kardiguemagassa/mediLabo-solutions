@@ -18,5 +18,5 @@ public interface PatientServiceClient {
      * @param patientUuid UUID du patient
      * @return Mono<PatientResponse> ou Mono.empty() si non trouvé
      */
-    Mono<PatientResponse> getPatientByUuid(String patientUuid);
+    Mono<PatientResponse> getPatientByUuid(String patientUuid, String token);
 }

@@ -18,5 +18,5 @@ public interface NoteServiceClient {
      * @param patientUuid UUID du patient
      * @return Flux<NoteResponse> ou Flux.empty() si aucune note
      */
-    Flux<NoteResponse> getNotesByPatientUuid(String patientUuid);
+    Flux<NoteResponse> getNotesByPatientUuid(String patientUuid, String token);
 }

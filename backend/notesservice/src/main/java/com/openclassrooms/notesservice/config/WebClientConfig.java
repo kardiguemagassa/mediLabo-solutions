@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${services.patient-service.url:http://localhost:8081}")
+    @Value("${PATIENT_SERVICE_URL:http://localhost:8081}")
     private String patientServiceUrl;
 
     @Value("${services.patient-service.timeout:5000}")

@@ -127,17 +127,23 @@ services:
     container_name: medilabo-patient
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      EUREKA_INSTANCE_HOSTNAME: patient-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SERVER_PORT: ${PATIENT_SERVICE_PORT:-8081}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_PATIENTS:-medilabo_patients}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_HOST: discovery-server
+      JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks        
+      AUTH_SERVER_ISSUER_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PATIENT_SERVICE_HOST: patient-service
     ports:
       - "${PATIENT_SERVICE_PORT:-8081}:${PATIENT_SERVICE_PORT:-8081}"
     networks:
       - medilabo-network
       - postgres-network
+      - kafka-network
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -157,9 +163,18 @@ services:
     container_name: medilabo-notes
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      SPRING_CLOUD_LOADBALANCER_ENABLED: "false"
+      # URLs directes
+      PATIENT_SERVICE_URL: http://patient-service:8081
+      NOTES_SERVICE_URL: http://notes-service:8082
+      EUREKA_INSTANCE_HOSTNAME: notes-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SERVER_PORT: ${NOTES_SERVICE_PORT:-8082}
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/${MONGO_DATABASE:-medilabo_notes}
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE:-medilabo_notes}?authSource=admin
       EUREKA_HOST: discovery-server
+      JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks      
+      AUTH_SERVER_ISSUER_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       NOTES_SERVICE_HOST: notes-service
     volumes:
       - notes_uploads:/app/uploads
@@ -168,6 +183,7 @@ services:
     networks:
       - medilabo-network
       - mongodb-network
+      - kafka-network
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -189,11 +205,16 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       SERVER_PORT: ${ASSESSMENT_SERVICE_PORT:-8083}
       EUREKA_HOST: discovery-server
-      ASSESSMENT_SERVICE_HOST: assessment-service
+      JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks
+      AUTH_SERVER_ISSUER_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      PATIENT_SERVICE_URL: http://patient-service:8081   
+      NOTES_SERVICE_URL: http://notes-service:8082       
     ports:
       - "${ASSESSMENT_SERVICE_PORT:-8083}:${ASSESSMENT_SERVICE_PORT:-8083}"
     networks:
       - medilabo-network
+      - kafka-network      
     depends_on:
       discovery-server:
         condition: service_healthy
@@ -222,6 +243,7 @@ services:
       AUTH_SERVER_URL: http://authorization-server:9001
       PATIENT_SERVICE_URL: http://patient-service:8081
       JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks
+      AUTH_SERVER_ISSUER_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}
     ports:
       - "${NOTIFICATION_SERVICE_PORT:-8084}:${NOTIFICATION_SERVICE_PORT:-8084}"
     networks:

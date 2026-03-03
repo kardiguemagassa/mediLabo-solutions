@@ -51,8 +51,7 @@ spring:
         jwt:
           # On priorise l'URL complète si elle est dans le .env
           # sinon on reconstruit dynamiquement pour Docker
-          issuer-uri: ${AUTH_SERVER_ISSUER_URI:http://${AUTH_SERVER_HOST:authorizationserver}:${AUTH_SERVER_PORT:9001}}
-          jwk-set-uri: ${JWKS_URI:http://${AUTH_SERVER_HOST:authorizationserver}:${AUTH_SERVER_PORT:9001}/oauth2/jwks}
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
 
 
   # KAFKA CONFIGURATION - POUR LES NOTIFICATIONS

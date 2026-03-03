@@ -17,7 +17,9 @@ spring:
 eureka:
   instance:
     # Plus robuste dans Docker Compose pour éviter les problèmes de résolution DNS
-    prefer-ip-address: true
+    prefer-ip-address: false
+    hostname: patient-service
+    non-secure-port: 8081
     # Utiliser random.uuid permet de lancer plusieurs instances du service sans conflit d'ID
     instance-id: ${spring.application.name}:${random.uuid}
     # Délais plus courts pour une détection de panne plus rapide par la Gateway

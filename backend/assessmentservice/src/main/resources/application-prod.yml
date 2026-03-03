@@ -10,20 +10,24 @@ spring:
     activate:
       on-profile: prod
 
-eureka:
-  client:
-    service-url:
-      # variables injectées par le compose
-      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT}/eureka/
-  instance:
-    # IP dans le réseau Docker pour éviter les lags DNS
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.uuid}
+  # SECURITY - surchargé pour Docker
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://authorization-server:9001/oauth2/jwks}
 
-# Configuration des URLs pour les clients Feign/WebClient en PROD
+eureka:
+  instance:
+    prefer-ip-address: false
+    hostname: assessment-service
+    instance-id: ${spring.application.name}:${random.uuid}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# URLs Feign pour Docker - noms de services (pas container_name !)
 services:
   patient:
-    # On utilise le nom du service défini dans docker-compose.yml
-    url: http://medilabo-patient:8081
+    url: http://patient-service:8081    # nom du service docker-compose
   notes:
-    url: http://medilabo-notes:8082
+    url: http://notes-service:8082      # nom du service docker-compose

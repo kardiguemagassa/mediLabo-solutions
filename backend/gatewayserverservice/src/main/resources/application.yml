@@ -46,6 +46,9 @@ spring:
           uri: lb://AUTHORIZATIONSERVERSERVICE
           predicates:
             - Path=/authorization/**
+          metadata:
+            response-timeout: 15000
+            connect-timeout: 30000
           filters:
             - StripPrefix=1
 
@@ -85,8 +88,8 @@ spring:
         - id: assessment-service
           uri: lb://ASSESSMENTSERVICE
           metadata:
-            response-timeout: 10000 # 10s pour celui-ci car il calcule beaucoup
-            connect-timeout: 2000
+            response-timeout: 15000 # 15s pour celui-ci car il calcule beaucoup
+            connect-timeout: 3000
           predicates:
             - Path=/api/assessments/**
           filters:

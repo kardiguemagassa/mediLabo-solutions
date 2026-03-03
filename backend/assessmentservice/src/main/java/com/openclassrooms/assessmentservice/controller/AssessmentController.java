@@ -46,12 +46,13 @@ public class AssessmentController {
     /**
      * Évalue le risque de diabète pour un patient.
      * FLUX:
-     * 1. Réception de la requête avec JWT dans le header
+     * 1. Réception de la requête avec JWT dans le header, Capturer le token AVANT d'entrer dans le contexte réactif
      * 2. Spring Security extrait le JWT et le met dans SecurityContext
      * 3. AssessmentService appelle PatientService et NotesService
      * 4. WebClientInterceptor propage automatiquement le JWT à chaque appel
      * 5. Résultat retourné au client
      */
+
     @Operation(
             summary = "Évaluer le risque de diabète",
             description = "Calcule le niveau de risque de diabète pour un patient " +
@@ -63,16 +64,19 @@ public class AssessmentController {
             @ApiResponse(responseCode = "503", description = "Service externe indisponible")
     })
     @GetMapping("/diabetes/{patientUuid}")
-    //@PreAuthorize("hasAnyAuthority('assessment:read', 'SUPER_ADMIN')")
     @PreAuthorize("isAuthenticated()")
     public Mono<ResponseEntity<Response>> assessDiabetesRisk(@Parameter(description = "UUID du patient", required = true) @PathVariable String patientUuid, HttpServletRequest request) {
 
         log.info("Received diabetes assessment request for patient: {}", patientUuid);
 
-        return assessmentService.assessDiabetesRisk(patientUuid).map(assessmentMapper::toResponse)
-                .map(assessmentResponse -> ResponseEntity.ok(getResponse(request, Map.of("assessment", assessmentResponse),
+        String authHeader = request.getHeader("Authorization");
+        String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
+
+        return assessmentService.assessDiabetesRisk(patientUuid, token)
+                .map(assessmentMapper::toResponse)
+                .map(assessmentResponse -> ResponseEntity.ok(getResponse(request,
+                        Map.of("assessment", assessmentResponse),
                         "Évaluation du risque effectuée avec succès", OK)))
-                .doOnSuccess(response -> log.info("Assessment completed for patient: {}", patientUuid))
                 .doOnError(error -> log.error("Assessment failed for patient {}: {}", patientUuid, error.getMessage()));
     }
 }
