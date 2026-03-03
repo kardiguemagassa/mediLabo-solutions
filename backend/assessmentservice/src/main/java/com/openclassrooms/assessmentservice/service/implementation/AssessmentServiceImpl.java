@@ -57,23 +57,23 @@ public class AssessmentServiceImpl implements AssessmentService {
      * 5. Construction de l'Assessment
      */
     @Override
-    public Mono<Assessment> assessDiabetesRisk(String patientUuid) {
-        log.info("Starting diabetes risk assessment for patient: {}", patientUuid);
+    public Mono<Assessment> assessDiabetesRisk(String patientUuid, String token) {
+        Mono<PatientResponse> patientMono = patientServiceClient
+                .getPatientByUuid(patientUuid, token)
+                .switchIfEmpty(Mono.error(new ApiException("Patient non trouvé: " + patientUuid)));
 
-        // Récupérer le patient (erreur si non trouvé)
-        Mono<PatientResponse> patientMono = patientServiceClient.getPatientByUuid(patientUuid).switchIfEmpty(Mono.error(new ApiException("Patient non trouvé: " + patientUuid)));
+        Mono<List<NoteResponse>> notesMono = noteServiceClient
+                .getNotesByPatientUuid(patientUuid, token)
+                .collectList()
+                .defaultIfEmpty(List.of());
 
-        // Récupérer les notes (liste vide si aucune)
-        Mono<List<NoteResponse>> notesMono = noteServiceClient.getNotesByPatientUuid(patientUuid).collectList().defaultIfEmpty(List.of());
-
-        // Combiner les deux appels en parallèle
         return Mono.zip(patientMono, notesMono)
-                .map(tuple -> {PatientResponse patient = tuple.getT1();List<NoteResponse> notes = tuple.getT2();
-                    Assessment assessment = buildAssessment(patient, notes);
-                    publishAssessmentCompletedEvent(patient, assessment);
+                .map(tuple -> {
+                    Assessment assessment = buildAssessment(tuple.getT1(), tuple.getT2());
+                    publishAssessmentCompletedEvent(tuple.getT1(), assessment);
                     return assessment;
                 })
-                .doOnSuccess(assessment -> log.info("Assessment complete for patient {} - Risk Level: {}, Triggers: {}", patientUuid, assessment.riskLevel(), assessment.triggerCount()))
+                .doOnSuccess(a -> log.info("Assessment complete for patient {} - Risk: {}", patientUuid, a.riskLevel()))
                 .doOnError(error -> log.error("Error assessing patient {}: {}", patientUuid, error.getMessage()));
     }
 

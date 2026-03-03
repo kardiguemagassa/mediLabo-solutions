@@ -47,6 +47,7 @@ class AssessmentServiceImplTest {
     private AssessmentServiceImpl assessmentService;
 
     private static final String PATIENT_UUID = "patient-uuid-123";
+    private static final String TEST_TOKEN = "test-jwt-token";
 
     @BeforeEach
     void setUp() {}
@@ -87,13 +88,13 @@ class AssessmentServiceImplTest {
 
             List<NoteResponse> notes = List.of(createNote("Patient fumeur, cholestérol élevé"), createNote("Poids anormal"));
 
-            when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
-            when(noteServiceClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(Flux.fromIterable(notes));
+            when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
+            when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.fromIterable(notes));
             when(riskLevelCalculator.calculate(45, Gender.FEMALE, 4)).thenReturn(RiskLevel.BORDERLINE);
 
             doNothing().when(eventPublisher).publishEvent(any());
 
-            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN))
                     .assertNext(result -> {
                         assertThat(result.riskLevel()).isEqualTo(RiskLevel.BORDERLINE);
                         assertThat(result.triggerCount()).isEqualTo(4);
@@ -108,13 +109,14 @@ class AssessmentServiceImplTest {
 
             List<NoteResponse> notes = List.of(createNote("Fumeur, taille anormale, poids élevé"));
 
-            when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
-            when(noteServiceClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(Flux.fromIterable(notes));
+            //when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
+            when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
+            when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.fromIterable(notes));
             when(riskLevelCalculator.calculate(25, Gender.MALE, 4)).thenReturn(RiskLevel.IN_DANGER);
 
             doNothing().when(eventPublisher).publishEvent(any());
 
-            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN))
                     .assertNext(result -> {
                         assertThat(result.riskLevel()).isEqualTo(RiskLevel.IN_DANGER);
                         assertThat(result.triggerCount()).isEqualTo(4);
@@ -132,13 +134,13 @@ class AssessmentServiceImplTest {
                     createNote("Anticorps détectés, réaction allergique")
             );
 
-            when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
-            when(noteServiceClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(Flux.fromIterable(notes));
+            when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
+            when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.fromIterable(notes));
             when(riskLevelCalculator.calculate(28, Gender.MALE, 6)).thenReturn(RiskLevel.EARLY_ONSET);
 
             doNothing().when(eventPublisher).publishEvent(any());
 
-            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID,TEST_TOKEN))
                     .assertNext(result -> {
                         assertThat(result.riskLevel()).isEqualTo(RiskLevel.EARLY_ONSET);
                         assertThat(result.triggerCount()).isEqualTo(6);
@@ -156,20 +158,19 @@ class AssessmentServiceImplTest {
         @Test
         @DisplayName("Devrait lever ApiException si patient introuvable")
         void shouldThrowPatientNotFound_whenPatientDoesNotExist() {
-            when(patientServiceClient.getPatientByUuid(PATIENT_UUID))
-                    .thenReturn(Mono.empty());
+            when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.empty());
 
             // IMPORTANT: Il faut aussi mocker le service de notes pour éviter NullPointerException
-            when(noteServiceClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(Flux.empty());
+            when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.empty());
 
-            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN))
                     .expectErrorMatches(error ->
                             error instanceof ApiException &&
                                     error.getMessage().contains(PATIENT_UUID))
                     .verify();
 
-            verify(patientServiceClient).getPatientByUuid(PATIENT_UUID);
-            verify(noteServiceClient).getNotesByPatientUuid(PATIENT_UUID);
+            verify(patientServiceClient).getPatientByUuid(PATIENT_UUID, TEST_TOKEN);
+            verify(noteServiceClient).getNotesByPatientUuid(PATIENT_UUID, TEST_TOKEN);
             verify(riskLevelCalculator, never()).calculate(anyInt(), any(), anyInt());
             verify(eventPublisher, never()).publishEvent(any());
         }
@@ -180,14 +181,13 @@ class AssessmentServiceImplTest {
             PatientResponse patient = createPatient(50, Gender.FEMALE);
             RuntimeException notesError = new RuntimeException("Notes down");
 
-            when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
+            when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
+            when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.error(notesError));
 
-            when(noteServiceClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(Flux.error(notesError));
+            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN)).expectError(RuntimeException.class).verify();
 
-            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID)).expectError(RuntimeException.class).verify();
-
-            verify(patientServiceClient).getPatientByUuid(PATIENT_UUID);
-            verify(noteServiceClient).getNotesByPatientUuid(PATIENT_UUID);
+            verify(patientServiceClient).getPatientByUuid(eq(PATIENT_UUID), anyString());
+            verify(noteServiceClient).getNotesByPatientUuid(eq(PATIENT_UUID), anyString());
             verify(riskLevelCalculator, never()).calculate(anyInt(), any(), anyInt());
             verify(eventPublisher, never()).publishEvent(any());
         }
@@ -206,13 +206,13 @@ class AssessmentServiceImplTest {
 
             NoteResponse note = createNote(null);
 
-            when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
-            when(noteServiceClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(Flux.just(note));
+            when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
+            when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.just(note));
             when(riskLevelCalculator.calculate(35, Gender.MALE, 0)).thenReturn(RiskLevel.NONE);
 
             doNothing().when(eventPublisher).publishEvent(any());
 
-            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN))
                     .assertNext(result -> {
                         assertThat(result.triggerCount()).isZero();
                     })
@@ -226,13 +226,13 @@ class AssessmentServiceImplTest {
 
             NoteResponse note = createNote("");
 
-            when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
-            when(noteServiceClient.getNotesByPatientUuid(PATIENT_UUID)).thenReturn(Flux.just(note));
+            when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
+            when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.just(note));
             when(riskLevelCalculator.calculate(35, Gender.FEMALE, 0)).thenReturn(RiskLevel.NONE);
 
             doNothing().when(eventPublisher).publishEvent(any());
 
-            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID))
+            StepVerifier.create(assessmentService.assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN))
                     .assertNext(result -> {
                         assertThat(result.triggerCount()).isZero();
                     })

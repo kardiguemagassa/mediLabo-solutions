@@ -21,6 +21,7 @@ class NoteServiceClientImplTest {
     private static MockWebServer mockWebServer;
     private NoteServiceClientImpl noteClient;
     private ObjectMapper objectMapper;
+    private static final String TEST_TOKEN = "test-jwt-token";
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -70,7 +71,7 @@ class NoteServiceClientImplTest {
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(mockJsonResponse));
 
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .assertNext(result -> {
                     assertThat(result).isNotEmpty();
                     assertThat(result.getFirst().getNoteUuid()).isEqualTo("note-1");
@@ -96,7 +97,7 @@ class NoteServiceClientImplTest {
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(mockEmptyResponse));
 
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .assertNext(result -> assertThat(result).isEmpty())
                 .verifyComplete();
     }
@@ -110,7 +111,7 @@ class NoteServiceClientImplTest {
                 .setBody("Not Found"));
 
         // Les erreurs 4xx sont propagées comme ApiException
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .expectErrorMatches(throwable ->
                         throwable instanceof ApiException &&
                                 throwable.getMessage().contains("Erreur client NotesService"))
@@ -125,7 +126,7 @@ class NoteServiceClientImplTest {
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody("Bad Request"));
 
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .expectErrorMatches(throwable ->
                         throwable instanceof ApiException &&
                                 throwable.getMessage().contains("Erreur client NotesService"))
@@ -148,7 +149,7 @@ class NoteServiceClientImplTest {
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(mockJsonResponse));
 
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .assertNext(result -> assertThat(result).isEmpty())
                 .verifyComplete();
     }
@@ -171,7 +172,7 @@ class NoteServiceClientImplTest {
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(mockJsonResponse));
 
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .assertNext(result -> assertThat(result).isEmpty())
                 .verifyComplete();
     }
@@ -195,7 +196,7 @@ class NoteServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // convertValue va échouer et retourner Collections.emptyList()
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .assertNext(result -> assertThat(result).isEmpty())
                 .verifyComplete();
     }
@@ -207,7 +208,7 @@ class NoteServiceClientImplTest {
         mockWebServer.enqueue(new MockResponse().setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START));
 
         // L'erreur réseau déclenche le fallback qui retourne Flux.empty()
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .assertNext(result -> assertThat(result).isEmpty())
                 .verifyComplete();
     }
@@ -220,7 +221,7 @@ class NoteServiceClientImplTest {
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(""));
 
-        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123").collectList())
+        StepVerifier.create(noteClient.getNotesByPatientUuid("uuid-123", TEST_TOKEN).collectList())
                 .assertNext(result -> assertThat(result).isEmpty())
                 .verifyComplete();
     }

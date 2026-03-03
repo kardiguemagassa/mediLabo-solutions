@@ -38,7 +38,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AUTH_SERVER_ISSUER_URI:http://localhost:9001}
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
 
   # FILE UPLOAD -  MULTIPART CONFIGURATION
   servlet:

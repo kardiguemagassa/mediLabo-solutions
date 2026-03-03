@@ -18,5 +18,5 @@ public interface AssessmentService {
      * @param patientUuid UUID du patient
      * @return Mono<Assessment> contenant l'évaluation complète du risque
      */
-    Mono<Assessment> assessDiabetesRisk(String patientUuid);
+    Mono<Assessment> assessDiabetesRisk(String patientUuid, String token);
 }

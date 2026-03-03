@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${services.authorization-server.url:http://localhost:9001}")
+    @Value("${AUTH_SERVER_ISSUER_URI:http://localhost:9001}")
     private String authorizationServerUrl;
 
     @Value("${services.authorization-server.timeout:5000}")

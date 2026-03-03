@@ -110,6 +110,11 @@ resilience4j:
         timeoutDuration: 5s
         cancelRunningFuture: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
 
 # SERVICES CONFIGURATION     AUTH_SERVER_URL
 services:

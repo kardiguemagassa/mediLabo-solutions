@@ -24,6 +24,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -50,7 +51,6 @@ class AssessmentControllerIntegrationTest {
     @DisplayName("Scénario Succès : Calcul du risque asynchrone")
     void scenario_AssessmentSuccess() throws Exception {
 
-        // GIVEN
         Assessment assessment = new Assessment(PATIENT_UUID, "Jean Dupont", 45, Gender.MALE, RiskLevel.NONE, 0, List.of(), LocalDateTime.now());
 
         AssessmentResponse assessmentResponse = AssessmentResponse.builder()
@@ -65,17 +65,15 @@ class AssessmentControllerIntegrationTest {
                 .assessedAt(LocalDateTime.now())
                 .build();
 
-        Mockito.when(assessmentService.assessDiabetesRisk(PATIENT_UUID)).thenReturn(Mono.just(assessment));
+        Mockito.when(assessmentService.assessDiabetesRisk(eq(PATIENT_UUID), any())).thenReturn(Mono.just(assessment));
         Mockito.when(assessmentMapper.toResponse(any(Assessment.class))).thenReturn(assessmentResponse);
 
-        // WHEN
         MvcResult mvcResult = mockMvc.perform(
                         get(BASE_URL + "/{patientUuid}", PATIENT_UUID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        // THEN
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.assessment.patientUuid", is(PATIENT_UUID)))
@@ -90,17 +88,14 @@ class AssessmentControllerIntegrationTest {
     @DisplayName("Scénario Erreur : Gestion d'exception asynchrone")
     void scenario_AssessmentFailure() throws Exception {
 
-        // GIVEN
-        Mockito.when(assessmentService.assessDiabetesRisk(PATIENT_UUID)).thenReturn(Mono.error(new RuntimeException("Database error")));
+        Mockito.when(assessmentService.assessDiabetesRisk(eq(PATIENT_UUID), any())).thenReturn(Mono.error(new RuntimeException("Database error")));
 
-        // WHEN
         MvcResult mvcResult = mockMvc.perform(
                         get(BASE_URL + "/{patientUuid}", PATIENT_UUID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        // THEN
         mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isInternalServerError());
     }
 
@@ -109,7 +104,6 @@ class AssessmentControllerIntegrationTest {
     @DisplayName("Scénario Succès : Patient à risque IN_DANGER")
     void scenario_AssessmentInDanger() throws Exception {
 
-        // GIVEN
         List<String> triggers = List.of("Poids", "Fumeur", "Cholestérol", "Vertiges", "Taille");
 
         Assessment assessment = new Assessment(PATIENT_UUID, "Marie Martin", 25, Gender.FEMALE, RiskLevel.IN_DANGER, 5, triggers, LocalDateTime.now());
@@ -126,19 +120,15 @@ class AssessmentControllerIntegrationTest {
                 .assessedAt(LocalDateTime.now())
                 .build();
 
-        Mockito.when(assessmentService.assessDiabetesRisk(PATIENT_UUID))
-                .thenReturn(Mono.just(assessment));
-        Mockito.when(assessmentMapper.toResponse(any(Assessment.class)))
-                .thenReturn(assessmentResponse);
+        Mockito.when(assessmentService.assessDiabetesRisk(eq(PATIENT_UUID), any())).thenReturn(Mono.just(assessment));
+        Mockito.when(assessmentMapper.toResponse(any(Assessment.class))).thenReturn(assessmentResponse);
 
-        // WHEN
         MvcResult mvcResult = mockMvc.perform(
                         get(BASE_URL + "/{patientUuid}", PATIENT_UUID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        // THEN
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.assessment.riskLevel", is("IN_DANGER")))

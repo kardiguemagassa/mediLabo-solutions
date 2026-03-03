@@ -46,6 +46,7 @@ class AssessmentControllerTest {
 
     private Assessment assessment;
     private AssessmentResponse assessmentResponse;
+    private static final String TEST_TOKEN = "test-jwt-token";
 
     @BeforeEach
     void setUp() {
@@ -69,12 +70,9 @@ class AssessmentControllerTest {
     void shouldReturnResponseEntity_whenServiceSucceeds() {
 
         // Given
-        when(assessmentService.assessDiabetesRisk(PATIENT_UUID))
-                .thenReturn(Mono.just(assessment));
-
-        when(assessmentMapper.toResponse(assessment))
-                .thenReturn(assessmentResponse);
-
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN);
+        when(assessmentService.assessDiabetesRisk(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(assessment));
+        when(assessmentMapper.toResponse(assessment)).thenReturn(assessmentResponse);
         when(request.getRequestURI()).thenReturn("/api/assess/diabetes/" + PATIENT_UUID);
 
         // When
@@ -87,7 +85,7 @@ class AssessmentControllerTest {
         assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
         assertThat(responseEntity.getBody()).isNotNull();
 
-        verify(assessmentService).assessDiabetesRisk(PATIENT_UUID);
+        verify(assessmentService).assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN);
         verify(assessmentMapper).toResponse(assessment);
     }
 
@@ -96,19 +94,16 @@ class AssessmentControllerTest {
     void shouldReturnError_whenServiceFails() {
 
         // Given
-        when(assessmentService.assessDiabetesRisk(PATIENT_UUID))
-                .thenReturn(Mono.error(new RuntimeException("Service indisponible")));
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + TEST_TOKEN);
+        when(assessmentService.assessDiabetesRisk(eq(PATIENT_UUID), anyString())).thenReturn(Mono.error(new RuntimeException("Service indisponible")));
 
         // When
-        Mono<ResponseEntity<Response>> resultMono =
-                assessmentController.assessDiabetesRisk(PATIENT_UUID, request);
+        Mono<ResponseEntity<Response>> resultMono = assessmentController.assessDiabetesRisk(PATIENT_UUID, request);
 
         // Then
         StepVerifier.create(resultMono).expectError(RuntimeException.class).verify();
 
-        verify(assessmentService).assessDiabetesRisk(PATIENT_UUID);
+        verify(assessmentService).assessDiabetesRisk(PATIENT_UUID, TEST_TOKEN);
         verifyNoInteractions(assessmentMapper);
     }
-
-
 }
