@@ -7,12 +7,6 @@
 
 spring:
   datasource:
-    # L'URL qui conteneur automatiquement
-    url: jdbc:tc:postgresql:16:///authdb
-    username: test
-    password: test
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-
   sql:
     init:
       mode: always

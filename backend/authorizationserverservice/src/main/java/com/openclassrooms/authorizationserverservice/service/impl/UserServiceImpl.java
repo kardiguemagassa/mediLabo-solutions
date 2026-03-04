@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.openclassrooms.authorizationserverservice.constant.Constant.PHOTO_DIRECTORY;
 import static com.openclassrooms.authorizationserverservice.enumeration.EventType.RESETPASSWORD;
 import static com.openclassrooms.authorizationserverservice.enumeration.EventType.USER_CREATED;
 import static com.openclassrooms.authorizationserverservice.util.UserUtils.randomUUUID;
@@ -93,6 +92,9 @@ public class UserServiceImpl implements UserService {
     private final ApplicationEventPublisher publisher;
     @Value("${ui.app.url}")
     private String uiAppUrl;
+
+    @Value("${app.photo.directory}")
+    private String photoDirectory;
 
     // USER MANAGEMENT TOKEN SERVICE
 
@@ -355,7 +357,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User uploadPhoto(String userUuid, MultipartFile file) {
         var user = userRepository.getUserByUuid(userUuid);
-        var imageUrl = photoFunction.apply(user.getImageUrl(), file);
+        var imageUrl = savePhoto(user.getImageUrl(), file);
         userRepository.updateImageUrl(userUuid, imageUrl);
         user.setImageUrl(imageUrl + "?timestamp=" + System.currentTimeMillis());
         return user;
@@ -530,23 +532,20 @@ public class UserServiceImpl implements UserService {
      * Supprime l'ancienne image si elle existe et copie la nouvelle dans le répertoire PHOTO_DIRECTORY.
      * Retourne l'URL publique de l'image sauvegardée.
      */
-    private final BiFunction<String, MultipartFile, String> photoFunction = (imageUrl, image) -> {
+    private String savePhoto(String imageUrl, MultipartFile image) {
         try {
-            //var filename = imageUrl.split("/")[imageUrl.split("/").length - 1].split("\\.")[0] + fileExtension.apply(image.getOriginalFilename());
-            var existingImage = Paths.get(PHOTO_DIRECTORY + imageUrl.split("/")[imageUrl.split("/").length - 1]);
-            var fileStorageLocation = Paths.get(PHOTO_DIRECTORY).toAbsolutePath().normalize();
+            var existingImage = Paths.get(photoDirectory + imageUrl.split("/")[imageUrl.split("/").length - 1]);
+            var fileStorageLocation = Paths.get(photoDirectory).toAbsolutePath().normalize();
             if(!Files.exists(fileStorageLocation)) { Files.createDirectories(fileStorageLocation); }
             if(Files.exists(existingImage)) { Files.deleteIfExists(existingImage); }
             var filename = randomUUUID.get() + fileExtension.apply(image.getOriginalFilename());
             Files.copy(image.getInputStream(), fileStorageLocation.resolve(filename), REPLACE_EXISTING);
-            return ServletUriComponentsBuilder
-                    .fromCurrentContextPath()
-                    .path("/user/image/" + filename).toUriString();
+            return ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/image/" + filename).toUriString();
         } catch (Exception exception) {
             log.error(exception.getMessage());
             throw new ApiException("Impossible de sauvegardé l'image");
         }
-    };
+    }
 
     // USER PATIENT MANAGEMENT
 

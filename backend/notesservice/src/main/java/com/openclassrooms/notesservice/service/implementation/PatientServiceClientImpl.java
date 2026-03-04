@@ -40,8 +40,6 @@ public class PatientServiceClientImpl implements PatientServiceClient {
     private static final String CIRCUIT_BREAKER_NAME = "patientService";
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
-    // ==================== PUBLIC METHODS ====================
-
     /**
      * Récupère les informations d'un patient par son UUID.
      *
@@ -98,13 +96,14 @@ public class PatientServiceClientImpl implements PatientServiceClient {
      * @return Mono<PatientInfo> ou Mono.empty() si pas d'email
      */
     @Override
-    @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getPatientContactInfoFallback")
     public Mono<PatientInfo> getPatientContactInfo(String patientUuid) {
         log.debug("Fetching patient contact info: {}", patientUuid);
 
         return getPatientByUuid(patientUuid)
-                // Filtrer si pas d'email
+                /**
+                 * Filtrer si pas d'email
+                 */
                 .filter(patient -> {
                     if (patient.getEmail() == null || patient.getEmail().isBlank()) {
                         log.warn("Patient {} has no email configured", patientUuid);
@@ -118,8 +117,6 @@ public class PatientServiceClientImpl implements PatientServiceClient {
                     }
                 });
     }
-
-    // ==================== FALLBACK METHODS ====================
 
     /**
      * Fallback pour getPatientByUuid.
@@ -137,8 +134,6 @@ public class PatientServiceClientImpl implements PatientServiceClient {
         log.error("Fallback getPatientContactInfo - UUID: {}, Cause: {}", patientUuid, throwable.getMessage());
         return Mono.empty();
     }
-
-    // ==================== PRIVATE METHODS ====================
 
     /**
      * Extrait PatientInfo depuis la réponse ExternalResponse.
