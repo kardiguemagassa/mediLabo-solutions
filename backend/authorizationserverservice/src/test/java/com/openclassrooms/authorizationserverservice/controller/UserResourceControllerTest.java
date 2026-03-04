@@ -17,6 +17,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository; // AJOUT
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -37,6 +38,7 @@ import java.util.List;
 
 @WebMvcTest(UserResourceController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@TestPropertySource(properties = {"app.photo.directory=${java.io.tmpdir}/"})
 class UserResourceControllerTest {
 
     @Autowired
@@ -452,12 +454,7 @@ class UserResourceControllerTest {
     void uploadPhoto_ShouldReturnUser() throws Exception {
         String uuid = "user-uuid";
         // Création d'un faux fichier image
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "avatar.png",
-                MediaType.IMAGE_PNG_VALUE,
-                "content".getBytes()
-        );
+        MockMultipartFile file = new MockMultipartFile("file", "avatar.png", MediaType.IMAGE_PNG_VALUE, "content".getBytes());
 
         User mockUser = new User();
         mockUser.setUserUuid(uuid);
@@ -479,25 +476,16 @@ class UserResourceControllerTest {
         String filename = "test-image.png";
         byte[] mockImageContent = "fake-image-content".getBytes();
 
-        // 1. Définir le chemin COMPLET tel qu'attendu par ton code
-        Path directoryPath = Paths.get("/Users/kara/Downloads/uploads/");
-        Path filePath = directoryPath.resolve(filename);
-
-        // 2. Créer physiquement le dossier et le fichier pour le test
-        if (!Files.exists(directoryPath)) {
-            Files.createDirectories(directoryPath);
-        }
+        Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+        Path filePath = tempDir.resolve(filename);
         Files.write(filePath, mockImageContent);
 
         try {
-            // 3. Exécuter la requête
             mockMvc.perform(get("/user/image/{filename}", filename))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.IMAGE_PNG_VALUE))
                     .andExpect(content().bytes(mockImageContent));
-
         } finally {
-            // 4. Nettoyage : on supprime le fichier de test pour ne pas polluer ton dossier Downloads
             Files.deleteIfExists(filePath);
         }
     }

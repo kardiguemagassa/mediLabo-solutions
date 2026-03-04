@@ -44,6 +44,10 @@ spring:
         jdbc:
           time_zone: UTC
 
+app:
+  photo:
+    directory: ${user.home}/Downloads/uploads/
+
 # CONFIGURATION TECHNIQUE SERVEE
 server:
   port: ${AUTHORIZATION_SERVER_PORT:9001}

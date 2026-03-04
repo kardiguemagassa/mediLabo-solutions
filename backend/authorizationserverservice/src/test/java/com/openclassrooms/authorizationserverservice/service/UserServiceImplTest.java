@@ -6,6 +6,7 @@ import com.openclassrooms.authorizationserverservice.model.User;
 import com.openclassrooms.authorizationserverservice.repository.UserRepository;
 import com.openclassrooms.authorizationserverservice.service.impl.UserServiceImpl;
 import com.openclassrooms.authorizationserverservice.util.UserUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -45,6 +47,11 @@ class UserServiceImplTest {
 
     @InjectMocks
     private UserServiceImpl userService;
+
+    @BeforeEach
+    void injectPhotoDirectory() {
+        ReflectionTestUtils.setField(userService, "photoDirectory", System.getProperty("java.io.tmpdir") + "/");
+    }
 
     @Test
     @DisplayName("createUser doit encoder le mot de passe et publier un événement")
@@ -796,21 +803,16 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("uploadPhoto doit lever une ApiException si la sauvegarde du fichier échoue")
     void uploadPhoto_ShouldThrowApiException_WhenFileOperationFails() throws IOException {
-        // GIVEN
         String uuid = "uuid-123";
         MultipartFile mockFile = mock(MultipartFile.class);
         User mockUser = new User();
         mockUser.setImageUrl("http://localhost/images/old.png");
 
         when(userRepository.getUserByUuid(uuid)).thenReturn(mockUser);
-
-        // On force une erreur de lecture du fichier
-        when(mockFile.getInputStream()).thenThrow(new IOException("Disk Full"));
         when(mockFile.getOriginalFilename()).thenReturn("photo.png");
+        when(mockFile.getInputStream()).thenThrow(new IOException("Disk Full"));
 
-        // WHEN & THEN
         assertThatThrownBy(() -> userService.uploadPhoto(uuid, mockFile))
                 .isInstanceOf(ApiException.class)
                 .hasMessageContaining("Impossible de sauvegardé l'image");

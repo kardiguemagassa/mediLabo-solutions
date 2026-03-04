@@ -12,7 +12,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -24,7 +25,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static com.openclassrooms.authorizationserverservice.constant.Constant.PHOTO_DIRECTORY;
 import static com.openclassrooms.authorizationserverservice.util.RequestUtils.getResponse;
 import static java.util.Collections.emptyMap;
 import static java.util.Map.of;
@@ -112,10 +112,15 @@ import static org.springframework.http.ResponseEntity.ok;
         description = "Public REST API for user registration, authentication, profile management and security (MFA, password, roles, photos)"
 )
 @RestController
-@AllArgsConstructor
 @RequestMapping("/user")
 public class UserResourceController {
     private final UserService userService;
+    private final String photoDirectory;
+
+    public UserResourceController(UserService userService, @Value("${app.photo.directory}") String photoDirectory) {
+        this.userService = userService;
+        this.photoDirectory = photoDirectory;
+    }
 
     // REGISTRATION AND ACCOUNT VERIFICATION
 
@@ -397,7 +402,7 @@ public class UserResourceController {
     })
     @GetMapping(path = "/image/{filename}", produces = { IMAGE_PNG_VALUE, IMAGE_JPEG_VALUE })
     public byte [] getPhoto(@PathVariable("filename") String filename) throws IOException {
-        return Files.readAllBytes(Paths.get(PHOTO_DIRECTORY + filename));
+        return Files.readAllBytes(Paths.get(photoDirectory + filename));
     }
 
     // PRIVATE UTIL
