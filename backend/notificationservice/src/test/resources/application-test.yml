@@ -3,7 +3,8 @@ spring:
   # url/username/password gérés par @DynamicPropertySource
   sql:
     init:
-      mode: never                         # ← Testcontainers gère l'init via withInitScript
+      mode: never
+      schema-locations: classpath:schema.sql
   cloud:
     discovery:
       enabled: false

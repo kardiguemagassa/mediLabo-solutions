@@ -28,8 +28,7 @@ class NotificationserviceApplicationTests {
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
 			.withDatabaseName("notificationdb_test")
 			.withUsername("test")
-			.withPassword("test")
-			.withInitScript("schema.sql");    // ← Testcontainers exécute le SQL directement
+			.withPassword("test");
 
 	@DynamicPropertySource
 	static void configureProperties(DynamicPropertyRegistry registry) {
@@ -39,7 +38,5 @@ class NotificationserviceApplicationTests {
 	}
 
 	@Test
-	void contextLoads() {
-		assertThat(true).isTrue();
-	}
+	void contextLoads() {}
 }
