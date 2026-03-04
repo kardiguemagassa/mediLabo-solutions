@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -107,7 +108,8 @@ class UserServiceClientImplTest {
                         assertThat(user.getFirstName()).isEqualTo("Jean");
                         assertThat(user.getEmail()).isEqualTo("jean.dupont@medilabo.fr");
                     })
-                    .verifyComplete();
+                    .expectComplete()
+                    .verify(Duration.ofSeconds(5));
         }
 
         @Test
@@ -121,7 +123,8 @@ class UserServiceClientImplTest {
 
             // When & Then
             StepVerifier.create(userService.getUserByEmail("unknown@email.com"))
-                    .verifyComplete();
+                    .expectComplete()
+                    .verify(Duration.ofSeconds(5));
         }
 
         @Test
@@ -135,7 +138,7 @@ class UserServiceClientImplTest {
                     HttpStatus.OK,
                     "No user",
                     "",
-                    Map.of()  // data vide
+                    Map.of()
             );
 
             mockWebServer.enqueue(new MockResponse()
@@ -145,7 +148,8 @@ class UserServiceClientImplTest {
 
             // When & Then : Le filter() retourne Mono.empty()
             StepVerifier.create(userService.getUserByEmail("test@test.com"))
-                    .verifyComplete();
+                    .expectComplete()
+                    .verify(Duration.ofSeconds(5));
         }
 
         @Test
@@ -160,9 +164,8 @@ class UserServiceClientImplTest {
             // When & Then
             StepVerifier.create(userService.getUserByEmail("invalid@email.com"))
                     .expectErrorMatches(throwable ->
-                            throwable instanceof ApiException &&
-                                    throwable.getMessage().contains("Erreur client"))
-                    .verify();
+                            throwable instanceof ApiException && throwable.getMessage().contains("Erreur client"))
+                    .verify(Duration.ofSeconds(5));
         }
 
         @Test
@@ -177,9 +180,8 @@ class UserServiceClientImplTest {
             // When & Then
             StepVerifier.create(userService.getUserByEmail("any@email.com"))
                     .expectErrorMatches(throwable ->
-                            throwable instanceof ApiException &&
-                                    throwable.getMessage().contains("Erreur serveur"))
-                    .verify();
+                            throwable instanceof ApiException && throwable.getMessage().contains("Erreur serveur"))
+                    .verify(Duration.ofSeconds(5));
         }
     }
 
@@ -200,7 +202,9 @@ class UserServiceClientImplTest {
 
             // When & Then
             StepVerifier.create(userService.getUserByUuid("unknown-uuid"))
-                    .verifyComplete();
+                    .expectComplete()
+                    .verify(Duration.ofSeconds(5));
+
         }
 
         @Test
@@ -217,7 +221,7 @@ class UserServiceClientImplTest {
                     .expectErrorMatches(throwable ->
                             throwable instanceof ApiException &&
                                     throwable.getMessage().contains("Erreur serveur"))
-                    .verify();
+                    .verify(Duration.ofSeconds(5));
         }
 
         @Test
@@ -234,7 +238,7 @@ class UserServiceClientImplTest {
                     .expectErrorMatches(throwable ->
                             throwable instanceof ApiException &&
                                     throwable.getMessage().contains("Erreur client"))
-                    .verify();
+                    .verify(Duration.ofSeconds(5));
         }
     }
 
@@ -249,7 +253,8 @@ class UserServiceClientImplTest {
         void fallbackGetUserByUuidShouldReturnEmpty() {
             // Test direct du fallback (sans passer par AOP)
             StepVerifier.create(userService.getUserByUuidFallback("any-uuid", new RuntimeException("Test")))
-                    .verifyComplete();
+                    .expectComplete()
+                    .verify(Duration.ofSeconds(5));
         }
 
         @Test
@@ -257,7 +262,8 @@ class UserServiceClientImplTest {
         void fallbackGetUserByEmailShouldReturnEmpty() {
             // Test direct du fallback
             StepVerifier.create(userService.getUserByEmailFallback("any@email.com", new RuntimeException("Test")))
-                    .verifyComplete();
+                    .expectComplete()
+                    .verify(Duration.ofSeconds(5));
         }
     }
 }
