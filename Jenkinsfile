@@ -115,13 +115,15 @@ pipeline {
                             dir(svc.path) {
                                 if (fileExists('pom.xml')) {
                                     configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                                        sh """
-                                            echo "🧪 Testing ${svc.name}..."
-                                            mvn test -s \$MAVEN_SETTINGS -B -U \
-                                                -Dsurefire.useSystemClassLoader=false \
-                                                -Dsurefire.forkCount=1
-                                            echo "✅ ${svc.name} tests passed"
-                                        """
+                                        timeout(time: 15, unit: 'MINUTES') {
+                                            sh """
+                                                echo "🧪 Testing ${svc.name}..."
+                                                mvn test -s \$MAVEN_SETTINGS -B -U \
+                                                    -Dsurefire.useSystemClassLoader=false \
+                                                    -Dsurefire.forkCount=1
+                                                echo "✅ ${svc.name} tests passed"
+                                            """
+                                        }
                                     }
                                 }
                             }
