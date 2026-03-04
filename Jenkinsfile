@@ -42,7 +42,7 @@ def heavyServices = [
 ]
 
 def lightServices = [
-    [name: 'authorizationserverservice', path: 'backend/authorizationserverservice', port: '9000'],
+    [name: 'authorizationserverservice', path: 'backend/authorizationserverservice', port: '9001'],
     [name: 'patientservice',             path: 'backend/patientservice',             port: '8081'],
     [name: 'notesservice',               path: 'backend/notesservice',               port: '8082'],
     [name: 'assessmentservice',          path: 'backend/assessmentservice',          port: '8083'],
