@@ -1,23 +1,17 @@
 spring:
   datasource:
-#    url: jdbc:tc:postgresql:16:///notificationdb_test?TC_INITSCRIPT=schema.sql
-#    username: test
-#    password: test
-#    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  # url/username/password gérés par @DynamicPropertySource
   sql:
     init:
-      mode: never  # Testcontainers initialise déjà via TC_INITSCRIPT
-
+      mode: never                         # ← Testcontainers gère l'init via withInitScript
   cloud:
     discovery:
       enabled: false
-
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
       auto-offset-reset: earliest
       group-id: notification-test-group
-
   security:
     oauth2:
       resourceserver:
@@ -32,4 +26,3 @@ logging:
   level:
     root: WARN
     com.openclassrooms.notificationservice: DEBUG
-    org.testcontainers: INFO
