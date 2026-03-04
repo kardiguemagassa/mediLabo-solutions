@@ -24,15 +24,32 @@ def config = [
     ]
 ]
 
-def backendServices = [
+// ─────────────────────────────────────────────────────────────────────────────
+// Services découpés en deux groupes :
+//
+//   heavyServices  → discovery (Eureka Server) + gateway (Spring Cloud Gateway)
+//                    Ces deux services démarrent un contexte Spring complet avec
+//                    Eureka, LoadBalancer, CircuitBreaker, etc.
+//                    Temps observés : discovery ~952 s, gateway ~447 s
+//                    Ils sont testés SÉQUENTIELLEMENT pour ne pas se cannibaler.
+//
+//   lightServices  → les 5 microservices métier
+//                    Tests rapides (<40 s chacun en local) — parallélisés.
+// ─────────────────────────────────────────────────────────────────────────────
+def heavyServices = [
     [name: 'discoveryserverservice',     path: 'backend/discoveryserverservice',     port: '8761'],
+    [name: 'gatewayserverservice',       path: 'backend/gatewayserverservice',       port: '8080']
+]
+
+def lightServices = [
     [name: 'authorizationserverservice', path: 'backend/authorizationserverservice', port: '9000'],
-    [name: 'gatewayserverservice',       path: 'backend/gatewayserverservice',       port: '8080'],
     [name: 'patientservice',             path: 'backend/patientservice',             port: '8081'],
     [name: 'notesservice',               path: 'backend/notesservice',               port: '8082'],
     [name: 'assessmentservice',          path: 'backend/assessmentservice',          port: '8083'],
     [name: 'notificationservice',        path: 'backend/notificationservice',        port: '8084']
 ]
+
+def backendServices = heavyServices + lightServices
 
 def frontend = [name: 'medilabo-frontend', path: 'frontend/mediLabo-solutions-ui']
 
@@ -49,11 +66,26 @@ pipeline {
         DOCKER_REGISTRY              = "${config.dockerRegistry}"
         CONTAINER_TAG                = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
         TESTCONTAINERS_RYUK_DISABLED = "true"
-        // Pas de MAVEN_OPTS avec repo local → Nexus gère le cache
+
+        // ── FIX DOCKER-IN-DOCKER ─────────────────────────────────────────────
+        // Jenkins tourne dans un container Docker.
+        // Testcontainers démarre un Postgres et mappe son port sur l'hôte
+        // (ex: 172.17.0.1:52249).  Le container Jenkins ne peut pas atteindre
+        // cette adresse via le bridge par défaut.
+        //
+        // TESTCONTAINERS_HOST_OVERRIDE force Testcontainers à utiliser
+        // "host-gateway" comme adresse de l'hôte Docker, ce qui correspond
+        // à l'IP injectée via --add-host=host-gateway:host-gateway dans le
+        // container Jenkins (ou 172.17.0.1 selon ta config).
+        //
+        // Alternative si host-gateway n'est pas résolu : utilise directement
+        // l'IP du bridge : TESTCONTAINERS_HOST_OVERRIDE = "172.17.0.1"
+        // ─────────────────────────────────────────────────────────────────────
+        TESTCONTAINERS_HOST_OVERRIDE = "host-gateway"
     }
 
     options {
-        timeout(time: 90, unit: 'MINUTES')
+        timeout(time: 120, unit: 'MINUTES')   // augmenté : discovery + gateway = ~25 min à eux seuls
         buildDiscarder(logRotator(numToKeepStr: '10'))
         skipDefaultCheckout(true)
         timestamps()
@@ -62,7 +94,7 @@ pipeline {
 
     stages {
 
-        // STAGE 1 — CHECKOUT & VALIDATION
+        // ── STAGE 1 — CHECKOUT & VALIDATION ───────────────────────────────────
         stage('Checkout & Validation') {
             steps {
                 checkout scm
@@ -73,9 +105,7 @@ pipeline {
             }
         }
 
-        // STAGE 2 — BUILD (compile uniquement, pas de tests)
-        // -U : force Maven à résoudre depuis Nexus (pas de cache local corrompu)
-        // Parallélisation des 7 services
+        // ── STAGE 2 — BUILD (compile uniquement, pas de tests) ────────────────
         stage('Backend - Build') {
             steps {
                 script {
@@ -103,13 +133,67 @@ pipeline {
             }
         }
 
-        // STAGE 3 — TEST (séparé du build — bonne pratique CI/CD)
-        stage('Backend - Test') {
+        // ── STAGE 3A — TEST : services lourds (séquentiel) ───────────────────
+        //
+        // discovery et gateway démarrent un contexte Spring complet (Eureka,
+        // LoadBalancer, CircuitBreaker…).  Les faire tourner en parallèle
+        // épuise la RAM/CPU du nœud Jenkins et provoque des timeouts en cascade
+        // sur les autres services.
+        //
+        // Timeout par service : 30 min (discovery a pris ~16 min en build #27).
+        // ─────────────────────────────────────────────────────────────────────
+        stage('Backend - Test (heavy services)') {
+            steps {
+                script {
+                    heavyServices.each { svc ->
+                        dir(svc.path) {
+                            if (fileExists('pom.xml')) {
+                                configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
+                                    timeout(time: 30, unit: 'MINUTES') {
+                                        sh """
+                                            echo "🧪 Testing ${svc.name} (heavy — sequential)..."
+                                            mvn test -s \$MAVEN_SETTINGS -B -U \
+                                                -Dsurefire.useSystemClassLoader=false \
+                                                -Dsurefire.forkCount=1
+                                            echo "✅ ${svc.name} tests passed"
+                                        """
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true,
+                          testResults: 'backend/discoveryserverservice/target/surefire-reports/*.xml, backend/gatewayserverservice/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        // ── STAGE 3B — TEST : services légers (parallèle) ────────────────────
+        //
+        // authorizationserverservice, patientservice, notesservice,
+        // assessmentservice, notificationservice.
+        //
+        // Ces services utilisent Testcontainers (Postgres, Mongo) ou des mocks.
+        // Timeout par service : 15 min (amplement suffisant).
+        //
+        // FIX notificationservice :
+        //   Le contextLoads échoue avec "Connection refused" car Spring's
+        //   ScriptUtils ne peut pas parser les fonctions PL/pgSQL ($$...$$).
+        //   Solution retenue : sql.init.mode=never dans application-test.yml
+        //   (le test contextLoads n'a besoin que d'une datasource valide,
+        //   pas du schéma complet).
+        //   Voir : backend/notificationservice/src/test/resources/application-test.yml
+        // ─────────────────────────────────────────────────────────────────────
+        stage('Backend - Test (light services)') {
             steps {
                 script {
                     def testStages = [:]
 
-                    backendServices.each { service ->
+                    lightServices.each { service ->
                         def svc = service
                         testStages["Test ${svc.name}"] = {
                             dir(svc.path) {
@@ -136,7 +220,7 @@ pipeline {
             post {
                 always {
                     junit allowEmptyResults: true,
-                          testResults: '**/target/surefire-reports/*.xml'
+                          testResults: 'backend/authorizationserverservice/target/surefire-reports/*.xml, backend/patientservice/target/surefire-reports/*.xml, backend/notesservice/target/surefire-reports/*.xml, backend/assessmentservice/target/surefire-reports/*.xml, backend/notificationservice/target/surefire-reports/*.xml'
                 }
                 failure {
                     script {
@@ -146,7 +230,7 @@ pipeline {
             }
         }
 
-        // STAGE 4 — COVERAGE (JaCoCo)
+        // ── STAGE 4 — COVERAGE (JaCoCo) ───────────────────────────────────────
         stage('Backend - Coverage') {
             steps {
                 script {
@@ -178,7 +262,7 @@ pipeline {
             }
         }
 
-        // STAGE 5 — PACKAGE (JAR final sans retester)
+        // ── STAGE 5 — PACKAGE (JAR final sans retester) ───────────────────────
         stage('Backend - Package') {
             steps {
                 script {
@@ -213,7 +297,7 @@ pipeline {
             }
         }
 
-        // STAGE 6 — SONARQUBE ANALYSIS
+        // ── STAGE 6 — SONARQUBE ───────────────────────────────────────────────
         stage('Backend - SonarQube') {
             when {
                 expression { return config.sonar.enabled }
@@ -245,8 +329,7 @@ pipeline {
             }
         }
 
-        // STAGE 7 — QUALITY GATE
-        // Non bloquant pour l'instant (nettoyage en cours)
+        // ── STAGE 7 — QUALITY GATE ────────────────────────────────────────────
         stage('Quality Gate') {
             when {
                 allOf {
@@ -268,7 +351,6 @@ pipeline {
                             echo "⚠️ Quality Gate: WARNING"
                             currentBuild.result = 'UNSTABLE'
                         } else {
-                            // TODO: remplacer par error() une fois le nettoyage terminé
                             echo "⚠️ Quality Gate FAILED: ${qg.status} — non bloquant (nettoyage en cours)"
                             currentBuild.result = 'UNSTABLE'
                         }
@@ -277,7 +359,7 @@ pipeline {
             }
         }
 
-        // STAGE 8 — SECURITY (OWASP + Maven Audit en parallèle)
+        // ── STAGE 8 — SECURITY ────────────────────────────────────────────────
         stage('Security') {
             when {
                 anyOf {
@@ -320,8 +402,7 @@ pipeline {
             }
         }
 
-        // STAGE 9 — FRONTEND BUILD
-        // Tests Angular désactivés — non encore implémentés
+        // ── STAGE 9 — FRONTEND BUILD ──────────────────────────────────────────
         stage('Frontend - Build') {
             steps {
                 dir(frontend.path) {
@@ -337,7 +418,7 @@ pipeline {
             }
         }
 
-        // STAGE 10 — FRONTEND SONARQUBE
+        // ── STAGE 10 — FRONTEND SONARQUBE ─────────────────────────────────────
         stage('Frontend - SonarQube') {
             when {
                 expression { fileExists("${frontend.path}/sonar-project.properties") }
@@ -356,8 +437,7 @@ pipeline {
             }
         }
 
-        // STAGE 11 — DOCKER BUILD
-        //  JARs déjà buildés — pas de rebuild dans Docker
+        // ── STAGE 11 — DOCKER BUILD ───────────────────────────────────────────
         stage('Docker - Build') {
             when {
                 anyOf { branch 'main'; branch 'develop' }
@@ -406,7 +486,7 @@ pipeline {
             }
         }
 
-        // STAGE 12 — DOCKER PUSH
+        // ── STAGE 12 — DOCKER PUSH ────────────────────────────────────────────
         stage('Docker - Push') {
             when {
                 anyOf { branch 'main'; branch 'develop' }
@@ -439,7 +519,7 @@ pipeline {
             }
         }
 
-        // STAGE 13 — DEPLOY (docker-compose up complet)
+        // ── STAGE 13 — DEPLOY ─────────────────────────────────────────────────
         stage('Deploy') {
             when {
                 anyOf { branch 'main'; branch 'develop' }
@@ -458,7 +538,7 @@ pipeline {
             }
         }
 
-        // STAGE 14 — HEALTH CHECK
+        // ── STAGE 14 — HEALTH CHECK ───────────────────────────────────────────
         stage('Health Check') {
             when {
                 anyOf { branch 'main'; branch 'develop' }
@@ -490,7 +570,7 @@ pipeline {
         }
     }
 
-    // POST
+    // ── POST ──────────────────────────────────────────────────────────────────
     post {
         success {
             script {
@@ -516,7 +596,8 @@ pipeline {
     }
 }
 
-// FONCTIONS UTILITAIRES
+// ── FONCTIONS UTILITAIRES ─────────────────────────────────────────────────────
+
 def validateEnvironment() {
     sh "java -version"
     sh "mvn -version"
