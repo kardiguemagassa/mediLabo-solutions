@@ -20,11 +20,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,9 +48,12 @@ class UserServiceImplTest {
     @InjectMocks
     private UserServiceImpl userService;
 
+    @TempDir
+    Path tempDir;
+
     @BeforeEach
-    void injectPhotoDirectory() {
-        ReflectionTestUtils.setField(userService, "photoDirectory", System.getProperty("java.io.tmpdir") + "/");
+    void setUp() {
+        ReflectionTestUtils.setField(userService, "photoDirectory", tempDir.toString() + "/");
     }
 
     @Test
@@ -406,16 +409,12 @@ class UserServiceImplTest {
     @Test
     @DisplayName("uploadPhoto doit mettre à jour l'image et ajouter un timestamp")
     void uploadPhoto_ShouldUpdateUrlAndReturnUser() throws IOException {
-        // On doit mocker ServletUriComponentsBuilder pour éviter le crash en test
         try (MockedStatic<ServletUriComponentsBuilder> mockedBuilder = mockStatic(ServletUriComponentsBuilder.class)) {
-
-            // Mock de l'URI builder (nécessaire pour la photoFunction interne)
-            var mockUriBuilder = mock(org.springframework.web.servlet.support.ServletUriComponentsBuilder.class);
+            var mockUriBuilder = mock(ServletUriComponentsBuilder.class);
             mockedBuilder.when(ServletUriComponentsBuilder::fromCurrentContextPath).thenReturn(mockUriBuilder);
             when(mockUriBuilder.path(anyString())).thenReturn(mockUriBuilder);
             when(mockUriBuilder.toUriString()).thenReturn("http://localhost/images/photo.png");
 
-            // GIVEN
             String uuid = "uuid-123";
             MultipartFile mockFile = mock(MultipartFile.class);
             User mockUser = new User();
@@ -423,13 +422,10 @@ class UserServiceImplTest {
 
             when(userRepository.getUserByUuid(uuid)).thenReturn(mockUser);
             when(mockFile.getOriginalFilename()).thenReturn("new-photo.png");
-            // On mock l'InputStream pour éviter les erreurs de lecture
             when(mockFile.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
 
-            // WHEN
             User result = userService.uploadPhoto(uuid, mockFile);
 
-            // THEN
             assertThat(result.getImageUrl()).contains("?timestamp=");
             verify(userRepository).updateImageUrl(eq(uuid), anyString());
         }
@@ -821,21 +817,13 @@ class UserServiceImplTest {
     @Test
     @DisplayName("uploadPhoto doit créer le répertoire s'il n'existe pas")
     void uploadPhoto_ShouldCreateDirectory_WhenNotExists() throws IOException {
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class);
-             MockedStatic<Paths> pathsMock = mockStatic(Paths.class);
-             MockedStatic<ServletUriComponentsBuilder> uriMock = mockStatic(ServletUriComponentsBuilder.class)) {
+        // Sous-dossier qui n'existe pas encore
+        Path subDir = tempDir.resolve("new-upload-dir");
+        ReflectionTestUtils.setField(userService, "photoDirectory", subDir.toString() + "/");
 
-            // Configuration minimale pour éviter les NullPointerException
-            Path mockPath = mock(Path.class);
-            pathsMock.when(() -> Paths.get(anyString())).thenReturn(mockPath);
-            when(mockPath.toAbsolutePath()).thenReturn(mockPath);
-            when(mockPath.normalize()).thenReturn(mockPath);
-            when(mockPath.resolve(anyString())).thenReturn(mockPath);
+        try (MockedStatic<ServletUriComponentsBuilder> uriMock = mockStatic(ServletUriComponentsBuilder.class)) {
+            setupUriMock(uriMock);
 
-            // Simulation : Le dossier n'existe pas
-            filesMock.when(() -> Files.exists(any(Path.class))).thenReturn(false);
-
-            // Mock du reste nécessaire
             User user = new User();
             user.setImageUrl("http://api.com/img.png");
             when(userRepository.getUserByUuid(anyString())).thenReturn(user);
@@ -844,49 +832,33 @@ class UserServiceImplTest {
             when(file.getOriginalFilename()).thenReturn("test.png");
             when(file.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
 
-            setupUriMock(uriMock); // Méthode utilitaire pour le mock URI
-
-            // WHEN
             userService.uploadPhoto("uuid", file);
 
-            // THEN
-            // On vérifie que createDirectories a bien été appelé car le dossier n'existait pas
-            filesMock.verify(() -> Files.createDirectories(any(Path.class)), times(1));
+            assertThat(Files.exists(subDir)).isTrue();
         }
     }
 
     @Test
     @DisplayName("uploadPhoto doit supprimer l'ancienne image si elle existe")
     void uploadPhoto_ShouldDeleteOldImage_WhenExists() throws IOException {
-        try (MockedStatic<Files> filesMock = mockStatic(Files.class);
-             MockedStatic<Paths> pathsMock = mockStatic(Paths.class);
-             MockedStatic<ServletUriComponentsBuilder> uriMock = mockStatic(ServletUriComponentsBuilder.class)) {
+        // Créer une vraie ancienne image dans tempDir
+        Path oldImage = tempDir.resolve("old-image.png");
+        Files.write(oldImage, "old-content".getBytes());
 
-            Path mockPath = mock(Path.class);
-            pathsMock.when(() -> Paths.get(anyString())).thenReturn(mockPath);
-            when(mockPath.toAbsolutePath()).thenReturn(mockPath);
-            when(mockPath.normalize()).thenReturn(mockPath);
-            when(mockPath.resolve(anyString())).thenReturn(mockPath);
-
-            // Simulation : Le dossier existe (true) ET l'ancienne image existe (true)
-            filesMock.when(() -> Files.exists(any(Path.class))).thenReturn(true);
+        try (MockedStatic<ServletUriComponentsBuilder> uriMock = mockStatic(ServletUriComponentsBuilder.class)) {
+            setupUriMock(uriMock);
 
             User user = new User();
-            user.setImageUrl("http://api.com/old-image.png");
+            user.setImageUrl("http://api.com/old-image.png"); // dernier segment = "old-image.png"
             when(userRepository.getUserByUuid(anyString())).thenReturn(user);
 
             MultipartFile file = mock(MultipartFile.class);
             when(file.getOriginalFilename()).thenReturn("new.png");
             when(file.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
 
-            setupUriMock(uriMock);
-
-            // WHEN
             userService.uploadPhoto("uuid", file);
 
-            // THEN
-            // On vérifie que la suppression a été tentée
-            filesMock.verify(() -> Files.deleteIfExists(any(Path.class)), atLeastOnce());
+            assertThat(Files.exists(oldImage)).isFalse();
         }
     }
 
