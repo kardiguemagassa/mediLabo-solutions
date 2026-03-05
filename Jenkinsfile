@@ -162,6 +162,10 @@ pipeline {
         // ══════════════════════════════════════════════════════════════════════
         stage('Checkout & Validation') {
             steps {
+                
+                sh """
+                    find ${WORKSPACE}/.m2/repository -name "*.lastUpdated" -delete 2>/dev/null || true
+                """ 
                 checkout scm
                 script {
                     validateEnvironment()
