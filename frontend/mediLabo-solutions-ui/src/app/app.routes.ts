@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
+
 
 export const routes: Routes = [
   // Public routes (Landing, Login, Register)
-  {
+  /*{
     path: '',
     loadChildren: () => import('./features/auth/auth.routes').then(r => r.AUTH_ROUTES)
   },
@@ -19,5 +19,5 @@ export const routes: Routes = [
   {
     path: '**',
     redirectTo: ''
-  }
+  }*/
 ];
