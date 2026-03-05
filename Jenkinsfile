@@ -131,7 +131,7 @@ pipeline {
     environment {
         DOCKER_REGISTRY              = "${config.dockerRegistry}"
         TESTCONTAINERS_RYUK_DISABLED = "true"
-        TESTCONTAINERS_HOST_OVERRIDE = "host-gateway"
+        TESTCONTAINERS_HOST_OVERRIDE = "host.docker.internal"
 
         // ── CACHE MAVEN ──────────────────────────────────────────────────────
         MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository -Xmx512m"
@@ -162,7 +162,7 @@ pipeline {
         // ══════════════════════════════════════════════════════════════════════
         stage('Checkout & Validation') {
             steps {
-                
+
                 sh """
                     find ${WORKSPACE}/.m2/repository -name "*.lastUpdated" -delete 2>/dev/null || true
                 """ 
@@ -781,7 +781,7 @@ def mavenCmd(String path, Map config, String goals, String extraArgs = "") {
     dir(path) {
         if (fileExists('pom.xml')) {
             configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -U ${extraArgs}"
+                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -U -e ${extraArgs}"
             }
         }
     }
