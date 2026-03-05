@@ -60,17 +60,23 @@ public class PatientServiceClientImpl implements PatientServiceClient {
                 .uri("/api/patients/{patientUuid}", patientUuid)
                 .retrieve()
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur PatientService")))
+                .onStatus(status -> status.is4xxClientError() && status != HttpStatus.NOT_FOUND, response -> Mono.error(new ApiException("Erreur client PatientService")))
                 .bodyToMono(ExternalResponse.class)
-                .onErrorResume(WebClientResponseException.NotFound.class, e -> {log.warn("Patient not found (404): {}", patientUuid);return Mono.empty();})
                 .flatMap(response -> {
                     if (response == null || response.data() == null || !response.data().containsKey("patient")) {
                         return Mono.empty();
                     }
                     return Mono.just(extractPatientInfo(response));
                 })
+
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> {
+                    log.warn("Patient non trouvé (404) pour l'UUID: {}", patientUuid);
+                    return Mono.empty(); // Retourne un Mono<PatientInfo> vide (correct !)
+                })
+
                 .timeout(TIMEOUT)
                 .onErrorResume(java.util.concurrent.TimeoutException.class, e -> {
-                    log.error("Timeout fetching patient {}", patientUuid);
+                    log.error("Timeout pour le patient {}", patientUuid);
                     return Mono.empty();
                 });
     }

@@ -3,6 +3,7 @@ package com.openclassrooms.notesservice.service.implementation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.notesservice.dto.ExternalResponse;
 import com.openclassrooms.notesservice.dto.PatientInfo;
+import com.openclassrooms.notesservice.exception.ApiException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
@@ -54,27 +55,13 @@ class PatientServiceClientImplTest {
         @DisplayName("Should return patient when found")
         void shouldReturnPatientWhenFound() throws Exception {
             // Given
+            PatientInfo.UserInfo userInfo = new PatientInfo.UserInfo("Jean", "Martin", "jean.martin@email.com", null, null, null);
             PatientInfo patient = PatientInfo.builder()
                     .patientUuid(PATIENT_UUID)
-                    .userInfo(new PatientInfo.UserInfo(
-                            "Jean",
-                            "Martin",
-                            "jean.martin@email.com",
-                            null,
-                            null,
-                            null
-                    ))
+                    .userInfo(userInfo)
                     .build();
 
-            ExternalResponse response = new ExternalResponse(
-                    "timestamp",
-                    200,
-                    "path",
-                    "OK",
-                    "Success",
-                    "",
-                    Map.of("patient", patient)
-            );
+            ExternalResponse response = new ExternalResponse("ts", 200, "path", "OK", "Success", "", Map.of("patient", patient));
 
             mockWebServer.enqueue(new MockResponse()
                     .setResponseCode(200)
@@ -83,38 +70,31 @@ class PatientServiceClientImplTest {
 
             // When & Then
             StepVerifier.create(patientServiceClient.getPatientByUuid(PATIENT_UUID))
-                    .expectNextMatches(p ->
-                            p.getPatientUuid().equals(PATIENT_UUID) &&
-                                    p.getEmail().equals("jean.martin@email.com"))
+                    .expectNextMatches(p -> p.getPatientUuid().equals(PATIENT_UUID) &&
+                            "jean.martin@email.com".equals(p.getEmail()))
                     .verifyComplete();
         }
 
         @Test
         @DisplayName("Should return empty when patient not found (404)")
         void shouldReturnEmptyWhenPatientNotFound() {
-            // Given
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(404)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{\"error\": \"Not found\"}"));
+            // Given - On simule un vrai 404
+            mockWebServer.enqueue(new MockResponse().setResponseCode(404));
 
-            // When & Then
+            // When & Then - Le service transforme le 404 en Mono.empty()
             StepVerifier.create(patientServiceClient.getPatientByUuid("unknown-patient"))
-                    .verifyComplete();
+                    .verifyComplete(); // Succès si vide
         }
 
         @Test
-        @DisplayName("Should return empty on server error (fallback)")
-        void shouldReturnEmptyOnServerError() {
-            // Given
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(500)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{\"error\": \"Server error\"}"));
+        @DisplayName("Should throw ApiException on server error (500)")
+        void shouldThrowApiExceptionOnServerError() {
+            // Given - On simule une erreur serveur
+            mockWebServer.enqueue(new MockResponse().setResponseCode(500));
 
-            // When & Then - The circuit breaker should trigger fallback
+            // When & Then - Le service transforme le 500 en ApiException via .onStatus()
             StepVerifier.create(patientServiceClient.getPatientByUuid(PATIENT_UUID))
-                    .expectError()
+                    .expectError(ApiException.class)
                     .verify();
         }
     }
