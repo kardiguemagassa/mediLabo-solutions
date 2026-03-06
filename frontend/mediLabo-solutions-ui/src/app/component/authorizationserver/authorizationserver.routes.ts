@@ -14,7 +14,7 @@ export const AUTHORIZATIONSERVER_ROUTES: Routes = [
                 loadComponent: () => import('./register/register.component').then(c => c.RegisterComponent)
             },
             {
-                path:'resetpassord',
+                path:'resetpassword',
                 loadComponent: () => import('./resetpassword/resetpassword.component').then(c => c.ResetpassordComponent)
             },
             {
