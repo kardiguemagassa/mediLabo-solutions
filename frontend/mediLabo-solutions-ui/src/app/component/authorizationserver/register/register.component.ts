@@ -2,15 +2,15 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { StorageService } from '../../../service/storage.service';
 import { UserService } from '../../../service/user.service';
-import { NgForm } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HotToastService } from '@ngxpert/hot-toast';
-
+import { CommonModule } from '@angular/common';
 
 
 @Component({
   selector: 'app-register',
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule, CommonModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
