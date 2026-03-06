@@ -29,10 +29,11 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${PATIENT_SERVICE_URL:http://patient-service:8081}")
+
+    @Value("${services.patient.url}")
     private String patientServiceUrl;
 
-    @Value("${NOTES_SERVICE_URL:http://notes-service:8082}")
+    @Value("${services.notes.url}")
     private String notesServiceUrl;
 
     @Value("${services.timeout:5000}")

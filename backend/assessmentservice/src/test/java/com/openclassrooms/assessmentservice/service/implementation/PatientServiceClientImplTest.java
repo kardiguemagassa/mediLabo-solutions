@@ -26,28 +26,6 @@ class PatientServiceClientImplTest {
     private PatientServiceClientImpl patientClient;
     private static final String TEST_TOKEN = "test-jwt-token";
 
-//    @BeforeAll
-//    static void setUp() throws IOException {
-//        mockWebServer = new MockWebServer();
-//        mockWebServer.start();
-//    }
-//
-//    @AfterAll
-//    static void tearDown() throws IOException {
-//        mockWebServer.shutdown();
-//    }
-
-//    @BeforeEach
-//    void initialize() {
-//
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        objectMapper.registerModule(new JavaTimeModule());
-//        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-//
-//        String baseUrl = String.format("http://localhost:%s", mockWebServer.getPort());
-//        WebClient webClient = WebClient.builder().baseUrl(baseUrl).build();
-//        patientClient = new PatientServiceClientImpl(webClient, objectMapper);
-//    }
 
     @BeforeEach
     void setUp() throws IOException {

@@ -2,7 +2,7 @@
 # ║              AUTHORIZATION SERVER - Test Profile                           ║
 # ║                                                                            ║
 # ║  🧪 Unit & Integration tests                                               ║
-# ║  Uses Testcontainers (PostgreSQL) - No H2 dependency                       ║
+# ║  Uses Testcontainers (PostgreSQL)                   ║
 # ╚════════════════════════════════════════════════════════════════════════════╝
 
 spring:

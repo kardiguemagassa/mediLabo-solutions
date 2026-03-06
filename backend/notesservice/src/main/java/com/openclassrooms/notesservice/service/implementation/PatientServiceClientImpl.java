@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -58,34 +59,26 @@ public class PatientServiceClientImpl implements PatientServiceClient {
         return patientServiceWebClient.get()
                 .uri("/api/patients/{patientUuid}", patientUuid)
                 .retrieve()
-                // Gestion 404 : Patient non trouvé → Mono.empty()
-                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND),
-                        response -> {
-                            log.warn("Patient not found: {}", patientUuid);
-                            return Mono.empty();
-                        })
-                // Gestion autres erreurs 4xx
-                .onStatus(HttpStatusCode::is4xxClientError,
-                        response -> Mono.error(new ApiException("Erreur client PatientService")))
-                // Gestion erreurs 5xx
-                .onStatus(HttpStatusCode::is5xxServerError,
-                        response -> Mono.error(new ApiException("Erreur serveur PatientService")))
-                // Conversion de la réponse
+                .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur PatientService")))
+                .onStatus(status -> status.is4xxClientError() && status != HttpStatus.NOT_FOUND, response -> Mono.error(new ApiException("Erreur client PatientService")))
                 .bodyToMono(ExternalResponse.class)
-                // Filtrer les réponses vides
-                .filter(response -> response != null && response.data() != null && response.data().containsKey("patient"))
-                // Mapper vers PatientInfo
-                .map(this::extractPatientInfo)
-                // Logging succès
-                .doOnSuccess(patient -> {
-                    if (patient != null) {
-                        log.debug("Patient found: {} - {}", patientUuid, patient.getFullName());
+                .flatMap(response -> {
+                    if (response == null || response.data() == null || !response.data().containsKey("patient")) {
+                        return Mono.empty();
                     }
+                    return Mono.just(extractPatientInfo(response));
                 })
-                // Logging erreur
-                .doOnError(error -> log.error("Error fetching patient {}: {}", patientUuid, error.getMessage()))
-                // Timeout
-                .timeout(TIMEOUT);
+
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> {
+                    log.warn("Patient non trouvé (404) pour l'UUID: {}", patientUuid);
+                    return Mono.empty(); // Retourne un Mono<PatientInfo> vide (correct !)
+                })
+
+                .timeout(TIMEOUT)
+                .onErrorResume(java.util.concurrent.TimeoutException.class, e -> {
+                    log.error("Timeout pour le patient {}", patientUuid);
+                    return Mono.empty();
+                });
     }
 
     /**
@@ -101,21 +94,14 @@ public class PatientServiceClientImpl implements PatientServiceClient {
         log.debug("Fetching patient contact info: {}", patientUuid);
 
         return getPatientByUuid(patientUuid)
-                /**
-                 * Filtrer si pas d'email
-                 */
-                .filter(patient -> {
+                .flatMap(patient -> {
                     if (patient.getEmail() == null || patient.getEmail().isBlank()) {
                         log.warn("Patient {} has no email configured", patientUuid);
-                        return false;
+                        return Mono.empty();
                     }
-                    return true;
+                    return Mono.just(patient);
                 })
-                .doOnSuccess(patient -> {
-                    if (patient != null) {
-                        log.debug("Patient contact info found: {}", patient.getEmail());
-                    }
-                });
+                .switchIfEmpty(Mono.empty());
     }
 
     /**

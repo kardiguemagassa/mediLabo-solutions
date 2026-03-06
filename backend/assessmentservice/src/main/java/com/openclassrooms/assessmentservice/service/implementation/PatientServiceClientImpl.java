@@ -28,7 +28,6 @@ public class PatientServiceClientImpl implements PatientServiceClient {
     private static final String CIRCUIT_BREAKER_NAME = "patientService";
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
-    @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getPatientByUuidFallback")
     public Mono<PatientResponse> getPatientByUuid(String patientUuid, String token) {
@@ -38,23 +37,15 @@ public class PatientServiceClientImpl implements PatientServiceClient {
                 .uri("/api/patients/{patientUuid}", patientUuid)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .retrieve()
-                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND),
-                        response -> {
-                            log.warn("Patient not found: {}", patientUuid);
-                            return Mono.empty();
-                        })
-                .onStatus(HttpStatusCode::is4xxClientError,
-                        response -> Mono.error(new ApiException("Erreur client PatientService")))
-                .onStatus(HttpStatusCode::is5xxServerError,
-                        response -> Mono.error(new ApiException("Erreur serveur PatientService")))
+                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
+                .onStatus(HttpStatusCode::isError, response -> Mono.error(new ApiException("Erreur service Patient")))
                 .bodyToMono(Response.class)
-                .filter(response -> response != null && response.data() != null
-                        && response.data().containsKey("patient"))
-                .map(this::extractPatient)
-                .doOnSuccess(patient -> {
-                    if (patient != null) log.debug("Patient found: {}", patientUuid);
+                .flatMap(response -> {
+                    if (response == null || response.data() == null || !response.data().containsKey("patient")) {
+                        return Mono.empty();
+                    }
+                    return Mono.just(extractPatient(response));
                 })
-                .doOnError(error -> log.error("Error fetching patient {}: {}", patientUuid, error.getMessage()))
                 .timeout(TIMEOUT);
     }
 
@@ -64,14 +55,12 @@ public class PatientServiceClientImpl implements PatientServiceClient {
     }
 
     private PatientResponse extractPatient(Response response) {
-        try {
-            Object patientData = response.data().get("patient");
-            PatientResponse patient = objectMapper.convertValue(patientData, PatientResponse.class);
-            log.debug("Extracted patient: {}", patient.getPatientUuid());
-            return patient;
-        } catch (Exception e) {
-            log.error("Error extracting patient from response: {}", e.getMessage());
-            throw new ApiException("Erreur lors de la conversion de la réponse patient");
+        Object patientData = response.data().get("patient");
+        if (patientData == null) {
+            throw new ApiException("Données patient manquantes");
         }
+
+        return objectMapper.convertValue(patientData, PatientResponse.class);
     }
+
 }

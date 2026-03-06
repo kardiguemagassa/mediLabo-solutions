@@ -38,7 +38,7 @@
 //   │ main         │ Idem develop + Deploy (prod) + Git Tag               │
 //   │ PR (any)     │ Build → Test → Coverage → Sonar → Quality Gate       │
 //   └──────────────┴───────────────────────────────────────────────────────┘
-// ──────────────────────────────────────────────────────────────────────────────
+
 
 def config = [
     emailRecipients: "magassakara@gmail.com",
@@ -81,9 +81,8 @@ def config = [
     ]
 ]
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // SERVICES
-// ─────────────────────────────────────────────────────────────────────────────
 def heavyServices = [
     [name: 'discoveryserverservice',     path: 'backend/discoveryserverservice',     port: '8761'],
     [name: 'gatewayserverservice',       path: 'backend/gatewayserverservice',       port: '8080']
@@ -103,7 +102,7 @@ def frontend = [name: 'medilabo-frontend', path: 'frontend/mediLabo-solutions-ui
 pipeline {
     agent any
 
-    // ── DÉCLENCHEMENT AUTOMATIQUE ────────────────────────────────────────────
+    // ── DÉCLENCHEMENT AUTOMATIQUE
     // githubPush() : Jenkins est notifié par le webhook GitHub à chaque push.
     // pollSCM      : filet de sécurité — si le webhook échoue, Jenkins poll
     //                toutes les 5 min. En production stable, on peut le retirer.
@@ -116,7 +115,6 @@ pipeline {
     //      Content type : application/json
     //      Events       : Just the push event
     //   3. Credentials GitHub dans Jenkins (pour repos privés)
-    // ─────────────────────────────────────────────────────────────────────────
     triggers {
         githubPush()
         pollSCM('H/5 * * * *')
@@ -131,16 +129,17 @@ pipeline {
     environment {
         DOCKER_REGISTRY              = "${config.dockerRegistry}"
         TESTCONTAINERS_RYUK_DISABLED = "true"
-        TESTCONTAINERS_HOST_OVERRIDE = "host-gateway"
+        TESTCONTAINERS_HOST_OVERRIDE = "host.docker.internal"
 
-        // ── CACHE MAVEN ──────────────────────────────────────────────────────
+
+        // ── CACHE MAVEN 
         MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository -Xmx512m"
 
-        // ── STRATÉGIE DE BRANCHES ────────────────────────────────────────────
+        // ── STRATÉGIE DE BRANCHES
         // IS_DEPLOYABLE : true pour main/develop → pipeline complet + deploy
         // IS_FEATURE    : true pour feature/* → build + test uniquement
         // IS_PR         : true pour les Pull Requests
-        // ─────────────────────────────────────────────────────────────────────
+        
         IS_DEPLOYABLE = "${env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop'}"
         IS_FEATURE    = "${!(env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop') && env.CHANGE_ID == null}"
         IS_PR         = "${env.CHANGE_ID != null}"
@@ -156,13 +155,12 @@ pipeline {
 
     stages {
 
-        // ══════════════════════════════════════════════════════════════════════
+      
         // STAGE 1 — CHECKOUT, VALIDATION & VERSIONING
         // Branches : TOUTES
-        // ══════════════════════════════════════════════════════════════════════
         stage('Checkout & Validation') {
             steps {
-                
+
                 sh """
                     find ${WORKSPACE}/.m2/repository -name "*.lastUpdated" -delete 2>/dev/null || true
                 """ 
@@ -170,7 +168,7 @@ pipeline {
                 script {
                     validateEnvironment()
 
-                    // ── VERSIONING SÉMANTIQUE ────────────────────────────────
+                    //  VERSIONING SÉMANTIQUE
                     env.GIT_SHORT_SHA = sh(
                         script: "git rev-parse --short=7 HEAD",
                         returnStdout: true
@@ -211,10 +209,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+        
         // STAGE 2 — BUILD (compile, pas de tests)
         // Branches : TOUTES
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - Build') {
             steps {
                 script {
@@ -232,10 +229,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+
         // STAGE 3A — TEST : services lourds (séquentiel)
         // Branches : TOUTES
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - Test (heavy)') {
             when {
                 expression { currentBuild.currentResult == 'SUCCESS' }
@@ -258,10 +254,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+        
         // STAGE 3B — TEST : services légers (parallèle)
         // Branches : TOUTES
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - Test (light)') {
             when {
                 expression { currentBuild.currentResult == 'SUCCESS' }
@@ -292,10 +287,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+
         // STAGE 4 — COVERAGE (JaCoCo)
         // Branches : TOUTES
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - Coverage') {
             when {
                 expression { currentBuild.currentResult == 'SUCCESS' }
@@ -321,10 +315,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+      
         // STAGE 5 — PACKAGE (JAR sans retester)
         // Branches : develop, main uniquement
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - Package') {
             when {
                 allOf {
@@ -353,10 +346,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+     
         // STAGE 6 — SONARQUBE (parallélisé)
         // Branches : TOUTES (quand Sonar activé)
-        // ══════════════════════════════════════════════════════════════════════
         stage('Backend - SonarQube') {
             when {
                 allOf {
@@ -396,10 +388,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+      
         // STAGE 7 — QUALITY GATE
         // Branches : develop, main, PRs
-        // ══════════════════════════════════════════════════════════════════════
         stage('Quality Gate') {
             when {
                 allOf {
@@ -430,10 +421,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+
         // STAGE 8 — SECURITY (OWASP sur TOUS les services)
         // Branches : develop, main, PRs
-        // ══════════════════════════════════════════════════════════════════════
         stage('Security') {
             when {
                 allOf {
@@ -477,10 +467,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+      
         // STAGE 9 — FRONTEND BUILD
         // Branches : develop, main
-        // ══════════════════════════════════════════════════════════════════════
         stage('Frontend - Build') {
             when {
                 allOf {
@@ -501,10 +490,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+       
         // STAGE 10 — FRONTEND SONARQUBE
         // Branches : develop, main
-        // ══════════════════════════════════════════════════════════════════════
         stage('Frontend - SonarQube') {
             when {
                 allOf {
@@ -527,10 +515,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+       
         // STAGE 11 — DOCKER BUILD
         // Branches : develop, main
-        // ══════════════════════════════════════════════════════════════════════
         stage('Docker - Build') {
             when {
                 allOf {
@@ -568,10 +555,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+    
         // STAGE 12 — DOCKER PUSH
         // Branches : develop, main
-        // ══════════════════════════════════════════════════════════════════════
         stage('Docker - Push') {
             when {
                 allOf {
@@ -605,10 +591,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+    
         // STAGE 13 — DEPLOY (Blue-Green Strategy)
         // Branches : develop → staging, main → prod
-        // ══════════════════════════════════════════════════════════════════════
         stage('Deploy') {
             when {
                 allOf {
@@ -640,10 +625,9 @@ pipeline {
             }
         }
 
-        // ══════════════════════════════════════════════════════════════════════
+       
         // STAGE 14 — HEALTH CHECK (multi-services + rollback)
         // Branches : develop, main
-        // ══════════════════════════════════════════════════════════════════════
         stage('Health Check') {
             when {
                 allOf {
@@ -701,20 +685,18 @@ pipeline {
         }
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
+
     // POST ACTIONS
-    // ══════════════════════════════════════════════════════════════════════════
     post {
         success {
             script {
                 sendNotification(config.emailRecipients, 'SUCCESS',
                     "Pipeline terminé — version ${env.SEMVER}", config)
 
-                // ── Tag Git automatique sur main uniquement ──────────────────
+                // Tag Git automatique sur main uniquement 
                 // Utilise les credentials Jenkins pour pousser le tag
                 // Prérequis : créer un credential 'github-credentials' dans
                 // Jenkins (type Username + Password / Token)
-                // ─────────────────────────────────────────────────────────────
                 if (env.BRANCH_NAME == 'main') {
                     withCredentials([usernamePassword(
                         credentialsId: 'github-credentials',
@@ -781,7 +763,7 @@ def mavenCmd(String path, Map config, String goals, String extraArgs = "") {
     dir(path) {
         if (fileExists('pom.xml')) {
             configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -U ${extraArgs}"
+                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -U -e ${extraArgs}"
             }
         }
     }
