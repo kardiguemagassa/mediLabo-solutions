@@ -1,34 +1,42 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" class="bg-gray-50">
 <head>
   <meta charset="utf-8">
   <title>MediLabo Solutions</title>
-  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-
-  <!-- Tailwind CSS CDN -->
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: {50: '#ecfeff',100: '#cffafe',200: '#a5f3fc',300: '#67e8f9',400: '#22d3ee',500: '#06b6d4',600: '#0891b2',700: '#0e7490',800: '#155e75',900: '#164e63',}
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Inter', sans-serif; }
+    .medical-gradient { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%); }
+    .medical-pattern {
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(13, 148, 136, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(45, 212, 191, 0.05) 0%, transparent 30%);
+    }
+    .card-shadow { box-shadow: 0 4px 25px -5px rgba(13, 148, 136, 0.12), 0 10px 40px -10px rgba(0, 0, 0, 0.08); }
+    .input-focus:focus { box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15); }
+    .btn-shadow { box-shadow: 0 4px 15px -3px rgba(13, 148, 136, 0.4); }
+    .btn-shadow:hover { box-shadow: 0 6px 20px -3px rgba(13, 148, 136, 0.5); transform: translateY(-1px); }
   </style>
 </head>
 <body class="bg-slate-50">
   <app-root></app-root>
+
+  <script>
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>';
+      } else {
+        input.type = 'password';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+      }
+    }
+  </script>
 </body>
 </html>
