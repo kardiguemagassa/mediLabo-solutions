@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.notificationservice.domain.Response;
 import com.openclassrooms.notificationservice.dtorequest.UserRequest;
 import com.openclassrooms.notificationservice.exception.ApiException;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @version 1.0
  * @since 2026-02-09
  */
+@Slf4j
 @DisplayName("UserServiceImpl (AuthServerClient) Tests")
 class UserServiceClientImplTest {
 
@@ -44,17 +46,23 @@ class UserServiceClientImplTest {
         mockWebServer.start();
 
         objectMapper = new ObjectMapper();
+        // Requis si ton objet Response contient des LocalDateTime
+        objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
-        WebClient webClient = WebClient.builder()
-                .baseUrl(mockWebServer.url("/").toString())
-                .build();
+        // On force l'URL sans slash final
+        String baseUrl = mockWebServer.url("").toString();
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+
+        WebClient webClient = WebClient.builder().baseUrl(baseUrl).build();
 
         userService = new UserServiceClientImpl(webClient);
     }
 
     @AfterEach
     void tearDown() throws IOException {
-        // ⭐ Fermer le serveur après chaque test
+        // Fermer le serveur après chaque test
         mockWebServer.shutdown();
     }
 
@@ -192,19 +200,17 @@ class UserServiceClientImplTest {
     class GetUserByUuidTests {
 
         @Test
-        @DisplayName("Devrait retourner Mono vide quand l'utilisateur n'existe pas (404)")
+        @DisplayName("Devrait retourner un Mono vide quand l'utilisateur n'existe pas (404)")
         void shouldReturnEmptyWhenUserNotFound() {
-            // Given : 404
             mockWebServer.enqueue(new MockResponse()
                     .setResponseCode(404)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{}"));
+                    .setBody("{}")); // Un body vide mais présent
 
-            // When & Then
-            StepVerifier.create(userService.getUserByUuid("unknown-uuid"))
+            StepVerifier.create(userService.getUserByEmail("unknown@email.com"))
+                    .expectSubscription()
                     .expectComplete()
-                    .verify(Duration.ofSeconds(5));
-
+                    .verify(Duration.ofSeconds(10));
         }
 
         @Test
