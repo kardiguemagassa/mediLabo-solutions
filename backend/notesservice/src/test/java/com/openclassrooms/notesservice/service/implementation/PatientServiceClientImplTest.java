@@ -106,37 +106,31 @@ class PatientServiceClientImplTest {
         @Test
         @DisplayName("Should return patient with email")
         void shouldReturnPatientWithEmail() throws Exception {
-            // Given
-            PatientInfo patient = PatientInfo.builder()
-                    .patientUuid(PATIENT_UUID)
-                    .userInfo(new PatientInfo.UserInfo(
-                            "Jean",
-                            "Martin",
-                            "jean.martin@email.com",
-                            null,
-                            null,
-                            null
-                    ))
-                    .build();
-
-            ExternalResponse response = new ExternalResponse(
-                    "timestamp",
-                    200,
-                    "path",
-                    "OK",
-                    "Success",
-                    "",
-                    Map.of("patient", patient)
-            );
+            String jsonResponse = """
+        {
+            "status": 200,
+            "message": "Success",
+            "data": {
+                "patient": {
+                    "patientUuid": "patient-uuid-123",
+                    "userInfo": {
+                        "firstName": "Jean",
+                        "lastName": "Martin",
+                        "email": "jean.martin@email.com"
+                    }
+                }
+            }
+        }
+        """;
 
             mockWebServer.enqueue(new MockResponse()
                     .setResponseCode(200)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(objectMapper.writeValueAsString(response)));
+                    .setBody(jsonResponse));
 
             // When & Then
             StepVerifier.create(patientServiceClient.getPatientContactInfo(PATIENT_UUID))
-                    .expectNextMatches(p -> p.getEmail().equals("jean.martin@email.com"))
+                    .expectNextMatches(p -> "jean.martin@email.com".equals(p.getEmail()))
                     .verifyComplete();
         }
 

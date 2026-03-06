@@ -85,15 +85,15 @@ def config = [
 // SERVICES
 def heavyServices = [
     [name: 'discoveryserverservice',     path: 'backend/discoveryserverservice',     port: '8761'],
-    [name: 'gatewayserverservice',       path: 'backend/gatewayserverservice',       port: '8080']
+    [name: 'gatewayserverservice',       path: 'backend/gatewayserverservice',       port: '8080'],
+    [name: 'authorizationserverservice', path: 'backend/authorizationserverservice', port: '9001'],
+    [name: 'notificationservice',        path: 'backend/notificationservice',        port: '8084']
 ]
 
 def lightServices = [
-    [name: 'authorizationserverservice', path: 'backend/authorizationserverservice', port: '9001'],
     [name: 'patientservice',             path: 'backend/patientservice',             port: '8081'],
     [name: 'notesservice',               path: 'backend/notesservice',               port: '8082'],
-    [name: 'assessmentservice',          path: 'backend/assessmentservice',          port: '8083'],
-    [name: 'notificationservice',        path: 'backend/notificationservice',        port: '8084']
+    [name: 'assessmentservice',          path: 'backend/assessmentservice',          port: '8083']
 ]
 
 def backendServices = heavyServices + lightServices
