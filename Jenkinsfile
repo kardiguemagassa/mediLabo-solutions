@@ -763,7 +763,7 @@ def mavenCmd(String path, Map config, String goals, String extraArgs = "") {
     dir(path) {
         if (fileExists('pom.xml')) {
             configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -U -e ${extraArgs}"
+                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -e ${extraArgs}"
             }
         }
     }
