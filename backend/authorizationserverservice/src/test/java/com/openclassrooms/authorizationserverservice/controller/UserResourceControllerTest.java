@@ -17,6 +17,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository; // AJOUT
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,6 +40,7 @@ import java.util.List;
 @WebMvcTest(UserResourceController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {"app.photo.directory=${java.io.tmpdir}/"})
+@ActiveProfiles("test")
 class UserResourceControllerTest {
 
     @Autowired

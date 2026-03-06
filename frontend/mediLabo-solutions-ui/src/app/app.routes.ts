@@ -2,6 +2,10 @@ import { Routes } from '@angular/router';
 
 
 export const routes: Routes = [
+  {
+    path: '',
+    loadChildren: () => import('./component/authorizationserver/authorizationserver.routes').then(r => r.AUTHORIZATIONSERVER_ROUTES)
+  }
   // Public routes (Landing, Login, Register)
   /*{
     path: '',
