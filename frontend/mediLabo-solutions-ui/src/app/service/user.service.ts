@@ -17,13 +17,21 @@ export class UserService {
   constructor() {  }
 
   register$ = (user: any) => <Observable<IResponse>>
-    this.http.post<Response>
+    this.http.post<IResponse>
     (`${server}/user/register`, user)
     .pipe(
       tap(console.log),
       catchError(this.handleError)
         
     );
+
+  verifyAccountToken$ = (token: string) => <Observable<IResponse>>
+    this.http.get<IResponse>
+      (`${server}/user/verify/account?token=${token}`)
+      .pipe(
+        tap(console.log),
+        catchError(this.handleError)
+      );
 
   
 

@@ -28,7 +28,7 @@ export class RegisterComponent {
     }
   }
 
-  closeMessage = () => this.state.set({loading: false, message: undefined, error: undefined});
+  closeMessage = () => this.state.set({ loading: false, message: undefined, error: undefined });
 
   register = (form: NgForm) => {
     console.log('Données envoyées :', form.value);
