@@ -75,7 +75,6 @@ class PatientServiceClientImplTest {
                     .verifyComplete();
         }
 
-        @Disabled("Flaky on CI - MockWebServer response ordering")
         @Test
         @DisplayName("Should return empty when patient not found (404)")
         void shouldReturnEmptyWhenPatientNotFound() {
@@ -84,19 +83,21 @@ class PatientServiceClientImplTest {
 
             // When & Then - Le service transforme le 404 en Mono.empty()
             StepVerifier.create(patientServiceClient.getPatientByUuid("unknown-patient"))
+                    .expectSubscription()
                     .verifyComplete(); // Succès si vide
         }
 
-        @Disabled("Flaky on CI - MockWebServer response ordering")
         @Test
-        @DisplayName("Should throw ApiException on server error (500)")
+        @DisplayName("Should throw ApiException on server error (500) - Internal Logic")
         void shouldThrowApiExceptionOnServerError() {
-            // Given - On simule une erreur serveur
+            // Given
             mockWebServer.enqueue(new MockResponse().setResponseCode(500));
 
-            // When & Then - Le service transforme le 500 en ApiException via .onStatus()
+            // When & Then
+            // Comme on teste l'objet "nu" (sans proxy Spring AOP), l'exception est levée
             StepVerifier.create(patientServiceClient.getPatientByUuid(PATIENT_UUID))
-                    .expectError(ApiException.class)
+                    .expectErrorMatches(throwable -> throwable instanceof ApiException &&
+                            throwable.getMessage().contains("Erreur serveur PatientService"))
                     .verify();
         }
     }
@@ -105,7 +106,6 @@ class PatientServiceClientImplTest {
     @DisplayName("getPatientContactInfo() Tests")
     class GetPatientContactInfoTests {
 
-        @Disabled("Flaky on CI - MockWebServer response ordering")
         @Test
         @DisplayName("Should return patient with email")
         void shouldReturnPatientWithEmail() throws Exception {
