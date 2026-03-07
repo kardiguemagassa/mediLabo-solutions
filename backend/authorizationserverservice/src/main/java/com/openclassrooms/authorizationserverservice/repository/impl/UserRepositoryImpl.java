@@ -1257,6 +1257,7 @@ public class UserRepositoryImpl implements UserRepository {
                 .addValue("password", password, VARCHAR)
                 .addValue("token", token, VARCHAR)
                 .addValue("credentialUuid", randomUUUID.get(), VARCHAR)
-                .addValue("memberId", memberId.get(), VARCHAR);
+                .addValue("memberId", memberId.get(), VARCHAR)
+                .addValue("roleName", "USER", VARCHAR);
     }
 }
