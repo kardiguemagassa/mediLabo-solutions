@@ -132,14 +132,14 @@ pipeline {
         TESTCONTAINERS_HOST_OVERRIDE = "host.docker.internal"
 
 
-        // ── CACHE MAVEN 
+        // ── CACHE MAVEN
         MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository -Xmx512m"
 
         // ── STRATÉGIE DE BRANCHES
         // IS_DEPLOYABLE : true pour main/develop → pipeline complet + deploy
         // IS_FEATURE    : true pour feature/* → build + test uniquement
         // IS_PR         : true pour les Pull Requests
-        
+
         IS_DEPLOYABLE = "${env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop'}"
         IS_FEATURE    = "${!(env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop') && env.CHANGE_ID == null}"
         IS_PR         = "${env.CHANGE_ID != null}"
@@ -155,7 +155,7 @@ pipeline {
 
     stages {
 
-      
+
         // STAGE 1 — CHECKOUT, VALIDATION & VERSIONING
         // Branches : TOUTES
         stage('Checkout & Validation') {
@@ -163,7 +163,7 @@ pipeline {
 
                 sh """
                     find ${WORKSPACE}/.m2/repository -name "*.lastUpdated" -delete 2>/dev/null || true
-                """ 
+                """
                 checkout scm
                 script {
                     validateEnvironment()
@@ -209,7 +209,7 @@ pipeline {
             }
         }
 
-        
+
         // STAGE 2 — BUILD (compile, pas de tests)
         // Branches : TOUTES
         stage('Backend - Build') {
@@ -254,38 +254,36 @@ pipeline {
             }
         }
 
-        
+
         // STAGE 3B — TEST : services légers (parallèle)
         // Branches : TOUTES
+        // STAGE 3B — TEST : services légers (MODE SÉQUENTIEL)
         stage('Backend - Test (light)') {
-            when {
-                expression { currentBuild.currentResult == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    def testStages = [:]
-                    lightServices.each { service ->
-                        def svc = service
-                        testStages["Test ${svc.name}"] = {
-                            timeout(time: config.timeouts.lightTest, unit: 'MINUTES') {
-                                mavenCmd(svc.path, config, "test",
-                                    "-Dsurefire.useSystemClassLoader=false -Dsurefire.forkCount=1")
+                            when {
+                                expression { currentBuild.currentResult == 'SUCCESS' }
+                            }
+                            steps {
+                                script {
+                                    // Un seul service à la fois pour ménager ton Mac
+                                    lightServices.each { svc ->
+                                        echo "🧪 Testing service: ${svc.name} (Séquentiel)"
+                                        timeout(time: config.timeouts.lightTest, unit: 'MINUTES') {
+                                            mavenCmd(svc.path, config, "test",
+                                                "-Dsurefire.useSystemClassLoader=false -Dsurefire.forkCount=1")
+                                        }
+                                    }
+                                }
+                            }
+                            post {
+                                always {
+                                    junit allowEmptyResults: true,
+                                          testResults: '**/target/surefire-reports/*.xml'
+                                }
+                                failure {
+                                    script { sendNotification(config.emailRecipients, 'FAILURE', 'Tests light échoués', config) }
+                                }
                             }
                         }
-                    }
-                    parallel testStages
-                }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true,
-                          testResults: 'backend/authorizationserverservice/target/surefire-reports/*.xml, backend/patientservice/target/surefire-reports/*.xml, backend/notesservice/target/surefire-reports/*.xml, backend/assessmentservice/target/surefire-reports/*.xml, backend/notificationservice/target/surefire-reports/*.xml'
-                }
-                failure {
-                    script { sendNotification(config.emailRecipients, 'FAILURE', 'Tests échoués', config) }
-                }
-            }
-        }
 
 
         // STAGE 4 — COVERAGE (JaCoCo)
@@ -315,7 +313,7 @@ pipeline {
             }
         }
 
-      
+
         // STAGE 5 — PACKAGE (JAR sans retester)
         // Branches : develop, main uniquement
         stage('Backend - Package') {
@@ -346,7 +344,7 @@ pipeline {
             }
         }
 
-     
+
         // STAGE 6 — SONARQUBE (parallélisé)
         // Branches : TOUTES (quand Sonar activé)
         stage('Backend - SonarQube') {
@@ -388,7 +386,7 @@ pipeline {
             }
         }
 
-      
+
         // STAGE 7 — QUALITY GATE
         // Branches : develop, main, PRs
         stage('Quality Gate') {
@@ -467,7 +465,7 @@ pipeline {
             }
         }
 
-      
+
         // STAGE 9 — FRONTEND BUILD
         // Branches : develop, main
         stage('Frontend - Build') {
@@ -490,7 +488,7 @@ pipeline {
             }
         }
 
-       
+
         // STAGE 10 — FRONTEND SONARQUBE
         // Branches : develop, main
         stage('Frontend - SonarQube') {
@@ -515,47 +513,40 @@ pipeline {
             }
         }
 
-       
+
         // STAGE 11 — DOCKER BUILD
         // Branches : develop, main
+        // STAGE 11 — DOCKER BUILD (MODE SÉQUENTIEL)
         stage('Docker - Build') {
-            when {
-                allOf {
-                    expression { currentBuild.currentResult == 'SUCCESS' }
-                    expression { return env.IS_DEPLOYABLE == 'true' }
-                }
-            }
-            steps {
-                script {
-                    def dockerStages = [:]
-
-                    (backendServices + [frontend]).each { service ->
-                        def svc = service
-                        dockerStages["Docker ${svc.name}"] = {
-                            dir(svc.path) {
-                                if (fileExists('Dockerfile')) {
-                                    timeout(time: config.timeouts.dockerBuild, unit: 'MINUTES') {
-                                        sh """
-                                            docker build \
-                                                --label "build.number=${BUILD_NUMBER}" \
-                                                --label "vcs.branch=${env.BRANCH_NAME}" \
-                                                --label "vcs.commit=${env.GIT_SHORT_SHA}" \
-                                                --label "version=${env.SEMVER}" \
-                                                -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:${CONTAINER_TAG} \
-                                                -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:latest .
-                                        """
+                    when {
+                        allOf {
+                            expression { currentBuild.currentResult == 'SUCCESS' }
+                            expression { return env.IS_DEPLOYABLE == 'true' }
+                        }
+                    }
+                    steps {
+                        script {
+                            // Construction une par une pour éviter la saturation disque/CPU
+                            (backendServices + [frontend]).each { svc ->
+                                dir(svc.path) {
+                                    if (fileExists('Dockerfile')) {
+                                        echo "🐳 Building image: ${svc.name}"
+                                        timeout(time: config.timeouts.dockerBuild, unit: 'MINUTES') {
+                                            sh """
+                                                docker build \
+                                                    --label "version=${env.SEMVER}" \
+                                                    -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:${CONTAINER_TAG} \
+                                                    -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:latest .
+                                            """
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-
-                    parallel dockerStages
-                }
-            }
         }
 
-    
+
         // STAGE 12 — DOCKER PUSH
         // Branches : develop, main
         stage('Docker - Push') {
@@ -591,7 +582,7 @@ pipeline {
             }
         }
 
-    
+
         // STAGE 13 — DEPLOY (Blue-Green Strategy)
         // Branches : develop → staging, main → prod
         stage('Deploy') {
@@ -625,7 +616,7 @@ pipeline {
             }
         }
 
-       
+
         // STAGE 14 — HEALTH CHECK (multi-services + rollback)
         // Branches : develop, main
         stage('Health Check') {
@@ -693,7 +684,7 @@ pipeline {
                 sendNotification(config.emailRecipients, 'SUCCESS',
                     "Pipeline terminé — version ${env.SEMVER}", config)
 
-                // Tag Git automatique sur main uniquement 
+                // Tag Git automatique sur main uniquement
                 // Utilise les credentials Jenkins pour pousser le tag
                 // Prérequis : créer un credential 'github-credentials' dans
                 // Jenkins (type Username + Password / Token)
