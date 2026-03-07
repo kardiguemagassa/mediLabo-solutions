@@ -56,7 +56,7 @@ import static org.springframework.kafka.support.KafkaHeaders.TOPIC;
 @RequiredArgsConstructor
 public class ApiEventListener {
     private final KafkaTemplate<String, Notification> kafkaTemplate;
-    private static final String NOTIFICATION_TOPIC = "NOTIFICATION_TOPIC";
+    private static final String NOTIFICATION_TOPIC = "MEDILABO_NOTIFICATIONS";
 
     /**
      * <p>

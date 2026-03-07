@@ -99,7 +99,7 @@ public class UserQuery {
      * */
     public static final String CREATE_USER_STORED_PROCEDURE =
             """
-            CALL create_user(:userUuid, :firstName, :lastName, :email, :username, :password, :credentialUuid, :token, :memberId)
+            CALL create_user(:userUuid, :firstName, :lastName, :email, :username, :password, :credentialUuid, :token, :memberId, :roleName)
             """;
 
     /** Sélectionne un token de compte spécifique
