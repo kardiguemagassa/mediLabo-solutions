@@ -103,18 +103,6 @@ pipeline {
     agent any
 
     // ── DÉCLENCHEMENT AUTOMATIQUE
-    // githubPush() : Jenkins est notifié par le webhook GitHub à chaque push.
-    // pollSCM      : filet de sécurité — si le webhook échoue, Jenkins poll
-    //                toutes les 5 min. En production stable, on peut le retirer.
-    //
-    // Prérequis :
-    //   1. Plugin "GitHub Integration Plugin" installé dans Jenkins
-    //   2. Webhook configuré dans GitHub :
-    //      Settings → Webhooks → Add webhook
-    //      Payload URL  : http://<ton-jenkins>/github-webhook/
-    //      Content type : application/json
-    //      Events       : Just the push event
-    //   3. Credentials GitHub dans Jenkins (pour repos privés)
     triggers {
         githubPush()
         pollSCM('H/5 * * * *')
@@ -131,15 +119,10 @@ pipeline {
         TESTCONTAINERS_RYUK_DISABLED = "true"
         TESTCONTAINERS_HOST_OVERRIDE = "host.docker.internal"
 
-
         // ── CACHE MAVEN
         MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository -Xmx512m"
 
         // ── STRATÉGIE DE BRANCHES
-        // IS_DEPLOYABLE : true pour main/develop → pipeline complet + deploy
-        // IS_FEATURE    : true pour feature/* → build + test uniquement
-        // IS_PR         : true pour les Pull Requests
-
         IS_DEPLOYABLE = "${env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop'}"
         IS_FEATURE    = "${!(env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'develop') && env.CHANGE_ID == null}"
         IS_PR         = "${env.CHANGE_ID != null}"
@@ -155,12 +138,9 @@ pipeline {
 
     stages {
 
-
         // STAGE 1 — CHECKOUT, VALIDATION & VERSIONING
-        // Branches : TOUTES
         stage('Checkout & Validation') {
             steps {
-
                 sh """
                     find ${WORKSPACE}/.m2/repository -name "*.lastUpdated" -delete 2>/dev/null || true
                 """
@@ -168,7 +148,6 @@ pipeline {
                 script {
                     validateEnvironment()
 
-                    //  VERSIONING SÉMANTIQUE
                     env.GIT_SHORT_SHA = sh(
                         script: "git rev-parse --short=7 HEAD",
                         returnStdout: true
@@ -193,7 +172,6 @@ pipeline {
 
                     env.CONTAINER_TAG = "${env.BRANCH_NAME}-${env.SEMVER}"
 
-                    // Sauvegarde du tag précédent pour rollback
                     env.PREVIOUS_TAG = sh(
                         script: """
                             docker images ${config.dockerRegistry}/medilabo/gatewayserverservice \
@@ -209,9 +187,7 @@ pipeline {
             }
         }
 
-
         // STAGE 2 — BUILD (compile, pas de tests)
-        // Branches : TOUTES
         stage('Backend - Build') {
             steps {
                 script {
@@ -229,9 +205,7 @@ pipeline {
             }
         }
 
-
         // STAGE 3A — TEST : services lourds (séquentiel)
-        // Branches : TOUTES
         stage('Backend - Test (heavy)') {
             when {
                 expression { currentBuild.currentResult == 'SUCCESS' }
@@ -254,40 +228,34 @@ pipeline {
             }
         }
 
-
-        // STAGE 3B — TEST : services légers (parallèle)
-        // Branches : TOUTES
         // STAGE 3B — TEST : services légers (MODE SÉQUENTIEL)
         stage('Backend - Test (light)') {
-                            when {
-                                expression { currentBuild.currentResult == 'SUCCESS' }
-                            }
-                            steps {
-                                script {
-                                    // Un seul service à la fois pour ménager ton Mac
-                                    lightServices.each { svc ->
-                                        echo "🧪 Testing service: ${svc.name} (Séquentiel)"
-                                        timeout(time: config.timeouts.lightTest, unit: 'MINUTES') {
-                                            mavenCmd(svc.path, config, "test",
-                                                "-Dsurefire.useSystemClassLoader=false -Dsurefire.forkCount=1")
-                                        }
-                                    }
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true,
-                                          testResults: '**/target/surefire-reports/*.xml'
-                                }
-                                failure {
-                                    script { sendNotification(config.emailRecipients, 'FAILURE', 'Tests light échoués', config) }
-                                }
-                            }
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    lightServices.each { svc ->
+                        echo "🧪 Testing service: ${svc.name} (Séquentiel)"
+                        timeout(time: config.timeouts.lightTest, unit: 'MINUTES') {
+                            mavenCmd(svc.path, config, "test",
+                                "-Dsurefire.useSystemClassLoader=false -Dsurefire.forkCount=1")
                         }
-
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true,
+                          testResults: '**/target/surefire-reports/*.xml'
+                }
+                failure {
+                    script { sendNotification(config.emailRecipients, 'FAILURE', 'Tests light échoués', config) }
+                }
+            }
+        }
 
         // STAGE 4 — COVERAGE (JaCoCo)
-        // Branches : TOUTES
         stage('Backend - Coverage') {
             when {
                 expression { currentBuild.currentResult == 'SUCCESS' }
@@ -313,9 +281,7 @@ pipeline {
             }
         }
 
-
         // STAGE 5 — PACKAGE (JAR sans retester)
-        // Branches : develop, main uniquement
         stage('Backend - Package') {
             when {
                 allOf {
@@ -344,9 +310,7 @@ pipeline {
             }
         }
 
-
         // STAGE 6 — SONARQUBE (parallélisé)
-        // Branches : TOUTES (quand Sonar activé)
         stage('Backend - SonarQube') {
             when {
                 allOf {
@@ -386,9 +350,7 @@ pipeline {
             }
         }
 
-
         // STAGE 7 — QUALITY GATE
-        // Branches : develop, main, PRs
         stage('Quality Gate') {
             when {
                 allOf {
@@ -419,9 +381,7 @@ pipeline {
             }
         }
 
-
         // STAGE 8 — SECURITY (OWASP sur TOUS les services)
-        // Branches : develop, main, PRs
         stage('Security') {
             when {
                 allOf {
@@ -465,9 +425,7 @@ pipeline {
             }
         }
 
-
         // STAGE 9 — FRONTEND BUILD
-        // Branches : develop, main
         stage('Frontend - Build') {
             when {
                 allOf {
@@ -488,9 +446,7 @@ pipeline {
             }
         }
 
-
         // STAGE 10 — FRONTEND SONARQUBE
-        // Branches : develop, main
         stage('Frontend - SonarQube') {
             when {
                 allOf {
@@ -513,42 +469,36 @@ pipeline {
             }
         }
 
-
-        // STAGE 11 — DOCKER BUILD
-        // Branches : develop, main
         // STAGE 11 — DOCKER BUILD (MODE SÉQUENTIEL)
         stage('Docker - Build') {
-                    when {
-                        allOf {
-                            expression { currentBuild.currentResult == 'SUCCESS' }
-                            expression { return env.IS_DEPLOYABLE == 'true' }
-                        }
-                    }
-                    steps {
-                        script {
-                            // Construction une par une pour éviter la saturation disque/CPU
-                            (backendServices + [frontend]).each { svc ->
-                                dir(svc.path) {
-                                    if (fileExists('Dockerfile')) {
-                                        echo "🐳 Building image: ${svc.name}"
-                                        timeout(time: config.timeouts.dockerBuild, unit: 'MINUTES') {
-                                            sh """
-                                                docker build \
-                                                    --label "version=${env.SEMVER}" \
-                                                    -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:${CONTAINER_TAG} \
-                                                    -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:latest .
-                                            """
-                                        }
-                                    }
+            when {
+                allOf {
+                    expression { currentBuild.currentResult == 'SUCCESS' }
+                    expression { return env.IS_DEPLOYABLE == 'true' }
+                }
+            }
+            steps {
+                script {
+                    (backendServices + [frontend]).each { svc ->
+                        dir(svc.path) {
+                            if (fileExists('Dockerfile')) {
+                                echo "🐳 Building image: ${svc.name}"
+                                timeout(time: config.timeouts.dockerBuild, unit: 'MINUTES') {
+                                    sh """
+                                        docker build \
+                                            --label "version=${env.SEMVER}" \
+                                            -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:${CONTAINER_TAG} \
+                                            -t ${DOCKER_REGISTRY}/medilabo/${svc.name}:latest .
+                                    """
                                 }
                             }
                         }
                     }
+                }
+            }
         }
 
-
         // STAGE 12 — DOCKER PUSH
-        // Branches : develop, main
         stage('Docker - Push') {
             when {
                 allOf {
@@ -582,9 +532,7 @@ pipeline {
             }
         }
 
-
         // STAGE 13 — DEPLOY (Blue-Green Strategy)
-        // Branches : develop → staging, main → prod
         stage('Deploy') {
             when {
                 allOf {
@@ -597,17 +545,16 @@ pipeline {
                     def profile = (env.BRANCH_NAME == 'main') ? 'prod' : 'staging'
                     echo "🚀 Deploying ${env.SEMVER} to ${profile.toUpperCase()}..."
 
-                    // Snapshot pour rollback
                     sh """
-                        docker-compose -f ${config.deploy.composeFile} config > /tmp/compose-backup.yml 2>/dev/null || true
+                        docker compose -f ${config.deploy.composeFile} config > /tmp/compose-backup.yml 2>/dev/null || true
                     """
 
                     timeout(time: config.timeouts.deploy, unit: 'MINUTES') {
                         sh """
                             export SPRING_PROFILES_ACTIVE=${profile}
                             export CONTAINER_TAG=${env.CONTAINER_TAG}
-                            docker-compose -f ${config.deploy.composeFile} pull --quiet || true
-                            docker-compose -f ${config.deploy.composeFile} up -d --force-recreate --remove-orphans
+                            docker compose -f ${config.deploy.composeFile} pull --quiet || true
+                            docker compose -f ${config.deploy.composeFile} up -d --force-recreate --remove-orphans
                         """
                     }
 
@@ -616,9 +563,7 @@ pipeline {
             }
         }
 
-
         // STAGE 14 — HEALTH CHECK (multi-services + rollback)
-        // Branches : develop, main
         stage('Health Check') {
             when {
                 allOf {
@@ -670,7 +615,7 @@ pipeline {
             }
             post {
                 failure {
-                    sh "docker-compose -f ${config.deploy.composeFile} logs --tail=100 || true"
+                    sh "docker compose -f ${config.deploy.composeFile} logs --tail=100 || true"
                 }
             }
         }
@@ -684,10 +629,6 @@ pipeline {
                 sendNotification(config.emailRecipients, 'SUCCESS',
                     "Pipeline terminé — version ${env.SEMVER}", config)
 
-                // Tag Git automatique sur main uniquement
-                // Utilise les credentials Jenkins pour pousser le tag
-                // Prérequis : créer un credential 'github-credentials' dans
-                // Jenkins (type Username + Password / Token)
                 if (env.BRANCH_NAME == 'main') {
                     withCredentials([usernamePassword(
                         credentialsId: 'github-credentials',
@@ -723,7 +664,6 @@ pipeline {
                 sh "docker image prune -f --filter 'until=24h' || true"
                 sh "docker volume prune -f || true"
             }
-            // Pas de cleanWs() → préserve le cache Maven (.m2) et npm (.npm-cache)
         }
     }
 }
@@ -731,33 +671,17 @@ pipeline {
 
 // ╔════════════════════════════════════════════════════════════════════════════╗
 // ║                     FONCTIONS UTILITAIRES                                  ║
-// ║                                                                            ║
-// ║  Migration Shared Library :                                                ║
-// ║    1. Créer un repo Git : jenkins-shared-library                           ║
-// ║    2. Structure :                                                          ║
-// ║       vars/                                                                ║
-// ║         mavenCmd.groovy                                                    ║
-// ║         performRollback.groovy                                             ║
-// ║         sendNotification.groovy                                            ║
-// ║         runOwaspCheck.groovy                                               ║
-// ║         archiveOwaspReports.groovy                                         ║
-// ║         validateEnvironment.groovy                                         ║
-// ║         displayBuildInfo.groovy                                            ║
-// ║    3. Jenkins : Manage → System → Global Pipeline Libraries                ║
-// ║    4. Jenkinsfile : @Library('medilabo-pipeline') _                        ║
 // ╚════════════════════════════════════════════════════════════════════════════╝
 
 /**
  * Exécute une commande Maven avec le contexte Nexus.
+ * SANS -U pour éviter la corruption du cache Maven en parallèle.
  */
 def mavenCmd(String path, Map config, String goals, String extraArgs = "") {
     dir(path) {
         if (fileExists('pom.xml')) {
             configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                //  -U (Update) pour la sécurité des SNAPSHOTS
-                //  -B (Batch) pour éviter les logs inutiles
-                //  -e (Errors) pour le debug en cas de crash
-                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -U -e ${extraArgs}"
+                sh "mvn ${goals} -s \$MAVEN_SETTINGS -B -e ${extraArgs}"
             }
         }
     }
@@ -773,12 +697,12 @@ def performRollback(Map config) {
             echo "🔄 Rolling back to tag: ${env.PREVIOUS_TAG}"
             sh """
                 export CONTAINER_TAG=${env.PREVIOUS_TAG}
-                docker-compose -f ${config.deploy.composeFile} up -d --force-recreate --remove-orphans
+                docker compose -f ${config.deploy.composeFile} up -d --force-recreate --remove-orphans
             """
             echo "✅ Rollback completed — version: ${env.PREVIOUS_TAG}"
         } else {
             echo "⚠️ Aucune version précédente — arrêt de la stack"
-            sh "docker-compose -f ${config.deploy.composeFile} down --remove-orphans || true"
+            sh "docker compose -f ${config.deploy.composeFile} down --remove-orphans || true"
         }
     } catch (Exception e) {
         echo "❌ ROLLBACK FAILED: ${e.getMessage()}"
