@@ -4,6 +4,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { StorageService } from './service/storage.service';
 import { UserService } from './service/user.service';
+import { provideHotToastConfig } from '@ngxpert/hot-toast';
 
 
 export const appConfig: ApplicationConfig = {
@@ -11,6 +12,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     UserService, StorageService,
-    provideHttpClient()
+    provideHttpClient(),
+    provideHotToastConfig({ position: 'top-right' })
   ]
 };

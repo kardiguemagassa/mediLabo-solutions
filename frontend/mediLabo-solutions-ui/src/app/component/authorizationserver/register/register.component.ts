@@ -31,6 +31,7 @@ export class RegisterComponent {
   closeMessage = () => this.state.set({loading: false, message: undefined, error: undefined});
 
   register = (form: NgForm) => {
+    console.log('Données envoyées :', form.value);
     this.state.set({loading: true, message: undefined, error: undefined});
     this.userService.register$(form.value).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
