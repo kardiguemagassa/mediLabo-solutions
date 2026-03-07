@@ -82,10 +82,10 @@
               <input type="email" ngModel #email="ngModel" name="email" id="email" placeholder="votre@email.com" required
                 class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
             </div>
-            @if(email.touched && email.dirty && email.invalid && email.errors.['required']) {
+            @if(email.touched && email.dirty && email.invalid && email.errors['required']) {
               <div class="hidden mt-2 text-sm text-red-500">L'email est requis</div>
             }
-            @if(email.touched && email.dirty && email.invalid && email.errors.['email']) {
+            @if(email.touched && email.dirty && email.invalid && email.errors['email']) {
               <div class="hidden mt-2 text-sm text-red-500">Le format de l'email est invalide</div>
             }
           </div>
@@ -97,11 +97,14 @@
               <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              <input type="text" ngModel #username="ngModel" name="username" id="username" placeholder="Nom d'utilisateur" required minlength="4"
+              <input type="text" ngModel #username="ngModel" name="username" id="username" placeholder="Nom d'utilisateur" required pattern="^[a-zA-Z0-9]+$" minlength="4"
                 class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
             </div>
-            @if(username.touched && username.dirty && username.invalid) {
+            @if (username.touched && username.dirty && username.invalid && username.errors['required'])   {
               <div class="hidden mt-2 text-sm text-red-500">Le nom d'utilisateur est requis</div>
+            }
+            @if (username.touched && username.dirty && username.invalid && username.errors['pattern']) {
+              <div class="hidden mt-2 text-sm text-red-500">Le nom d'utilisateur doit contenir au moins 4 caractères alphanumériques</div>
             }
           </div>
 
@@ -121,15 +124,15 @@
                 </svg>
               </button>
             </div>
-            @if(password.touched && password.dirty && password.invalid && password.errors.['required']) {
+            @if (password.touched && password.dirty && password.invalid && password.errors['required']) {
               <div class="hidden mt-2 text-sm text-red-500">Le mot de passe est requis</div>
             }
-            @if(password.touched && password.dirty && password.invalid && password.errors.['minlength']) {
+            @if (password.touched && password.dirty && password.invalid && password.errors['minlength']) {
               <div class="hidden mt-2 text-sm text-red-500">Le mot de passe doit contenir au moins 6 caractères</div>
             }
           </div>
 
-          <button type="submit" [disable]="form.invalid || state()?.loading" class="w-full py-3 px-6 rounded-xl text-white font-semibold medical-gradient btn-shadow transition-all duration-200 flex items-center justify-center gap-2">
+          <button type="submit" [disabled]="form.invalid || state()?.loading" class="w-full py-3 px-6 rounded-xl text-white font-semibold medical-gradient btn-shadow transition-all duration-200 flex items-center justify-center gap-2">
             Créer mon compte
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
