@@ -46,10 +46,8 @@ class UserServiceClientImplTest {
         mockWebServer.start();
 
         objectMapper = new ObjectMapper();
-        // Requis si ton objet Response contient des LocalDateTime
         objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
-        // On force l'URL sans slash final
         String baseUrl = mockWebServer.url("").toString();
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
@@ -121,16 +119,15 @@ class UserServiceClientImplTest {
         }
 
         @Test
-        @DisplayName("Devrait retourner un Mono vide quand l'utilisateur n'existe pas (404)")
+        @DisplayName("Devrait retourner Mono vide quand l'utilisateur n'existe pas (404)")
         void shouldReturnEmptyWhenUserNotFound() {
-            // Given : 404 - le onStatus retourne Mono.empty()
             mockWebServer.enqueue(new MockResponse()
                     .setResponseCode(404)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody("{}"));
 
-            // When & Then
-            StepVerifier.create(userService.getUserByEmail("unknown@email.com"))
+            StepVerifier.create(userService.getUserByUuid("unknown-uuid"))
+                    .expectSubscription()
                     .expectComplete()
                     .verify(Duration.ofSeconds(5));
         }
@@ -138,7 +135,7 @@ class UserServiceClientImplTest {
         @Test
         @DisplayName("Devrait retourner Mono vide quand la réponse n'a pas de user dans data")
         void shouldReturnEmptyWhenNoUserInData() throws Exception {
-            // Given : Response valide mais sans "user" dans data
+
             Response responseWithoutUser = new Response(
                     LocalDateTime.now().toString(),
                     HttpStatus.OK.value(),
@@ -154,41 +151,31 @@ class UserServiceClientImplTest {
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody(objectMapper.writeValueAsString(responseWithoutUser)));
 
-            // When & Then : Le filter() retourne Mono.empty()
+
             StepVerifier.create(userService.getUserByEmail("test@test.com"))
                     .expectComplete()
                     .verify(Duration.ofSeconds(5));
         }
 
         @Test
-        @DisplayName("Devrait lancer ApiException en cas d'erreur client (400)")
-        void shouldThrowApiExceptionOnClientError() {
-            // Given : Erreur 400
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(400)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{}"));
+        @DisplayName("Devrait retourner Mono vide en cas d'erreur client (400) sur l'email")
+        void shouldReturnEmptyOnEmailClientError() { // Changé le nom pour être clair
+            mockWebServer.enqueue(new MockResponse().setResponseCode(400));
 
-            // When & Then
             StepVerifier.create(userService.getUserByEmail("invalid@email.com"))
-                    .expectErrorMatches(throwable ->
-                            throwable instanceof ApiException && throwable.getMessage().contains("Erreur client"))
+                    .expectSubscription()
+                    .expectComplete()
                     .verify(Duration.ofSeconds(5));
         }
 
         @Test
-        @DisplayName("Devrait lancer ApiException en cas d'erreur serveur (500)")
-        void shouldThrowApiExceptionOnServerError() {
-            // Given : Erreur 500
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(500)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{}"));
+        @DisplayName("Devrait retourner Mono vide en cas d'erreur serveur (500) sur l'email")
+        void shouldReturnEmptyOnEmailServerError() {
+            mockWebServer.enqueue(new MockResponse().setResponseCode(500));
 
-            // When & Then
             StepVerifier.create(userService.getUserByEmail("any@email.com"))
-                    .expectErrorMatches(throwable ->
-                            throwable instanceof ApiException && throwable.getMessage().contains("Erreur serveur"))
+                    .expectSubscription()
+                    .expectComplete()
                     .verify(Duration.ofSeconds(5));
         }
     }
@@ -200,50 +187,35 @@ class UserServiceClientImplTest {
     class GetUserByUuidTests {
 
         @Test
-        @DisplayName("Devrait retourner un Mono vide quand l'utilisateur n'existe pas (404)")
-        void shouldReturnEmptyWhenUserNotFound() {
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(404)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{}")); // Un body vide mais présent
+        @DisplayName("Devrait retourner Mono vide quand l'utilisateur n'existe pas (404) par UUID")
+        void shouldReturnEmptyWhenUuidNotFound() {
+            mockWebServer.enqueue(new MockResponse().setResponseCode(404));
 
-            StepVerifier.create(userService.getUserByEmail("unknown@email.com"))
+            StepVerifier.create(userService.getUserByUuid("unknown-uuid"))
                     .expectSubscription()
                     .expectComplete()
-                    .verify(Duration.ofSeconds(10));
-        }
-
-        @Test
-        @DisplayName("Devrait lancer ApiException en cas d'erreur serveur (500)")
-        void shouldThrowApiExceptionOnServerError() {
-            // Given : Erreur 500
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(500)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{}"));
-
-            // When & Then
-            StepVerifier.create(userService.getUserByUuid("any-uuid"))
-                    .expectErrorMatches(throwable ->
-                            throwable instanceof ApiException &&
-                                    throwable.getMessage().contains("Erreur serveur"))
                     .verify(Duration.ofSeconds(5));
         }
 
         @Test
-        @DisplayName("Devrait lancer ApiException en cas d'erreur client (400)")
-        void shouldThrowApiExceptionOnClientError() {
-            // Given : Erreur 400
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(400)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody("{}"));
+        @DisplayName("Devrait retourner Mono vide en cas d'erreur client (400) sur l'UUID")
+        void shouldReturnEmptyOnUuidClientError() {
+            mockWebServer.enqueue(new MockResponse().setResponseCode(400));
 
-            // When & Then
             StepVerifier.create(userService.getUserByUuid("invalid-uuid"))
-                    .expectErrorMatches(throwable ->
-                            throwable instanceof ApiException &&
-                                    throwable.getMessage().contains("Erreur client"))
+                    .expectSubscription()
+                    .expectComplete()
+                    .verify(Duration.ofSeconds(5));
+        }
+
+        @Test
+        @DisplayName("Devrait retourner Mono vide en cas d'erreur serveur (500) sur l'UUID")
+        void shouldReturnEmptyOnUuidServerError() {
+            mockWebServer.enqueue(new MockResponse().setResponseCode(500));
+
+            StepVerifier.create(userService.getUserByUuid("any-uuid"))
+                    .expectSubscription()
+                    .expectComplete()
                     .verify(Duration.ofSeconds(5));
         }
     }

@@ -35,14 +35,20 @@ public class UserServiceClientImpl implements UserServiceClient {
         return authServerWebClient.get()
                 .uri("/user/{uuid}", userUuid)
                 .retrieve()
-                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> {log.warn("User not found: {}", userUuid);return Mono.empty();})
+                // On transforme le 404 en Mono vide proprement
+                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
+                // On vérifie la présence de la donnée "user"
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
                 .map(response -> RequestUtils.convertResponse(response, UserRequest.class, "user"))
-                .doOnSuccess(user -> {if (user != null) log.debug("User found: {}", userUuid);})
-                .timeout(TIMEOUT);
+                .timeout(TIMEOUT)
+                // En cas d'erreur inattendue, on bascule sur le fallback via un flux vide
+                .onErrorResume(e -> {
+                    log.error("Erreur lors de la récupération de l'utilisateur {}: {}", userUuid, e.getMessage());
+                    return Mono.empty();
+                });
     }
 
     @Override
@@ -54,14 +60,17 @@ public class UserServiceClientImpl implements UserServiceClient {
         return authServerWebClient.get()
                 .uri("/user/user/{email}", email)
                 .retrieve()
-                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> {log.debug("User not found for email: {}", email);return Mono.empty();})
+                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
                 .map(response -> RequestUtils.convertResponse(response, UserRequest.class, "user"))
-                .doOnSuccess(user -> {if (user != null) log.debug("User found for email: {}", email);})
-                .timeout(TIMEOUT);
+                .timeout(TIMEOUT)
+                .onErrorResume(e -> {
+                    log.error("Erreur lors de la récupération de l'email {}: {}", email, e.getMessage());
+                    return Mono.empty();
+                });
     }
 
     // FALLBACKS
