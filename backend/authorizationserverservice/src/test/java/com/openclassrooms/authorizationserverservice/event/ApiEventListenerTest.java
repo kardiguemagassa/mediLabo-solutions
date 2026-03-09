@@ -44,7 +44,7 @@ class ApiEventListenerTest {
 
         // Vérification du Header en utilisant la constante Spring Kafka
         // Dans le code on importes TOPIC de KafkaHeaders
-        assertThat(sentMessage.getHeaders().get(KafkaHeaders.TOPIC)).isEqualTo("NOTIFICATION_TOPIC");
+        assertThat(sentMessage.getHeaders().get(KafkaHeaders.TOPIC)).isEqualTo("MEDILABO_NOTIFICATIONS");
 
         // Vérification du Payload
         assertThat(sentMessage.getPayload()).isNotNull();
