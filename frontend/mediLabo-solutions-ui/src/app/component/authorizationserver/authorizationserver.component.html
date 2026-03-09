@@ -1,0 +1,31 @@
+<!-- Navigation -->
+<nav class="medical-gradient fixed w-full top-0 left-0 z-50 shadow-lg">
+    <div class="container h-16 mx-auto px-4">
+      <div class="h-full flex items-center justify-between">
+        <a [routerLink]="['/']" class="flex items-center gap-3 group">
+          <div class="p-2 bg-white/15 rounded-xl backdrop-blur-sm group-hover:bg-white/25 transition-all duration-200">
+            <img class="h-6 w-6" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+          </div>
+          <span class="text-white font-semibold text-lg hidden sm:block">MediLabo</span>
+        </a>
+        <div class="flex items-center gap-2">
+          <a href="http://localhost:9001/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=http://localhost:4200&code_challenge_method=S256&code_challenge=yLTPU5_n1a3ZtxFMoiguWiMYwpp7tm0vCZHXVnPStFk" class="flex items-center gap-1.5 px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-medium text-sm rounded-xl transition-all duration-200">
+            Connexion
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+          <a [routerLink]="['register']" class="hidden md:flex items-center gap-1.5 px-4 py-2 text-white/90 hover:text-white hover:bg-white/15 font-medium text-sm rounded-xl transition-all duration-200">
+            Créer un compte
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+          <a [routerLink]="['resetpassword']" class="hidden md:flex items-center gap-1.5 px-4 py-2 text-white/90 hover:text-white hover:bg-white/15 font-medium text-sm rounded-xl transition-all duration-200">
+            Mot de passe oublié
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+</nav>
+
+<div class="mt-12">
+    <router-outlet />
+</div>
