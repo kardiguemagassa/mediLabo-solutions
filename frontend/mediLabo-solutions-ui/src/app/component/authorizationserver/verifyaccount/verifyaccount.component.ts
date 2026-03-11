@@ -5,12 +5,12 @@ import { HotToastService } from '@ngxpert/hot-toast';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, Observer, switchMap } from 'rxjs';
 import { IResponse } from '../../../interface/response';
-import { CommonModule } from '@angular/common';
+
 
 
 @Component({
   selector: 'app-verifyaccount',
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './verifyaccount.component.html',
   styleUrl: './verifyaccount.component.scss'
 })

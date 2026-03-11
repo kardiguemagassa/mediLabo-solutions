@@ -5,12 +5,12 @@ import { UserService } from '../../../service/user.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { CommonModule } from '@angular/common';
+
 import { getFormData } from '../../../utils/fileutils';
 
 @Component({
   selector: 'app-resetpassord',
-  imports: [RouterLink, FormsModule, CommonModule],
+  imports: [RouterLink, FormsModule],
   templateUrl: './resetpassword.component.html',
   styleUrl: './resetpassword.component.scss'
 })

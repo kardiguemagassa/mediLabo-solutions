@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StorageService } from '../../../service/storage.service';
 import { UserService } from '../../../service/user.service';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { CommonModule } from '@angular/common';
+
 import { EMPTY, Observer, switchMap } from 'rxjs';
 
 import { Key } from '../../../enum/cache.key';
@@ -13,7 +13,7 @@ import { IAuthentication } from '../../../interface/IAuthentication';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
