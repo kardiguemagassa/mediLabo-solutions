@@ -5,12 +5,12 @@ import { UserService } from '../../../service/user.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { CommonModule } from '@angular/common';
+
 
 
 @Component({
   selector: 'app-register',
-  imports: [RouterLink, FormsModule, CommonModule],
+  imports: [RouterLink, FormsModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })

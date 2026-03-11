@@ -4,13 +4,13 @@ import { ActivatedRoute, ParamMap, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserService } from '../../../service/user.service';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { CommonModule } from '@angular/common';
+
 import { delay, EMPTY, Observer, switchMap } from 'rxjs';
 import { IResponse } from '../../../interface/response';
 
 @Component({
   selector: 'app-verifypassword',
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule],
   templateUrl: './verifypassword.component.html',
   styleUrl: './verifypassword.component.scss'
 })
