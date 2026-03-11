@@ -7,5 +7,5 @@ package com.openclassrooms.authorizationserverservice.enumeration;
  * @since 2026-05-01
  */
 public enum EventType {
-    REGISTRATION, RESETPASSWORD, USER_CREATED, ACCOUNT_VERIFIED
+    REGISTRATION, PASSWORD_RESET, USER_CREATED, ACCOUNT_VERIFIED
 }

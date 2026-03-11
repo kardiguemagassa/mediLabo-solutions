@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.openclassrooms.authorizationserverservice.enumeration.EventType.RESETPASSWORD;
+import static com.openclassrooms.authorizationserverservice.enumeration.EventType.PASSWORD_RESET;
 import static com.openclassrooms.authorizationserverservice.enumeration.EventType.USER_CREATED;
 import static com.openclassrooms.authorizationserverservice.util.UserUtils.randomUUUID;
 import static com.openclassrooms.authorizationserverservice.util.UserUtils.verifyCode;
@@ -447,13 +447,13 @@ public class UserServiceImpl implements UserService {
         var passwordToken = userRepository.getPasswordToken(user.getUserId());
         if(!nonNull(passwordToken)) {
             var newToken = userRepository.createPasswordToken(user.getUserId());
-            publisher.publishEvent(new Event(RESETPASSWORD, of("token", newToken, "email", email, "name", Objects.requireNonNull(capitalizeFully(user.getFirstName())))));
+            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", newToken, "email", email, "name", Objects.requireNonNull(capitalizeFully(user.getFirstName())))));
         } else if (passwordToken.isExpired()) {
             userRepository.deletePasswordToken(user.getUserId());
             var newToken = userRepository.createPasswordToken(user.getUserId());
-            publisher.publishEvent(new Event(RESETPASSWORD, of("token", newToken, "email", email, "name", capitalizeFully(user.getFirstName()))));
+            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", newToken, "email", email, "name", capitalizeFully(user.getFirstName()))));
         } else {
-            publisher.publishEvent(new Event(RESETPASSWORD, of("token", passwordToken.getToken(), "email", email, "name", capitalizeFully(user.getFirstName()))));
+            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", passwordToken.getToken(), "email", email, "name", capitalizeFully(user.getFirstName()))));
         }
     }
 

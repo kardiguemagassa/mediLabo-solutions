@@ -57,6 +57,9 @@ spring:
           uri: lb://AUTHORIZATIONSERVERSERVICE
           predicates:
             - Path=/user/**
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 10000
 
         # PATIENT SERVICE
         - id: patient-service

@@ -25,6 +25,7 @@ export class RegisterComponent {
   ngOnInit() : void {
     if (this.userService.isAuthenticated() && this.userService.isTokenExpired()) {
       this.storage.getRedirectUrl() ? this.router.navigate([this.storage.getRedirectUrl()]) : this.router.navigate(['/dashboard']);
+      return;
     }
   }
 
@@ -44,5 +45,5 @@ export class RegisterComponent {
       },
       complete: () => form.reset()
     });
-  }
+  };
 }

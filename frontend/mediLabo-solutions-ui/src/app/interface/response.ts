@@ -1,3 +1,5 @@
+import { IUser } from "./user";
+
 export interface IResponse {
     time: Date | string;
     code: number;
@@ -5,5 +7,5 @@ export interface IResponse {
     message: string
     path: string
     exception?: string
-    data: any
+    data: {user?: IUser, users?: IUser[]};
 }
