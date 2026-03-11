@@ -640,7 +640,7 @@ class UserServiceImplTest {
         Event sentEvent = eventCaptor.getValue();
 
         // Vérification du type d'événement
-        assertThat(sentEvent.getEventType()).isEqualTo(com.openclassrooms.authorizationserverservice.enumeration.EventType.RESETPASSWORD);
+        assertThat(sentEvent.getEventType()).isEqualTo(com.openclassrooms.authorizationserverservice.enumeration.EventType.PASSWORD_RESET);
 
         // Vérification de la Map 'data' (et non 'values')
         assertThat(sentEvent.getData().get("token")).isEqualTo(existingToken);

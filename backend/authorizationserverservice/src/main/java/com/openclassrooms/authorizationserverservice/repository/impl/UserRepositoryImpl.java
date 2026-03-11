@@ -982,7 +982,6 @@ public class UserRepositoryImpl implements UserRepository {
             return jdbc.sql(SELECT_PASSWORD_TOKEN_BY_USER_ID_QUERY).params(of("userId", userId)).query(PasswordToken.class).single();
         } catch (EmptyResultDataAccessException exception) {
             log.error(exception.getMessage());
-            //throw new ApiException("Invalid link. Please try again.");
             return null;
         } catch (Exception exception) {
             log.error(exception.getMessage());
