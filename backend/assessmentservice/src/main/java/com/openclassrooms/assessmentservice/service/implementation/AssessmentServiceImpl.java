@@ -1,5 +1,6 @@
 package com.openclassrooms.assessmentservice.service.implementation;
 
+import com.openclassrooms.assessmentservice.cache.AssessmentCache;
 import com.openclassrooms.assessmentservice.dtoresponse.NoteResponse;
 import com.openclassrooms.assessmentservice.dtoresponse.PatientResponse;
 import com.openclassrooms.assessmentservice.exception.ApiException;
@@ -46,6 +47,14 @@ public class AssessmentServiceImpl implements AssessmentService {
     private final NoteServiceClient noteServiceClient;
     private final RiskLevelCalculator riskLevelCalculator;
     private final ApplicationEventPublisher eventPublisher;
+    private final AssessmentCache assessmentCache;
+
+    // 3. Ajouter cette nouvelle méthode
+    @Override
+    public List<Assessment> getAllAssessments() {
+        log.info("Retrieving all cached assessments - {} entries", assessmentCache.size());
+        return assessmentCache.getAll();
+    }
 
     /**
      * Évalue le risque de diabète pour un patient.
@@ -70,6 +79,7 @@ public class AssessmentServiceImpl implements AssessmentService {
         return Mono.zip(patientMono, notesMono)
                 .map(tuple -> {
                     Assessment assessment = buildAssessment(tuple.getT1(), tuple.getT2());
+                    assessmentCache.save(assessment);
                     publishAssessmentCompletedEvent(tuple.getT1(), assessment);
                     return assessment;
                 })
