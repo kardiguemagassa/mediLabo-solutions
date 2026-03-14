@@ -10,7 +10,8 @@ export class StorageService {
 
   get = (key: string) => this.storage.getItem(key);
 
-  set = (key: string, value: any) => this.storage.setItem(key, value === 'string' ? value : JSON.stringify(value));
+  //set = (key: string, value: any) => this.storage.setItem(key, value === 'string' ? value : JSON.stringify(value));
+  set = (key: string, value: any) => this.storage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
   
   remove = (key: string) => this.storage.removeItem(key);
 

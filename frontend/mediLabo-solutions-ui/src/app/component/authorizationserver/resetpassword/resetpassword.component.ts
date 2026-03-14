@@ -24,7 +24,7 @@ export class ResetpassordComponent {
   private toastService = inject(HotToastService);
 
   ngOnInit() : void {
-    if (this.userService.isAuthenticated() && this.userService.isTokenExpired()) {
+    if (this.userService.isAuthenticated() && !this.userService.isTokenExpired()) {
       this.storage.getRedirectUrl() ? this.router.navigate([this.storage.getRedirectUrl()]) : this.router.navigate(['/dashboard']);
       return;
     }
