@@ -1,8 +1,7 @@
-
 @if (loading()) {
    <div class="container mx-auto">
       <div class="flex flex-col justify-center items-center mx-auto pt-10">
-         <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+         <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin fill-teal-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
             <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
          </svg>
@@ -11,159 +10,288 @@
    </div>
 } @else {
    @if (!loading()) {
-      <section class="container mx-auto">
+      <nav class="medical-gradient fixed w-full top-0 left-0 z-50 shadow-lg">
+         <div class="container h-16 mx-auto px-4">
+            <div class="relative h-full flex items-center justify-between">
+               <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                  <a href="#" class="flex-shrink-0 items-center flex gap-3">
+                     <div class="p-2 bg-white/15 rounded-xl backdrop-blur-sm">
+                        <img class="h-6 w-6" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+                     </div>
+                     <span class="text-white font-semibold text-lg">MediLabo</span>
+                  </a>
+                  <div class="hidden lg:ml-6 lg:flex lg:items-center lg:gap-1">
+                     <a href="#features" class="px-4 py-2 text-white font-medium text-sm rounded-xl transition-all duration-200 hover:bg-white/15">Fonctionnalités</a>
+                     <a href="#how-it-works" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Comment ça marche</a>
+                     <a href="#testimonials" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Témoignages</a>
+                  </div>
+               </div>
+               <div class="flex items-center gap-2">
+                  <a (click)="login()" class="flex items-center gap-2 px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200 cursor-pointer">
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                     Connexion
+                  </a>
+                  <a (click)="login()" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-medium text-sm rounded-xl transition-all duration-200 cursor-pointer">Commencer</a>
+               </div>
+            </div>
+         </div>
+      </nav>
+
+      <section class="container mx-auto pt-20">
          <div class="flex align-center justify-between gap-y-40 mt-20 mb-10">
             <div class="place-self-center">
-               <h1 class="text-4xl font-extrabold mb-4 xl:text-6xl">
-                  Assistance Chat
-               </h1>
-               <h2 class="text-xl font-extrabold mb-4 xl:text-3xl">Système de Gestion de Medilabo du Futur.</h2>
+               <h1 class="text-4xl font-extrabold mb-4 xl:text-6xl">MediLabo Solutions</h1>
+               <h2 class="text-xl font-extrabold mb-4 xl:text-3xl">Système de Gestion Médicale du Futur.</h2>
                <p class="text-gray-500 font-light md:text-lg lg:text-xl">
-                  Les particuliers et les entreprises font confiance à assistance Chat. Où la technologie rencontre l'efficacité : 
-                  Offrir des solutions plus rapides, plus intelligentes et plus organisées pour tous vos besoins de support.
+                  Les particuliers et les entreprises font confiance à MediLabo Solutions. Où la technologie rencontre l'efficacité : 
+                  Offrir des solutions plus rapides, plus intelligentes et plus organisées pour tous vos besoins médicaux.
                </p>
+               <div class="flex flex-wrap gap-3 mt-6">
+                  <a (click)="login()" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-700 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer">
+                     Commencer gratuitement
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  </a>
+                  <a href="#features" class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600/10 text-teal-700 border border-teal-600/20 rounded-xl font-semibold hover:bg-teal-600/15 transition-all">
+                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                     En savoir plus
+                  </a>
+               </div>
             </div>
             <div class="hidden md:block">
                <img class="grow-shrink" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
             </div>
          </div>
       </section>
-      <div class="container mx-auto mt-3 mb-3 border-t border-gray-200"></div>
-      <section class="container mx-auto md mt-10">
-         <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-center gap-6 md:gap-10 mb-4">
-            <div class="size-full bg-white rounded-lg p-3 border border-gray-200">
-               <div class="flex items-center gap-x-4 mb-3">
-                  <div class="inline-flex justify-center items-center size-12 rounded-full border-4 border-blue-50 bg-blue-100">
-                     <svg class="shrink-0 size-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="13.5" cy="6.5" r=".5"/>
-                        <circle cx="17.5" cy="10.5" r=".5"/>
-                        <circle cx="8.5" cy="7.5" r=".5"/>
-                        <circle cx="6.5" cy="12.5" r=".5"/>
-                        <path d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/>
-                     </svg>
-                  </div>
-                  <div class="shrink-0">
-                     <h3 class="block text-lg font-semibold text-gray-800">Gestion des Medilabo</h3>
-                  </div>
-               </div>
-               <p class="text-gray-600">Créez, triez, filtrez, mettez à jour tous vos données en un seul endroit centralisé.</p>
+
+      <section id="features" class="py-20 px-4 bg-gray-50/50">
+         <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+               <h2 class="text-3xl font-bold text-gray-900 mb-3">Tout ce dont vous avez besoin</h2>
+               <p class="text-gray-500 text-lg max-w-xl mx-auto">Une plateforme complète pour gérer vos patients et évaluer les risques de diabète.</p>
             </div>
-            <div class="size-full bg-white rounded-lg p-3 border border-gray-200">
-               <div class="flex items-center gap-x-4 mb-3">
-                  <div class="inline-flex justify-center items-center size-12 rounded-full border-4 border-blue-50 bg-blue-100">
-                     <svg class="shrink-0 size-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                     </svg>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
+                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                   </div>
-                  <div class="shrink-0">
-                     <h3 class="block text-lg font-semibold text-gray-800">Communication d'Équipe</h3>
-                  </div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Gestion des patients</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Centralisez les dossiers médicaux, historiques et informations de tous vos patients.</p>
                </div>
-               <p class="text-gray-600">Envoyez des messages et ajoutez des commentaires à vos clients et à votre équipe de support.</p>
-            </div>
-            <div class="size-full bg-white rounded-lg p-3 border border-gray-200">
-               <div class="flex items-center gap-x-4 mb-3">
-                  <div class="inline-flex justify-center items-center size-12 rounded-full border-4 border-blue-50 bg-blue-100">
-                     <svg class="shrink-0 size-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
-                     </svg>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
+                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                   </div>
-                  <div class="shrink-0">
-                     <h3 class="block text-lg font-semibold text-gray-800">Tableau de Bord Admin</h3>
-                  </div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Notes médicales</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Rédigez et partagez des notes cliniques, prescriptions et résultats d'examens.</p>
                </div>
-               <p class="text-gray-600">Affichez les données pertinentes, les métriques, les graphiques pour piloter les résultats.</p>
-            </div>
-            <div class="size-full bg-white rounded-lg p-3 border border-gray-200">
-               <div class="flex items-center gap-x-4 mb-3">
-                  <div class="inline-flex justify-center items-center size-12 rounded-full border-4 border-blue-50 bg-blue-100">
-                     <svg class="shrink-0 size-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                     </svg>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
+                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                   </div>
-                  <div class="shrink-0">
-                     <h3 class="block text-lg font-semibold text-gray-800">Gestion des Utilisateurs</h3>
-                  </div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Évaluation des risques</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Algorithme intelligent analysant 12 déclencheurs cliniques pour le risque diabète.</p>
                </div>
-               <p class="text-gray-600">Création, mise à jour et contrôle d'accès des comptes utilisateurs</p>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
+                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                  </div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Messagerie sécurisée</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Communiquez avec votre équipe médicale via un système de messagerie chiffré.</p>
+               </div>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
+                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  </div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Sécurité avancée</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Authentification OAuth2, MFA et contrôle d'accès basé sur les rôles.</p>
+               </div>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
+                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm12 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                  </div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Tableau de bord</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Visualisez métriques, graphiques et rapports pour piloter votre activité.</p>
+               </div>
             </div>
          </div>
       </section>
-      <section class="container mx-auto bg-white rounded-md mt-10">
+
+      <section id="how-it-works" class="py-20 px-4">
+         <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+               <h2 class="text-3xl font-bold text-gray-900 mb-3">Comment ça marche ?</h2>
+               <p class="text-gray-500 text-lg">Trois étapes simples pour commencer.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+               <div class="text-center relative">
+                  <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-teal-700 to-teal-500 text-white text-sm font-bold mb-4">1</div>
+                  <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                     <svg class="w-10 h-10 mx-auto mb-4 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                     <h3 class="font-semibold text-gray-900 mb-2">Créez un compte</h3>
+                     <p class="text-sm text-gray-500">Inscrivez-vous et configurez votre profil praticien en quelques minutes.</p>
+                  </div>
+               </div>
+               <div class="text-center relative">
+                  <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-teal-700 to-teal-500 text-white text-sm font-bold mb-4">2</div>
+                  <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                     <svg class="w-10 h-10 mx-auto mb-4 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                     <h3 class="font-semibold text-gray-900 mb-2">Ajoutez vos patients</h3>
+                     <p class="text-sm text-gray-500">Enregistrez les dossiers patients et ajoutez des notes médicales détaillées.</p>
+                  </div>
+               </div>
+               <div class="text-center relative">
+                  <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-teal-700 to-teal-500 text-white text-sm font-bold mb-4">3</div>
+                  <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                     <svg class="w-10 h-10 mx-auto mb-4 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                     <h3 class="font-semibold text-gray-900 mb-2">Évaluez les risques</h3>
+                     <p class="text-sm text-gray-500">Notre algorithme analyse automatiquement les déclencheurs et évalue le risque diabète.</p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      <section class="py-20 px-4 bg-gray-50/50">
+         <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+               <h2 class="text-3xl font-bold text-gray-900 mb-3">Niveaux de risque diabète</h2>
+               <p class="text-gray-500 text-lg">Notre algorithme analyse 12 déclencheurs cliniques.</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center hover:shadow-md transition-shadow">
+                  <div class="text-4xl mb-4">🟢</div>
+                  <h3 class="font-semibold text-gray-900 mb-2">None</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Aucun déclencheur détecté. Le patient ne présente pas de risque de diabète.</p>
+               </div>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center hover:shadow-md transition-shadow">
+                  <div class="text-4xl mb-4">🟡</div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Borderline</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Quelques déclencheurs présents. Surveillance recommandée.</p>
+               </div>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center hover:shadow-md transition-shadow">
+                  <div class="text-4xl mb-4">🟠</div>
+                  <h3 class="font-semibold text-gray-900 mb-2">In Danger</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Risque élevé identifié. Consultation spécialisée conseillée.</p>
+               </div>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm text-center hover:shadow-md transition-shadow">
+                  <div class="text-4xl mb-4">🔴</div>
+                  <h3 class="font-semibold text-gray-900 mb-2">Early Onset</h3>
+                  <p class="text-sm text-gray-500 leading-relaxed">Apparition précoce détectée. Prise en charge immédiate requise.</p>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      <section id="about" class="container mx-auto bg-white rounded-md mt-10">
          <div class="px-4 py-8">
             <div class="lg:grid gap-8 lg:grid-cols-2">
                <div class="flex items-start">
                   <div class="text-gray-500">
-                     <h2 class="mb-4 text-3xl font-extrabold text-gray-900">
-                        Rationalisez le support, Résolvez plus rapidement.
-                     </h2>
-                     <p class="mb-8 lg:text-xl">
-                        Permettre une communication transparente, une résolution de problèmes efficace et une gestion de support plus intelligente — Le tout dans un système unifié.
-                     </p>
+                     <h2 class="mb-4 text-3xl font-extrabold text-gray-900">Rationalisez le suivi, Diagnostiquez plus rapidement.</h2>
+                     <p class="mb-8 lg:text-xl">Permettre une communication transparente, une résolution de problèmes efficace et une gestion médicale plus intelligente — Le tout dans un système unifié.</p>
                      <ul class="pt-8 border-t border-gray-200 my-7">
                         <li class="flex align-items mb-3">
-                           <svg class="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                           <span class="text-gray-900 font-medium">
-                              Création et soumission de medilabo
-                           </span>
+                           <svg class="w-5 h-5 text-teal-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                           <span class="text-gray-900 font-medium">Création et gestion des dossiers patients</span>
                         </li>
                         <li class="flex align-items mb-3">
-                           <svg class="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                           <span class="text-gray-900 font-medium">
-                              Communication et engagement
-                           </span>
+                           <svg class="w-5 h-5 text-teal-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                           <span class="text-gray-900 font-medium">Communication et messagerie sécurisée</span>
                         </li>
                         <li class="flex align-items mb-3">
-                           <svg class="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                           <span class="text-gray-900 font-medium">
-                              Surveillance et rapports
-                           </span>
+                           <svg class="w-5 h-5 text-teal-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                           <span class="text-gray-900 font-medium">Évaluation automatique des risques diabète</span>
                         </li>
                         <li class="flex align-items mb-3">
-                           <svg class="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                           <span class="text-gray-900 font-medium">
-                              Informations basées sur les données
-                           </span>
+                           <svg class="w-5 h-5 text-teal-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                           <span class="text-gray-900 font-medium">Notes médicales et pièces jointes</span>
                         </li>
                         <li class="flex align-items mb-3">
-                           <svg class="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                           <span class="text-gray-900 font-medium">
-                              Flux de travail automatisés
-                           </span>
+                           <svg class="w-5 h-5 text-teal-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                           <span class="text-gray-900 font-medium">Authentification OAuth2 et sécurité avancée</span>
                         </li>
                         <li class="flex align-items">
-                           <svg class="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                           <span class="text-gray-900 font-medium">
-                              Sécurité et confidentialité des données
-                           </span>
+                           <svg class="w-5 h-5 text-teal-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                           <span class="text-gray-900 font-medium">Architecture microservices scalable</span>
                         </li>
                      </ul>
-                     <p class="lg:text-xl mb-4">
-                        Vous aider à prendre de l'avance en transformant les défis des clients en opportunités de service exceptionnel.
-                     </p>
+                     <p class="lg:text-xl mb-4">Vous aider à prendre de l'avance en transformant les défis médicaux en opportunités de soin exceptionnel.</p>
                   </div>
                </div>
-               <div class="">
+               <div>
                   <img src="https://img.freepik.com/free-vector/coloured-statistics-design_1212-417.jpg" class="rounded-md w-full overflow-hidden" />
                </div>
             </div>
          </div>
       </section>
+
+      <section id="testimonials" class="py-20 px-4">
+         <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+               <h2 class="text-3xl font-bold text-gray-900 mb-3">Ce que disent nos utilisateurs</h2>
+               <p class="text-gray-500 text-lg">Découvrez pourquoi les professionnels font confiance à MediLabo.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                  <p class="text-amber-400 mb-3">★★★★★</p>
+                  <p class="text-gray-500 italic mb-4">"MediLabo a transformé ma pratique. L'évaluation des risques est remarquablement précise."</p>
+                  <div class="flex items-center gap-3">
+                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center text-white text-sm font-bold">DR</div>
+                     <div>
+                        <p class="text-sm font-semibold text-gray-900">Dr. Rousseau</p>
+                        <p class="text-xs text-gray-500">Médecin généraliste</p>
+                     </div>
+                  </div>
+               </div>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                  <p class="text-amber-400 mb-3">★★★★★</p>
+                  <p class="text-gray-500 italic mb-4">"La gestion des dossiers patients n'a jamais été aussi simple. Un gain de temps considérable."</p>
+                  <div class="flex items-center gap-3">
+                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center text-white text-sm font-bold">SB</div>
+                     <div>
+                        <p class="text-sm font-semibold text-gray-900">Dr. Bernard</p>
+                        <p class="text-xs text-gray-500">Endocrinologue</p>
+                     </div>
+                  </div>
+               </div>
+               <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                  <p class="text-amber-400 mb-3">★★★★★</p>
+                  <p class="text-gray-500 italic mb-4">"Le système de messagerie intégré facilite la coordination avec l'ensemble de l'équipe."</p>
+                  <div class="flex items-center gap-3">
+                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center text-white text-sm font-bold">ML</div>
+                     <div>
+                        <p class="text-sm font-semibold text-gray-900">Marie Lefèvre</p>
+                        <p class="text-xs text-gray-500">Infirmière coordinatrice</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      <section class="py-20 px-4 medical-gradient">
+         <div class="max-w-3xl mx-auto text-center text-white">
+            <h2 class="text-3xl font-bold mb-4">Prêt à moderniser votre pratique ?</h2>
+            <p class="text-white/80 text-lg mb-8">Rejoignez les praticiens qui utilisent déjà MediLabo Solutions.</p>
+            <div class="flex flex-wrap justify-center gap-4">
+               <a (click)="login()" class="px-8 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-semibold transition-all duration-200 cursor-pointer">Créer un compte gratuit</a>
+               <a (click)="login()" class="px-8 py-3 border-2 border-white/40 text-white rounded-xl font-semibold hover:bg-white/10 transition-all duration-200 cursor-pointer">J'ai déjà un compte</a>
+            </div>
+         </div>
+      </section>
+
       <div class="container mx-auto">
          <div class="text-blue-gray-600 border-t border-gray-200 mt-6">
             <footer class="py-2">
                <div class="flex w-full flex-wrap items-center justify-center gap-6 px-2 md:justify-between">
                   <p class="block antialiased font-sans text-sm leading-normal font-normal text-inherit">
                      &#169; 2025
-                     <a class="transition-colors hover:text-blue-500 font-bold" href="https://www.kmra.io" target="_blank" >KMRA, LLC.</a>
+                     <a class="transition-colors hover:text-teal-500 font-bold" href="https://www.kmra.io" target="_blank">KMRA, LLC.</a>
                   </p>
                   <ul class="flex items-center gap-4">
-                     <li><a href="https://www.kmra.io" target="_blank" class="block antialiased font-sans text-sm leading-normal py-0.5 px-1 font-normal text-inherit transition-colors hover:text-blue-500">À Propos de Nous</a>
-                     </li>
-                     <li><a href="https://www.kmra.io" target="_blank" class="block antialiased font-sans text-sm leading-normal py-0.5 px-1 font-normal text-inherit transition-colors hover:text-blue-500">Blog</a>
-                     </li>
-                     <li><a href="https://www.kmra.io" target="_blank" class="block antialiased font-sans text-sm leading-normal py-0.5 px-1 font-normal text-inherit transition-colors hover:text-blue-500">Licence</a>
-                     </li>
+                     <li><a href="https://www.kmra.io" target="_blank" class="block antialiased font-sans text-sm leading-normal py-0.5 px-1 font-normal text-inherit transition-colors hover:text-teal-500">À Propos de Nous</a></li>
+                     <li><a href="https://www.kmra.io" target="_blank" class="block antialiased font-sans text-sm leading-normal py-0.5 px-1 font-normal text-inherit transition-colors hover:text-teal-500">Blog</a></li>
+                     <li><a href="https://www.kmra.io" target="_blank" class="block antialiased font-sans text-sm leading-normal py-0.5 px-1 font-normal text-inherit transition-colors hover:text-teal-500">Licence</a></li>
                   </ul>
                </div>
             </footer>

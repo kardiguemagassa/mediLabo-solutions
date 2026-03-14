@@ -69,4 +69,8 @@ export class HomeComponent {
     this.storage.set(Key.REFRESH_TOKEN, response.refresh_token);
   };
 
+  login = () => {
+    window.location.href = 'http://localhost:9001/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=http://localhost:4200&code_challenge_method=S256&code_challenge=yLTPU5_n1a3ZtxFMoiguWiMYwpp7tm0vCZHXVnPStFk';
+};
+
 }
