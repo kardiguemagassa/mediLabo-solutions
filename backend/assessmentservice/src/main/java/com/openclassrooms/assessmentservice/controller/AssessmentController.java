@@ -43,6 +43,25 @@ public class AssessmentController {
     private final AssessmentService assessmentService;
     private final AssessmentMapper assessmentMapper;
 
+    @Operation(
+            summary = "Récupérer toutes les évaluations en cache",
+            description = "Retourne la liste de toutes les évaluations de risque déjà calculées"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Évaluations récupérées avec succès")
+    })
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Response> getAllAssessments(HttpServletRequest request) {
+        log.info("Received request to get all cached assessments");
+        var assessments = assessmentService.getAllAssessments().stream()
+                .map(assessmentMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(getResponse(request,
+                Map.of("assessments", assessments),
+                "Évaluations récupérées avec succès", OK));
+    }
+
     /**
      * Évalue le risque de diabète pour un patient.
      * FLUX:

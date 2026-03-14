@@ -102,6 +102,7 @@ public class AuthorizationServerConfig {
             "/user/verify/account/**",
             "/user/verify/password/**",
             "/user/resetpassword/**",
+            "/.well-known/**",
             "/user/image/**",
             "/actuator/health",
             "/actuator/info",

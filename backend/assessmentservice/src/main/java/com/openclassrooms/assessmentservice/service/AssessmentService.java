@@ -3,6 +3,8 @@ package com.openclassrooms.assessmentservice.service;
 import com.openclassrooms.assessmentservice.model.Assessment;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 /**
  * Service d'évaluation du risque de diabète Full Réactif
  *
@@ -11,6 +13,8 @@ import reactor.core.publisher.Mono;
  * @since 2026-02-25
  */
 public interface AssessmentService {
+
+    List<Assessment> getAllAssessments();
 
     /**
      * Évalue le risque de diabète pour un patient de manière réactive.
