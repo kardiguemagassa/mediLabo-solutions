@@ -30,7 +30,7 @@ export class NavbarComponent {
   noteFilesToSave: File[] = [];
   noteFiles = signal<{ name: string, size: string }[]>([]);
 
-  patients = computed(() => {
+  allPatients = computed(() => {
     const patients = this.store.allPatients() ?? [];
     const users = this.store.users() ?? [];
     return patients.map(patient => {

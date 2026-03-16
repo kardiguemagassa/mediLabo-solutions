@@ -5,7 +5,7 @@ import { IPatient } from '../interface/patient';
 export class LabelValue implements PipeTransform {
   transform(data: any[], args?: string[]): any {
 
-    // dashboard
+    // dashboard 
     if (args[0] === 'months') {
       return {
         categories: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']

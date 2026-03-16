@@ -345,6 +345,19 @@ export const AppStore = signalStore(
                     }
                 })
             )))),
+        getAllNotes: rxMethod<void>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap(() => noteService.allNotes$().pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { allNotes: response.data.notes, loading: false, error: null });
+                    },
+                    error: (error: string) => {
+                        toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
+                        patchState(store, { loading: false, error });
+                    }
+                })
+            )))),
         getNote: rxMethod<string>(pipe(
             tap(() => patchState(store, { loading: true, error: null })),
             switchMap((noteUuid) => noteService.note$(noteUuid).pipe(

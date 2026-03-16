@@ -18,6 +18,13 @@ export class NoteService {
         .pipe(tap(console.log), catchError(this.handleError))
     );
 
+  allNotes$ = () =>
+    <Observable<IResponse>>(
+      this.http
+        .get<IResponse>(`${server}/api/notes/my-notes`)
+        .pipe(tap(console.log), catchError(this.handleError))
+    );
+
   note$ = (noteUuid: string) =>
     <Observable<IResponse>>(
       this.http

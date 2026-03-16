@@ -1,4 +1,4 @@
-@if (enrichedPatients()?.length > 0) {
+@if (allPatients()?.length > 0) {
   <div class="container mx-auto">
     <!-- Stats Cards -->
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -8,7 +8,7 @@
           <div>
             <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">TOTAL PATIENTS</p>
             <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ enrichedPatients()?.length }}</h3>
+              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients()?.length }}</h3>
             </div>
           </div>
           <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-500 text-white rounded-full">
@@ -31,7 +31,7 @@
           <div>
             <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">RISQUE FAIBLE</p>
             <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ enrichedPatients() | DataValue: ['risk', 'BORDERLINE'] }}</h3>
+              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'BORDERLINE'] }}</h3>
             </div>
           </div>
           <div class="shrink-0 flex justify-center items-center size-[46px] bg-green-500 text-white rounded-full">
@@ -54,7 +54,7 @@
           <div>
             <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">RISQUE MODÉRÉ</p>
             <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ enrichedPatients() | DataValue: ['risk', 'IN_DANGER'] }}</h3>
+              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'IN_DANGER'] }}</h3>
             </div>
           </div>
           <div class="shrink-0 flex justify-center items-center size-[46px] bg-yellow-500 text-white rounded-full">
@@ -77,7 +77,7 @@
           <div>
             <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">RISQUE ÉLEVÉ</p>
             <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ enrichedPatients() | DataValue: ['risk', 'EARLY_ONSET'] }}</h3>
+              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'EARLY_ONSET'] }}</h3>
             </div>
           </div>
           <div class="shrink-0 flex justify-center items-center size-[46px] bg-red-500 text-white rounded-full">
@@ -101,7 +101,7 @@
       <div class="rounded-xl bg-white border border-gray-200">
         <div id="riskPieChart">
           <apx-chart
-            [series]="enrichedPatients() | PieDataValue: ['riskCounts']"
+            [series]="allPatients() | PieDataValue: ['riskCounts']"
             [chart]="pieChartOptions.chart"
             [labels]="['Faible', 'Modéré', 'Élevé']"
             [colors]="['#22c55e', '#eab308', '#ef4444']"
@@ -123,7 +123,7 @@
         <div class="relative bg-clip-border mx-4 rounded-xl overflow-hidden bg-white text-gray-700">
           <div id="ageBarChart">
             <apx-chart
-              [series]="enrichedPatients() | ChartDataValue: ['ageGroups']"
+              [series]="allPatients() | ChartDataValue: ['ageGroups']"
               [chart]="barChartOptions.chart"
               [xaxis]="barChartOptions.xaxis"
               [colors]="['#3b82f6']"
@@ -174,7 +174,7 @@
         <div class="p-6 pb-2">
           <div id="riskColumnChart">
             <apx-chart
-              [series]="enrichedPatients() | ChartDataValue: ['riskColumns']"
+              [series]="allPatients() | ChartDataValue: ['riskColumns']"
               [chart]="columnChartOptions.chart"
               [dataLabels]="columnChartOptions.dataLabels"
               [plotOptions]="columnChartOptions.plotOptions"
