@@ -13,7 +13,7 @@ import { ChartDataValue } from '../../../pipe/chart-data.pipe';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterLink, DataValue, LabelValue, PieDataValue, ChartDataValue, NgApexchartsModule],
+  imports: [CommonModule, RouterLink, DataValue, PieDataValue, ChartDataValue, NgApexchartsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -21,7 +21,7 @@ export class DashboardComponent {
   protected store = inject(AppStore);
 
   // Signal computed qui enrichit les patients avec les données user + assessment
-  enrichedPatients = computed(() => {
+  allPatients = computed(() => {
     const patients = this.store.allPatients() ?? [];
     const users = this.store.users() ?? [];
     const assessments = this.store.allAssessments() ?? [];
@@ -39,7 +39,7 @@ export class DashboardComponent {
   });
 
   highRiskPatients = computed(() => {
-    return this.enrichedPatients().filter(
+    return this.allPatients().filter(
       (p: any) => p.riskLevel === 'EARLY_ONSET' || p.riskLevel === 'IN_DANGER'
     );
   });
@@ -139,5 +139,6 @@ export class DashboardComponent {
     this.store.getAllPatients();
     this.store.getUsers();
     this.store.getAllAssessments();
+    this.store.getAllNotes();
   }
 }
