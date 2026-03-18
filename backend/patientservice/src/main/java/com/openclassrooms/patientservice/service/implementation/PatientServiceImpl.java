@@ -1,6 +1,7 @@
 package com.openclassrooms.patientservice.service.implementation;
 
 import com.openclassrooms.patientservice.dtorequest.PatientRequest;
+import com.openclassrooms.patientservice.dtorequest.UserRequest;
 import com.openclassrooms.patientservice.dtoresponse.PatientResponse;
 import com.openclassrooms.patientservice.event.Event;
 import com.openclassrooms.patientservice.exception.ApiException;
@@ -145,19 +146,40 @@ public class PatientServiceImpl implements PatientService {
                         .orElseGet(() -> Mono.error(new ApiException("Patient non trouvé: " + patientUuid))))
                 .flatMap(existingPatient ->
                         userService.getUserByUuid(existingPatient.getUserUuid())
-                                .flatMap(user -> Mono.fromCallable(() -> {
-                                            Patient updatedPatient = patientMapper.updateEntity(existingPatient, request);
-                                            Patient savedPatient = patientRepository.updatePatient(updatedPatient);
+                                .flatMap(user -> {
 
-                                            // Publier l'événement PATIENT_UPDATED
-                                            publishPatientUpdatedEvent(user.getEmail(),
-                                                    user.getFirstName() + " " + user.getLastName(),
-                                                    savedPatient.getMedicalRecordNumber());
+                                    Mono<Patient> updatePatientMono = Mono.fromCallable(() -> {
+                                        Patient updatedPatient = patientMapper.updateEntity(existingPatient, request);
+                                        return patientRepository.updatePatient(updatedPatient);
+                                    }).subscribeOn(Schedulers.boundedElastic());
 
-                                            log.info("Patient updated successfully: {}", patientUuid);
-                                            return patientMapper.toResponseWithUserInfo(savedPatient, user);
-                                        })
-                                        .subscribeOn(Schedulers.boundedElastic()))
+                                    Mono<UserRequest> updateUserMono;
+                                    if (request.getPhone() != null || request.getAddress() != null) {
+                                        updateUserMono = userService.updateUserContactInfo(
+                                                existingPatient.getUserUuid(),
+                                                request.getPhone(),
+                                                request.getAddress()
+                                        ).onErrorResume(e -> {
+                                            log.warn("Could not update user contact info: {}", e.getMessage());
+                                            return Mono.just(user);
+                                        });
+                                    } else {
+                                        updateUserMono = Mono.just(user);
+                                    }
+
+                                    return Mono.zip(updatePatientMono, updateUserMono)
+                                            .map(tuple -> {
+                                                Patient savedPatient = tuple.getT1();
+                                                UserRequest updatedUser = tuple.getT2();
+
+                                                publishPatientUpdatedEvent(updatedUser.getEmail(),
+                                                        updatedUser.getFirstName() + " " + updatedUser.getLastName(),
+                                                        savedPatient.getMedicalRecordNumber());
+
+                                                log.info("Patient updated successfully: {}", patientUuid);
+                                                return patientMapper.toResponseWithUserInfo(savedPatient, updatedUser);
+                                            });
+                                })
                 );
     }
 

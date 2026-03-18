@@ -16,4 +16,5 @@ public interface UserServiceClient {
     Mono<UserRequest> getUserByUuid(String userUuid);
     Mono<UserRequest> getUserByEmail(String email);
     Mono<UserRequest> getAssignee(String patientUuid);
+    Mono<UserRequest> updateUserContactInfo(String userUuid, String phone, String address);
 }
