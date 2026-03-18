@@ -20,7 +20,7 @@ public final class TriggerTerms {
     /**
      * Liste des termes déclencheurs selon les spécifications métier.
      */
-    public static final List<String> TERMS = List.of("Hémoglobine A1C", "Microalbumine", "Taille", "Poids", "Fumeur", "Fumeuse", "Anormal", "Cholestérol", "Vertiges", "Rechute", "Réaction", "Anticorps");
+    public static final List<String> TERMS = List.of("Hémoglobine A1C", "Microalbumine", "Taille", "Poids", "Fumeur", "fume", "Fumeuse", "Anormal", "Cholestérol", "Vertige", "Rechute", "Réaction", "Anticorps");
 
     /**
      * Patterns compilés pour recherche efficace (insensible à la casse).
