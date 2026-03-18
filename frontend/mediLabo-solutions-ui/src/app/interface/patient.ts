@@ -1,9 +1,13 @@
 export interface IPatient {
+  id: number;
   patientId: number;
   patientUuid: string;
   userUuid: string;
+  content: string;
+  date: string;
 
   dateOfBirth: string;
+  age: number; 
   gender: string;
   bloodType: string;
 
@@ -23,11 +27,20 @@ export interface IPatient {
   insuranceProvider: string;
   insurancePolicyNumber: string;
 
-  active: boolean;
+  active?: boolean;
 
   createdAt: string;
   updatedAt: string;
+
+  userInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    imageUrl: string;
+    address: string;
+    phone: string;
+  };
 }
 
-export type Patient = {'patient:': IPatient};
-export type Patients = {'patients:': IPatient[]};
+export type Patient = { 'patient:': IPatient };
+export type Patients = { 'patients:': IPatient[] };

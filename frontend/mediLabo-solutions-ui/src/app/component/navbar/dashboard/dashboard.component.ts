@@ -13,7 +13,7 @@ import { ChartDataValue } from '../../../pipe/chart-data.pipe';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterLink, DataValue, PieDataValue, ChartDataValue, NgApexchartsModule],
+  imports: [CommonModule, RouterLink, DataValue, LabelValue, PieDataValue, ChartDataValue, NgApexchartsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -22,20 +22,17 @@ export class DashboardComponent {
 
   // Signal computed qui enrichit les patients avec les données user + assessment
   allPatients = computed(() => {
-    const patients = this.store.allPatients() ?? [];
-    const users = this.store.users() ?? [];
-    const assessments = this.store.allAssessments() ?? [];
-
-    return patients.map(patient => {
-      const user = users.find(u => u.userUuid === patient.userUuid);
-      const assessment = assessments.find(a => a.patientUuid === patient.patientUuid);
-      return {
-        ...patient,
-        firstName: user?.firstName ?? '',
-        lastName: user?.lastName ?? '',
-        riskLevel: assessment?.riskLevel ?? 'NONE'
-      };
-    });
+      const patients = this.store.allPatients() ?? [];
+      const assessments = this.store.allAssessments() ?? [];
+      return patients.map(patient => {
+        const assessment = assessments.find(a => a.patientUuid === patient.patientUuid);
+        return {
+          ...patient,
+          firstName: patient.userInfo?.firstName ?? '',
+          lastName: patient.userInfo?.lastName ?? '',
+          riskLevel: assessment?.riskLevel ?? 'NONE'
+        };
+      });
   });
 
   highRiskPatients = computed(() => {
@@ -137,8 +134,6 @@ export class DashboardComponent {
 
   ngOnInit() {
     this.store.getAllPatients();
-    this.store.getUsers();
     this.store.getAllAssessments();
-    this.store.getAllNotes();
   }
 }

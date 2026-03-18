@@ -1,1 +1,335 @@
-<p>patient-detail works!</p>
+@if (store.loading() && !patient()) {
+    <div class="flex justify-center items-center py-24">
+        <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin fill-teal-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+            <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+        </svg>
+    </div>
+} @else if (patient()) {
+    <div class="space-y-6">
+
+        <!-- ── EN-TÊTE + ACTIONS ── -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a routerLink="/patients" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Dossier patient</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">N° {{patient()!.medicalRecordNumber}}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                @if (!isEditing() && perm.canCreatePatient()) {
+                    <button (click)="startEditing()" class="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-teal-600 bg-teal-50 hover:bg-teal-100 rounded-lg transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Modifier
+                    </button>
+                }
+                @if (perm.canCreateAssessment()) {
+                    <button (click)="assessPatient()" class="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Évaluer
+                    </button>
+                }
+                @if (perm.canDeletePatient()) {
+                    @if (patient()!.active !== false) {
+                        <button (click)="deletePatient()" class="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Désactiver
+                        </button>
+                    } @else {
+                        <button (click)="restorePatient()" class="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Restaurer
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+
+        <!--  WORKFLOW GUIDE pour nouveau patien  -->
+        @if (!hasNotes() && !hasAssessment()) {
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div>
+                        <p class="text-sm font-medium text-blue-800">Nouveau patient — prochaines étapes</p>
+                        <p class="text-xs text-blue-600 mt-1">Pour évaluer le risque diabète, ajoutez d'abord des notes médicales contenant des observations cliniques (poids, taille, cholestérol, habitudes, etc.). L'algorithme analysera ensuite les déclencheurs présents dans les notes.</p>
+                        <div class="flex items-center gap-4 mt-3">
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-blue-700">
+                                <span class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold">1</span>
+                                Ajouter une note
+                            </span>
+                            <svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-blue-400">
+                                <span class="w-5 h-5 rounded-full bg-blue-300 text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                                Évaluer le risque
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        } @else if (hasNotes() && !hasAssessment()) {
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div>
+                        <p class="text-sm font-medium text-amber-800">{{patientNotes().length}} note(s) ajoutée(s) — évaluation en attente</p>
+                        <p class="text-xs text-amber-600 mt-1">Le patient a des notes médicales mais n'a pas encore été évalué. Cliquez sur "Évaluer" pour lancer l'analyse des risques.</p>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- ── SECTION 1 : IDENTITÉ ── -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="flex items-center gap-4 mb-5">
+                <img [src]="patient()!.userInfo?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+                     [alt]="patient()!.userInfo?.firstName"
+                     class="w-16 h-16 rounded-full object-cover ring-2 ring-gray-100"
+                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">{{patient()!.userInfo?.firstName}} {{patient()!.userInfo?.lastName}}</h2>
+                    <p class="text-sm text-gray-500">{{patient()!.userInfo?.email}}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-xs text-gray-500">{{patient()!.age}} ans</span>
+                        <span class="text-xs text-gray-400">•</span>
+                        <span class="text-xs text-gray-500">{{patient()!.gender === 'MALE' ? 'Homme' : 'Femme'}}</span>
+                        <span class="text-xs text-gray-400">•</span>
+                        <span class="text-xs text-gray-500">Né(e) le {{patient()!.dateOfBirth}}</span>
+                    </div>
+                </div>
+            </div>
+
+            @if (isEditing()) {
+                <div class="border-t border-gray-100 pt-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Date de naissance</label>
+                            <input type="date" [value]="editData().dateOfBirth" (input)="updateField('dateOfBirth', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Genre</label>
+                            <select [value]="editData().gender" (change)="updateField('gender', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                                <option value="MALE">Homme</option>
+                                <option value="FEMALE">Femme</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Groupe sanguin</label>
+                            <select [value]="editData().bloodType" (change)="updateField('bloodType', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                                <option value="">—</option>
+                                <option value="A+">A+</option><option value="A-">A-</option>
+                                <option value="B+">B+</option><option value="B-">B-</option>
+                                <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                <option value="O+">O+</option><option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Taille (cm)</label>
+                            <input type="number" [value]="editData().heightCm" (input)="updateField('heightCm', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Poids (kg)</label>
+                            <input type="number" [value]="editData().weightKg" (input)="updateField('weightKg', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Allergies</label>
+                            <input type="text" [value]="editData().allergies" (input)="updateField('allergies', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="Pénicilline, Latex..." />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Conditions chroniques</label>
+                            <input type="text" [value]="editData().chronicConditions" (input)="updateField('chronicConditions', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="Diabète, Hypertension..." />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Médicaments actuels</label>
+                            <input type="text" [value]="editData().currentMedications" (input)="updateField('currentMedications', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="Metformine 500mg..." />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Contact urgence — Nom</label>
+                            <input type="text" [value]="editData().emergencyContactName" (input)="updateField('emergencyContactName', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Contact urgence — Téléphone</label>
+                            <input type="tel" [value]="editData().emergencyContactPhone" (input)="updateField('emergencyContactPhone', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Contact urgence — Relation</label>
+                            <input type="text" [value]="editData().emergencyContactRelationship" (input)="updateField('emergencyContactRelationship', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="Conjoint, Parent..." />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Assureur</label>
+                            <input type="text" [value]="editData().insuranceProvider" (input)="updateField('insuranceProvider', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Adresse postale</label>
+                            <input type="text" [value]="editData().address" (input)="updateField('address', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="123 rue de Paris, 75001 Paris" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Téléphone</label>
+                            <input type="tel" [value]="editData().phone" (input)="updateField('phone', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="06 12 34 56 78" />
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 mt-4">
+                        <button (click)="cancelEditing()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
+                        <button (click)="savePatient()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700">Enregistrer</button>
+                    </div>
+                </div>
+            } @else {
+                <div class="border-t border-gray-100 pt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div><p class="text-xs text-gray-400">Groupe sanguin</p><p class="text-sm font-medium text-gray-900">{{patient()!.bloodType || '—'}}</p></div>
+                    <div><p class="text-xs text-gray-400">Taille</p><p class="text-sm font-medium text-gray-900">{{patient()!.heightCm ? patient()!.heightCm + ' cm' : '—'}}</p></div>
+                    <div><p class="text-xs text-gray-400">Poids</p><p class="text-sm font-medium text-gray-900">{{patient()!.weightKg ? patient()!.weightKg + ' kg' : '—'}}</p></div>
+                    <div><p class="text-xs text-gray-400">Créé le</p><p class="text-sm font-medium text-gray-900">{{patient()!.createdAt | date:'dd/MM/yyyy'}}</p></div>
+                </div>
+                @if (patient()!.allergies || patient()!.chronicConditions || patient()!.currentMedications) {
+                    <div class="border-t border-gray-100 pt-4 mt-4 space-y-3">
+                        @if (patient()!.allergies) {<div><p class="text-xs text-gray-400">Allergies</p><p class="text-sm text-gray-700">{{patient()!.allergies}}</p></div>}
+                        @if (patient()!.chronicConditions) {<div><p class="text-xs text-gray-400">Conditions chroniques</p><p class="text-sm text-gray-700">{{patient()!.chronicConditions}}</p></div>}
+                        @if (patient()!.currentMedications) {<div><p class="text-xs text-gray-400">Médicaments actuels</p><p class="text-sm text-gray-700">{{patient()!.currentMedications}}</p></div>}
+                    </div>
+                }
+                @if (patient()!.emergencyContactName) {
+                    <div class="border-t border-gray-100 pt-4 mt-4">
+                        <p class="text-xs text-gray-400 mb-1">Contact d'urgence</p>
+                        <p class="text-sm text-gray-700">{{patient()!.emergencyContactName}} ({{patient()!.emergencyContactRelationship}}) — {{patient()!.emergencyContactPhone}}</p>
+                    </div>
+                }
+                
+                <div class="border-t border-gray-100 pt-4 mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-400">Adresse postale</p>
+                        <p class="text-sm text-gray-700">{{patient()!.userInfo?.address || '—'}}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400">Téléphone</p>
+                        <p class="text-sm text-gray-700">{{patient()!.userInfo?.phone || '—'}}</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- ── SECTION 2 : ÉVALUATION DU RISQUE ── -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold text-gray-900">Évaluation du risque diabète</h2>
+                @if (perm.canCreateAssessment()) {
+                    <button (click)="assessPatient()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-50 rounded-lg transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        {{hasAssessment() ? 'Réévaluer' : 'Évaluer'}}
+                    </button>
+                }
+            </div>
+
+            @if (patient()!.riskLevel) {
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border" [ngClass]="getRiskBadgeClass(patient()!.riskLevel)">
+                        <span class="w-2 h-2 rounded-full" [ngClass]="getRiskIconBg(patient()!.riskLevel)"></span>
+                        {{patient()!.riskLevelDescription || getRiskLabel(patient()!.riskLevel)}}
+                    </span>
+                    <span class="text-sm text-gray-500">{{patient()!.triggerCount}} déclencheur(s) détecté(s)</span>
+                </div>
+                @if (patient()!.triggersFound.length > 0) {
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        @for (trigger of patient()!.triggersFound; track trigger) {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-600">{{trigger}}</span>
+                        }
+                    </div>
+                } @else {
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg mb-3">
+                        <p class="text-xs text-emerald-700">Aucun déclencheur clinique trouvé dans les notes du patient. Ajoutez des notes avec des observations médicales pour une évaluation plus précise.</p>
+                    </div>
+                }
+                @if (patient()!.assessedAt) {
+                    <p class="text-xs text-gray-400">Dernière évaluation : {{patient()!.assessedAt | date:'dd MMM yyyy à HH:mm'}}</p>
+                }
+            } @else {
+                <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <p class="text-sm text-gray-500 font-medium">Aucune évaluation effectuée</p>
+                    <p class="text-xs text-gray-400 mt-1">{{hasNotes() ? 'Cliquez sur "Évaluer" pour lancer l\'analyse' : 'Ajoutez d\'abord des notes médicales puis lancez l\'évaluation'}}</p>
+                </div>
+            }
+        </div>
+
+        <!-- ── SECTION 3 : NOTES DU PATIENT ── -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <h2 class="text-base font-semibold text-gray-900">Notes médicales</h2>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-500">{{patientNotes().length}} note(s)</span>
+                    @if (perm.canCreateNote()) {
+                        <button (click)="toggleNoteForm()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Ajouter
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Formulaire note rapide -->
+            @if (showNoteForm()) {
+                <div class="p-5 border-b border-gray-100 bg-gray-50">
+                    <textarea [value]="noteContent()" (input)="noteContent.set($any($event.target).value)" rows="4" placeholder="Observations cliniques, résultats d'examen, traitements prescrits..." class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-3"></textarea>
+                    <div class="flex items-center justify-between mt-3">
+                        <p class="text-xs text-gray-400">Mots-clés détectables : Hémoglobine, Microalbumine, Taille, Poids, Fumeur, Fumeuse, Anormal, Cholestérol, Vertiges, Rechute, Réaction, Anticorps</p>
+                        <div class="flex items-center gap-2">
+                            <button (click)="toggleNoteForm()" class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
+                            <button (click)="saveQuickNote()" [disabled]="!noteContent().trim()" class="px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed">Créer la note</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (patientNotes().length > 0) {
+                <div class="divide-y divide-gray-100">
+                    @for (note of patientNotes(); track note.noteUuid) {
+                        <div [routerLink]="['/notes', note.noteUuid]" class="p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-xs text-gray-500">par {{note.practitionerName}}</p>
+                                        <span class="text-xs text-gray-400">•</span>
+                                        <p class="text-xs text-gray-400">{{note.createdAt | date:'dd MMM yyyy à HH:mm'}}</p>
+                                    </div>
+                                    <p class="text-sm text-gray-700 mt-1">{{truncate(note.content, 150)}}</p>
+                                    <div class="flex items-center gap-3 mt-1.5">
+                                        @if (note.fileCount > 0) {
+                                            <span class="inline-flex items-center gap-1 text-xs text-blue-600">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                {{note.fileCount}}
+                                            </span>
+                                        }
+                                        @if (note.commentCount > 0) {
+                                            <span class="inline-flex items-center gap-1 text-xs text-purple-600">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                                {{note.commentCount}}
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </div>
+                    }
+                </div>
+            } @else if (!showNoteForm()) {
+                <div class="flex flex-col items-center justify-center py-10">
+                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="text-sm text-gray-500 font-medium">Aucune note pour ce patient</p>
+                    @if (perm.canCreateNote()) {
+                        <button (click)="toggleNoteForm()" class="mt-3 text-sm text-teal-600 hover:text-teal-700 font-medium">Créer la première note</button>
+                    }
+                </div>
+            }
+        </div>
+
+    </div>
+} @else {
+    <div class="flex flex-col items-center justify-center py-24">
+        <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <p class="text-gray-500 font-medium">Patient introuvable</p>
+        <a routerLink="/patients" class="mt-3 text-sm text-teal-600 hover:text-teal-700 font-medium">Retour aux patients</a>
+    </div>
+}

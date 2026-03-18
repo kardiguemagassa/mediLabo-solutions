@@ -1,7 +1,6 @@
 import { IComment } from './comment';
 import { IFile } from './file';
 
-
 export interface INote {
   id: string;
   noteUuid: string;
@@ -14,4 +13,6 @@ export interface INote {
   updatedAt: string;
   files: IFile[];
   comments: IComment[];
+  fileCount: number;
+  commentCount: number;
 }
