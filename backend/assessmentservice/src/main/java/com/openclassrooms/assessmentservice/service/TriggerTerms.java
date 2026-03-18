@@ -1,6 +1,7 @@
 package com.openclassrooms.assessmentservice.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,12 +21,34 @@ public final class TriggerTerms {
     /**
      * Liste des termes déclencheurs selon les spécifications métier.
      */
-    public static final List<String> TERMS = List.of("Hémoglobine A1C", "Microalbumine", "Taille", "Poids", "Fumeur", "fume", "Fumeuse", "Anormal", "Cholestérol", "Vertige", "Rechute", "Réaction", "Anticorps");
+    public static final List<String> TERMS = List.of(
+            "Hémoglobine A1C",
+            "Microalbumine",
+            "Taille",
+            "Poids",
+            "Fumeur",
+            "Fumeuse",
+            "Anormal",
+            "Cholestérol",
+            "Vertiges",
+            "Vertige",
+            "Rechute",
+            "Réaction",
+            "Anticorps"
+    );
+
+    /**
+     * Mapping des variantes vers un terme canonique.
+     * "Vertige" et "Vertiges" comptent comme un seul déclencheur.
+     */
+    private static final Map<String, String> CANONICAL = Map.of("Vertige", "Vertiges");
+
 
     /**
      * Patterns compilés pour recherche efficace (insensible à la casse).
      */
-    public static final List<Pattern> PATTERNS = TERMS.stream().map(term -> Pattern.compile(Pattern.quote(term), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)).toList();
+    public static final List<Pattern> PATTERNS = TERMS.stream().map(term -> Pattern.compile(Pattern.quote(term),
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)).toList();
 
     /**
      * Compte le nombre de termes déclencheurs uniques dans un texte.
@@ -50,7 +73,12 @@ public final class TriggerTerms {
         if (text == null || text.isBlank()) {
             return Set.of();
         }
-        return TERMS.stream().filter(term -> Pattern.compile(Pattern.quote(term), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(text).find()).collect(Collectors.toSet());
+        return TERMS.stream()
+                .filter(term -> Pattern.compile(Pattern.quote(term),
+                                Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)
+                        .matcher(text).find())
+                .map(term -> CANONICAL.getOrDefault(term, term))  // normaliser
+                .collect(Collectors.toSet());
     }
 
     /**
