@@ -7,6 +7,7 @@ import { UserService } from '../../service/user.service';
 import { StorageService } from '../../service/storage.service';
 import { AppStore } from '../../store/app.store';
 import { logoutUrl } from '../../utils/fileutils';
+import { PermissionService } from '../../service/permission.service';
 
 @Component({
   selector: 'app-navbar',
@@ -24,28 +25,29 @@ export class NavbarComponent {
   private userService = inject(UserService);
   private storage = inject(StorageService);
   protected store = inject(AppStore);
+  protected permission = inject(PermissionService);
 
   //patients = computed(() => this.store.allPatients() ?? []);
   today = new Date();
   noteFilesToSave: File[] = [];
   noteFiles = signal<{ name: string, size: string }[]>([]);
 
+  users = computed(() => this.store.users() ?? []);
+
   allPatients = computed(() => {
     const patients = this.store.allPatients() ?? [];
-    const users = this.store.users() ?? [];
-    return patients.map(patient => {
-      const user = users.find(u => u.userUuid === patient.userUuid);
-      return {
-        ...patient,
-        firstName: user?.firstName ?? '',
-        lastName: user?.lastName ?? ''
-      };
-    });
+    return patients.map(patient => ({
+      ...patient,
+      firstName: patient.userInfo?.firstName ?? '',
+      lastName: patient.userInfo?.lastName ?? ''
+    }));
   });
 
   ngOnInit() {
     this.store?.getProfile();
     this.store?.getMessages();
+    this.store?.getAllPatients();
+    this.store?.getUsers(); 
   }
 
   onFileChange = (files: FileList) => {
@@ -72,22 +74,26 @@ export class NavbarComponent {
     this.filesToSave = [...this.filesToSave.filter(currentFile => currentFile.name !== file.name)];
   };
 
-  // removeNoteFile = (file: File) => {
-  //   this.noteFiles.set([...this.noteFiles().filter(currentFile => currentFile.name !== file.name)]);
-  //   this.noteFilesToSave = [...this.noteFilesToSave.filter(currentFile => currentFile.name !== file.name)];
-  // };
   removeNoteFile = (file: { name: string, size: string }) => {
     this.noteFiles.set([...this.noteFiles().filter(currentFile => currentFile.name !== file.name)]);
     this.noteFilesToSave = [...this.noteFilesToSave.filter(currentFile => currentFile.name !== file.name)];
-};
+  };
 
   savePatient = (patientForm: NgForm) => {
+    const data = patientForm.value;
+    if (!data.userUuid || !data.dateOfBirth || !data.gender) return;
+    this.store.createPatient(data);
+    patientForm.resetForm();
     this.files.set([]);
     this.filesToSave = [];
     this.closeModal();
-  };
+};
 
   saveNote = (noteForm: NgForm) => {
+    const { patientUuid, content } = noteForm.value;
+    if (!patientUuid || !content) return;
+    this.store.createNote({ patientUuid, content });
+    noteForm.resetForm();
     this.noteFiles.set([]);
     this.noteFilesToSave = [];
     this.closeModal();

@@ -13,7 +13,3 @@ export const RiskLevelUI = {
   [RiskLevel.EARLY_ONSET]: {label: 'Apparition précoce',color: 'purple'},
   [RiskLevel.UNKNOWN]: {label: 'Inconnu',color: 'gray'}
 };
-
-/*<span [style.color]="RiskLevelUI[assessment.riskLevel].color">
-  {{ RiskLevelUI[assessment.riskLevel].label }}
-</span>*/

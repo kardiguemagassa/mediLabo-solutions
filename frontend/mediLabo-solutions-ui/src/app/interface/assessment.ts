@@ -7,9 +7,11 @@ export interface IAssessment {
   age: number;
   gender: Gender;
   riskLevel: RiskLevel;
+  riskLevelDescription: string;
   triggerCount: number;
   triggersFound: string[];
   assessedAt: string;
+  notes?: string; 
 }
 
 export interface IAssessmentDetail extends IAssessment {notes: string;}

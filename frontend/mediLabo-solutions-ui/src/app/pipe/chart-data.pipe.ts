@@ -16,13 +16,32 @@ export class ChartDataValue implements PipeTransform {
     if (args[0] === 'trends') {
       return this.getTrends(data as IAssessment[]);
     }
+    if (args[0] === 'genderByMonth') {
+      return this.getGenderByMonth(data);
+    }
+    if (args[0] === 'line') {
+      const sorted = data
+        .map(p => ({ ...p, createdAt: new Date(p.createdAt) }))
+        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      const groups = sorted.reduce((acc, p) => {
+        const yearWeek = this.getWeekNumber(p.createdAt);
+        if (!acc[yearWeek]) { acc[yearWeek] = []; }
+        acc[yearWeek].push(p);
+        return acc;
+      }, {});
+      const values: number[] = [];
+      for (const key in groups) {
+        values.push(groups[key].length);
+      }
+      return [{ name: 'Patients', data: values }];
+    }
     return [];
   }
 
   private getAgeGroups(patients: any[]): number[] {
     const groups = [0, 0, 0, 0, 0];
     patients.forEach(p => {
-      const age = this.calculateAge(p.dateOfBirth);
+      const age = p.age ?? 0; // ← utilise age du backend directement
       if (age <= 18) groups[0]++;
       else if (age <= 30) groups[1]++;
       else if (age <= 45) groups[2]++;
@@ -56,13 +75,23 @@ export class ChartDataValue implements PipeTransform {
     return [{ name: 'Évaluations', data: months }];
   }
 
-  private calculateAge(dateOfBirth: string): number {
-    if (!dateOfBirth) return 0;
-    const today = new Date();
-    const birth = new Date(dateOfBirth);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
-    return age;
+  private getGenderByMonth(patients: any[]): { name: string; data: number[] }[] {
+    const months = Array.from({ length: 12 }, () => ({ male: 0, female: 0 }));
+    patients.forEach(p => {
+      const month = new Date(p.createdAt).getMonth();
+      if (p.gender === 'MALE') months[month].male++;
+      else if (p.gender === 'FEMALE') months[month].female++;
+    });
+    return [
+      { name: 'Hommes', data: months.map(m => m.male) },
+      { name: 'Femmes', data: months.map(m => m.female) }
+    ];
   }
+
+  private getWeekNumber = (date: Date | any): string => {
+    const firstDayOfYear: Date | any = new Date(date.getFullYear(), 0, 1);
+    const daysPassed = Math.floor((date - firstDayOfYear) / (24 * 60 * 60 * 1000));
+    const weekNumber = Math.ceil((daysPassed + firstDayOfYear.getDay() + 1) / 7);
+    return `Year ${date.getFullYear()} - W${weekNumber.toString().padStart(2, '0')}`;
+  };
 }

@@ -1,6 +1,10 @@
 export interface IFile {
     fileId: number;
     fileUuid: string;
+    fileName: string;
+    fileSize: string;
+    fileType: string;
+    createdAt: string;
     originalName: string;
     storedName: string;
     extension: string;
