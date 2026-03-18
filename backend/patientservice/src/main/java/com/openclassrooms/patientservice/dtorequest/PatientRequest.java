@@ -30,7 +30,6 @@ public class PatientRequest {
     @NotNull(message = "La date de naissance est obligatoire")
     @Past(message = "La date de naissance doit être dans le passé")
     private LocalDate dateOfBirth;
-
     private String gender;
     private String bloodType;
     private Integer heightCm;
@@ -38,19 +37,19 @@ public class PatientRequest {
     private String allergies;
     private String chronicConditions;
     private String currentMedications;
-
-    // Contact d'urgence
     private String emergencyContactName;
     private String emergencyContactPhone;
     private String emergencyContactRelationship;
-
-    // Assurance
     private String insuranceNumber;
     private String insuranceProvider;
-
-    // Métadonnées
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String insurancePolicyNumber;
+
+    private String phone;
+    private String address;
+    private String firstName;
+    private String lastName;
+    private String email;
 }

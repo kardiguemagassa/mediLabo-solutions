@@ -43,8 +43,6 @@ public class PatientController {
 
     private final PatientService patientService;
 
-    // CREATE
-
     @Operation(summary = "Créer un nouveau patient",
             description = "Crée un dossier patient associé à un utilisateur existant")
     @ApiResponses({
@@ -64,8 +62,6 @@ public class PatientController {
                 .map(patient -> {URI location = URI.create("/api/patients/" + patient.getPatientUuid());
                     return ResponseEntity.created(location).body(getResponse(httpRequest, Map.of("patient", patient), "Patient créé avec succès", CREATED));});
     }
-
-    // READ
 
     @Operation(summary = "Lister tous les patients actifs")
     @ApiResponses({
@@ -96,7 +92,6 @@ public class PatientController {
         return patientService.getPatientByUuid(patientUuid)
                 .map(patient -> ResponseEntity.ok(
                         getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
-                // switchIfEmpty pour retourner 404
                 .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
                         .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
@@ -126,7 +121,6 @@ public class PatientController {
         return patientService.getPatientByEmail(email)
                 .map(patient -> ResponseEntity.ok(
                         getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
-                // switchIfEmpty pour retourner 404
                 .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
                         .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
@@ -174,8 +168,6 @@ public class PatientController {
                         getResponse(request, Map.of("patients", patients, "count", patients.size()), "Patients récupérés avec succès", OK)));
     }
 
-    // UPDATE
-
     @Operation(summary = "Mettre à jour un patient")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Patient mis à jour"),
@@ -194,8 +186,6 @@ public class PatientController {
                         .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
-    // DELETE
-
     @Operation(summary = "Supprimer un patient (soft delete)")
     @DeleteMapping("/{patientUuid}")
     @PreAuthorize(ADMIN_ONLY)
@@ -206,8 +196,6 @@ public class PatientController {
         return patientService.deletePatient(patientUuid).then(Mono.just(ResponseEntity.ok(
                         getResponse(request, Map.of(), "Patient supprimé avec succès", OK))));
     }
-
-    // RESTORE
 
     @Operation(summary = "Restaurer un patient supprimé")
     @PatchMapping("/{patientUuid}/restore")
@@ -221,8 +209,6 @@ public class PatientController {
                 .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
                         .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
-
-    // STATS & UTILS
 
     @Operation(summary = "Obtenir le nombre total de patients actifs")
     @GetMapping("/stats/count")

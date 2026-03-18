@@ -122,7 +122,7 @@ public class UserResourceController {
         this.photoDirectory = photoDirectory;
     }
 
-    // REGISTRATION AND ACCOUNT VERIFICATION
+    /** REGISTRATION AND ACCOUNT VERIFICATION */
 
     @Operation(summary = "Register a new user", description = "Creates a new user and sends an email confirmation")
     @ApiResponses(value = {
@@ -146,7 +146,7 @@ public class UserResourceController {
         return ok(getResponse(request, emptyMap(), "Compte vérifié. Vous pouvez vous connecter maintenant.", OK));
     }
 
-    // MFA (MULTI-FACTOR AUTHENTICATION)
+    /** MFA (MULTI-FACTOR AUTHENTICATION) */
 
     @Operation(summary = "Enable MFA", description = "Activates two-factor authentication for the logged-in user")
     @ApiResponses(value = {
@@ -170,7 +170,7 @@ public class UserResourceController {
         return ok(getResponse(request, of("user", user), "L'authentification 2FA a été désactivée avec succès", OK));
     }
 
-    // USER PROFILE
+    /** USER PROFILE */
 
     @Operation(summary = "Get profile", description = "Retrieve profile and devices for the logged-in user")
     @ApiResponses(value = {
@@ -268,6 +268,14 @@ public class UserResourceController {
         return ok(getResponse(request, of("user", updatedUser), "Utilisateur mis à jour avec succès", OK));
     }
 
+    @Operation(summary = "Update user by UUID (admin)", description = "Update any user's contact info (ADMIN, SUPER_ADMIN, PRACTITIONER)")
+    @PatchMapping("/update/{userUuid}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN', 'PRACTITIONER', 'HEAD_PRACTITIONER')")
+    public ResponseEntity<Response> updateUserByUuid(@NotNull Authentication authentication, @PathVariable("userUuid") String userUuid, @RequestBody UserRequest user, HttpServletRequest request) {
+        var updatedUser = userService.updateUser(userUuid, user.getFirstName(), user.getLastName(), user.getEmail(), user.getPhone(), user.getBio(), user.getAddress());
+        return ok(getResponse(request, of("user", updatedUser), "Utilisateur mis à jour avec succès", OK));
+    }
+
     @Operation(summary = "Update user role", description = "Update the role of a user (ADMIN, SUPER_ADMIN, MANAGER required)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User role updated successfully"),
@@ -321,7 +329,7 @@ public class UserResourceController {
         return ok(getResponse(request, of("user", user), "Utilisateur mis à jour avec succès", OK));
     }
 
-    // PASSWORD MANAGEMENT WHEN USER IS LOGGED IN
+    /** PASSWORD MANAGEMENT WHEN USER IS LOGGED IN */
 
     @Operation(summary = "Update password", description = "Update the logged-in user's password")
     @ApiResponses(value = {
@@ -334,7 +342,7 @@ public class UserResourceController {
         return ok(getResponse(request, emptyMap(), "Mot de passe mis à jour avec succès", OK));
     }
 
-    // WHEN USER IS NOT LOGGED
+    /** WHEN USER IS NOT LOGGED */
     @Operation(summary = "Request password reset", description = "Request password reset email (user not logged in)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password reset email sent"),
@@ -346,7 +354,7 @@ public class UserResourceController {
         return ok(getResponse(request, emptyMap(), "Nous vous avons envoyé un email pour réinitialiser votre mot de passe.", OK));
     }
 
-    // WHEN USER IS NOT LOGGED
+    /** WHEN USER IS NOT LOGGED */
     @Operation(summary = "Verify password reset token", description = "Verifies the password reset token sent by email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token verified successfully"),
@@ -358,7 +366,7 @@ public class UserResourceController {
         return ok(getResponse(request, of("user", user), "Saisissez votre nouveau mot de passe", OK));
     }
 
-    // WHEN USER IS NOT LOGGED IN
+    /** WHEN USER IS NOT LOGGED IN */
     @Operation(summary = "Reset password", description = "Reset password using token sent by email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password reset successfully"),
@@ -382,7 +390,7 @@ public class UserResourceController {
         return ok(getResponse(request, of("users", userService.getUsers()), "Utilisateurs récupérés", OK));
     }
 
-    //PHOTOS AND AVATARS
+    /** PHOTOS AND AVATARS */
 
     @Operation(summary = "Upload user photo", description = "Uploads a photo for the logged-in user")
     @ApiResponses(value = {
@@ -405,7 +413,7 @@ public class UserResourceController {
         return Files.readAllBytes(Paths.get(photoDirectory + filename));
     }
 
-    // PRIVATE UTIL
+    /** PRIVATE UTIL */
 
     private URI getUri() {
         return URI.create("/user/profile/userId");
