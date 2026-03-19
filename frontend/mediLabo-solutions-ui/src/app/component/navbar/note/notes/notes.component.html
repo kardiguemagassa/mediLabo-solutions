@@ -6,7 +6,63 @@
             <h1 class="text-2xl font-bold text-gray-900">Notes médicales</h1>
             <p class="text-sm text-gray-500 mt-1">{{totalNotes()}} note(s) au total</p>
         </div>
+        @if (permission.canCreateNote()) {
+            <button (click)="toggleCreateForm()" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nouvelle note
+            </button>
+        }
     </div>
+
+    <!-- Formulaire création note (inline) -->
+    @if (showCreateForm()) {
+        <div class="bg-white rounded-xl border border-teal-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-teal-100 bg-teal-50">
+                <h2 class="text-base font-semibold text-teal-800">Nouvelle note médicale</h2>
+                <button (click)="toggleCreateForm()" class="p-1.5 text-teal-600 hover:bg-teal-100 rounded-lg transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4">
+                <!-- Sélection patient -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Patient</label>
+                    <select (change)="onPatientSelected($event)" [value]="selectedPatientUuid()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                        <option value="">Sélectionnez un patient</option>
+                        @for (patient of (store.allPatients() ?? []); track patient.patientUuid) {
+                            <option [value]="patient.patientUuid">{{patient.userInfo?.firstName}} {{patient.userInfo?.lastName}} — {{patient.userInfo?.email}}</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Aperçu patient sélectionné -->
+                @if (selectedPatient()) {
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <img [src]="selectedPatient()!.userInfo?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{selectedPatient()!.userInfo?.firstName}} {{selectedPatient()!.userInfo?.lastName}}</p>
+                            <p class="text-xs text-gray-500">{{selectedPatient()!.userInfo?.email}} — N° {{selectedPatient()!.medicalRecordNumber}}</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Contenu -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Observations</label>
+                    <textarea [value]="noteContent()" (input)="noteContent.set($any($event.target).value)" rows="5" placeholder="Observations cliniques, résultats d'examen, traitements prescrits..." class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-3"></textarea>
+                    <p class="text-xs text-gray-400 mt-1.5">Mots-clés détectables : Hémoglobine A1C, Microalbumine, Taille, Poids, Fumeur, Fumeuse, Anormal, Cholestérol, Vertiges, Rechute, Réaction, Anticorps</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button (click)="toggleCreateForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
+                    <button (click)="createNote()" [disabled]="!selectedPatientUuid() || !noteContent().trim()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                        Créer la note
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -90,22 +146,15 @@
                 @for (note of paginatedNotes(); track note.noteUuid) {
                     <div class="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
                         <div class="flex items-start justify-between gap-4">
-                            <!-- Note content -->
                             <div class="flex items-start gap-3 min-w-0 flex-1">
-                                <img [src]="note.patientImageUrl" 
-                                     [alt]="note.patientName"
-                                     class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0 mt-0.5"
-                                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                <img [src]="note.patientImageUrl" [alt]="note.patientName" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0 mt-0.5" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
                                 <div class="min-w-0 flex-1">
-                                    <!-- Header -->
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <p class="text-sm font-semibold text-gray-900">{{note.patientName}}</p>
                                         <span class="text-xs text-gray-400">•</span>
                                         <p class="text-xs text-gray-500">par {{note.practitionerName}}</p>
                                     </div>
-                                    <!-- Content preview -->
                                     <p class="text-sm text-gray-600 mt-1 leading-relaxed">{{truncate(note.content, 120)}}</p>
-                                    <!-- Meta -->
                                     <div class="flex items-center gap-4 mt-2">
                                         <span class="text-xs text-gray-400">{{note.createdAt | date:'dd MMM yyyy à HH:mm'}}</span>
                                         @if (note.fileCount > 0) {
@@ -126,14 +175,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- Actions -->
                             <div class="flex items-center gap-1 flex-shrink-0">
                                 <button [routerLink]="['/notes', note.noteUuid]" class="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all" title="Voir la note">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 </button>
-                                <button (click)="deleteNote(note.noteUuid)" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
+                                @if (permission.canDeleteNote()) {
+                                    <button (click)="deleteNote(note.noteUuid)" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                }
                             </div>
                         </div>
                     </div>
