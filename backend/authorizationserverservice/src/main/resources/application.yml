@@ -53,6 +53,14 @@ spring:
       properties:
         spring.json.add.type.headers: false
 
+  # FILE UPLOAD -  MULTIPART CONFIGURATION
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:50MB}
+      file-size-threshold: 2KB
+
 app:
   photo:
     directory: ${user.home}/Downloads/uploads/

@@ -1,11 +1,10 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { StorageService } from '../../../service/storage.service';
 import { UserService } from '../../../service/user.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HotToastService } from '@ngxpert/hot-toast';
-
 
 
 @Component({
@@ -21,6 +20,9 @@ export class RegisterComponent {
   private storage = inject(StorageService);
   private userService = inject(UserService);
   private toastService = inject(HotToastService);
+
+  @ViewChild('passwordField') passwordField!: ElementRef<HTMLInputElement>;
+  showPassword = false;
 
   ngOnInit() : void {
     if (this.userService.isAuthenticated() && !this.userService.isTokenExpired()) {
@@ -46,4 +48,9 @@ export class RegisterComponent {
       complete: () => form.reset()
     });
   };
+
+  togglePassword(input: HTMLInputElement) {
+  this.showPassword = !this.showPassword;
+  input.type = this.showPassword ? 'text' : 'password';
+}
 }

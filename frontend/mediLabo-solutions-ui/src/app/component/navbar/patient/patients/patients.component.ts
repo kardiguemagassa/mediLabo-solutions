@@ -3,7 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AppStore } from '../../../../store/app.store';
-import { PermissionService } from '../../../../service/permission.service';
+//import { PermissionService } from '../../../../service/permission.service';
 
 @Component({
   selector: 'app-patients',
@@ -13,7 +13,7 @@ import { PermissionService } from '../../../../service/permission.service';
 })
 export class PatientsComponent {
   protected store = inject(AppStore);
-  protected permission = inject(PermissionService);
+  // protected permission = inject(PermissionService);
 
   searchQuery = signal('');
   genderFilter = signal('');
