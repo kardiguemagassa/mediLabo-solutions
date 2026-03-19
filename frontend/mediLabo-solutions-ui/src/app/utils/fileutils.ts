@@ -14,6 +14,12 @@ export const getFormData = (formValue: any, files: File[]): FormData => {
     return formData;
 };
 
+export const getFileFormData = (file: File): FormData => {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return formData;
+};
+
 export const getMessageCount = (messages: IMessage[]) => {
     const unreadMessages = messages?.filter((message, index, array) => message.status === 'UNREAD');
     return unreadMessages?.length;

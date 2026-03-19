@@ -29,6 +29,7 @@
                 <!-- Desktop Navigation -->
                 <div class="hidden lg:ml-6 lg:flex lg:items-center lg:gap-1">
                     <a [routerLink]="['/dashboard']" [routerLinkActive]="['bg-white/20']" class="px-4 py-2 text-white font-medium text-sm rounded-xl transition-all duration-200 hover:bg-white/15">Tableau de bord</a>
+                    <a [routerLink]="['/users']" [routerLinkActive]="['bg-white/20']" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Utilisateurs</a>
                     <a [routerLink]="['/patients']" [routerLinkActive]="['bg-white/20']" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Patients</a>
                     <a [routerLink]="['/notes']" [routerLinkActive]="['bg-white/20']" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Notes</a>
                     <a [routerLink]="['/assessments']" [routerLinkActive]="['bg-white/20']" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Évaluations</a>
@@ -46,10 +47,10 @@
 
                 <!-- Profile dropdown -->
                 <button (click)="toggleMenu()" type="button" class="flex items-center text-sm pe-1 font-medium text-white rounded-full focus:ring-1 focus:ring-white ml-3">
-                    <img [src]="store?.profile() ? store?.profile()?.imageUrl : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb'" 
+                    <img [src]="store?.profile() ? store?.profile()?.imageUrl : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" 
                          [alt]="'Photo de ' + store?.profile()?.firstName" 
                          class="w-8 h-8 me-2 rounded-full object-cover ring-2 ring-white/30"
-                         onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb'">
+                         onerror="this.src=`https://cdn-icons-png.flaticon.com/512/149/149071.png`">
                     {{store?.profile()?.firstName}} {{store?.profile()?.lastName}}
                     <svg class="w-2.5 h-2.5 ms-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
