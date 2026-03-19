@@ -21,13 +21,68 @@ export class PatientsComponent {
   statusFilter = signal('');
   pageSize = 10;
 
+  // Formulaire création patient
+  showCreateForm = signal(false);
+  selectedUserUuid = signal('');
+  patientForm = signal<any>({
+    dateOfBirth: '',
+    gender: '',
+    phone: '',
+    address: ''
+  });
+
+  // User sélectionné (auto-rempli)
+  selectedUser = computed(() => {
+    const uuid = this.selectedUserUuid();
+    if (!uuid) return null;
+    return this.availableUsers().find(u => u.userUuid === uuid) ?? null;
+  });
+
+  // Users qui n'ont PAS encore de dossier patient
+  availableUsers = computed(() => {
+    const users = this.store.users() ?? [];
+    const patients = this.store.allPatients() ?? [];
+    const patientUserUuids = patients.map(p => p.userUuid);
+    return users.filter(u => !patientUserUuids.includes(u.userUuid));
+  });
+
   ngOnInit() {
-    if (!this.store.allPatients()?.length) {
-      this.store.getAllPatients();
-    }
-    if (!this.store.allAssessments()?.length) {
-      this.store.getAllAssessments();
-    }
+    this.store.getAllPatients();
+    this.store.getAllAssessments();
+  }
+
+  toggleCreateForm() {
+    this.showCreateForm.update(v => !v);
+    this.selectedUserUuid.set('');
+    this.patientForm.set({ dateOfBirth: '', gender: '', phone: '', address: '' });
+  }
+
+  onUserSelected(event: Event) {
+    this.selectedUserUuid.set((event.target as HTMLSelectElement).value);
+  }
+
+  updatePatientField(field: string, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.patientForm.update(f => ({ ...f, [field]: value }));
+  }
+
+  createPatient() {
+    const user = this.selectedUser();
+    const form = this.patientForm();
+    if (!user || !form.dateOfBirth || !form.gender) return;
+
+    this.store.createPatient({
+      userUuid: user.userUuid,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      dateOfBirth: form.dateOfBirth,
+      gender: form.gender,
+      phone: form.phone,
+      address: form.address
+    });
+
+    this.toggleCreateForm();
   }
 
   enrichedPatients = computed(() => {

@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AppStore } from '../../../../store/app.store';
+import { PermissionService } from '../../../../service/permission.service';
 
 @Component({
   selector: 'app-notes',
@@ -12,13 +13,46 @@ import { AppStore } from '../../../../store/app.store';
 })
 export class NotesComponent {
   protected store = inject(AppStore);
+  protected permission = inject(PermissionService);
 
   searchQuery = signal('');
   pageSize = 10;
 
+  // Formulaire création note
+  showCreateForm = signal(false);
+  selectedPatientUuid = signal('');
+  noteContent = signal('');
+
   ngOnInit() {
     this.store.getAllNotes();
     this.store.getAllPatients();
+  }
+
+  // Patient sélectionné (aperçu)
+  selectedPatient = computed(() => {
+    const uuid = this.selectedPatientUuid();
+    if (!uuid) return null;
+    const patients = this.store.allPatients() ?? [];
+    return patients.find(p => p.patientUuid === uuid) ?? null;
+  });
+
+  toggleCreateForm() {
+    this.showCreateForm.update(v => !v);
+    this.selectedPatientUuid.set('');
+    this.noteContent.set('');
+  }
+
+  onPatientSelected(event: Event) {
+    this.selectedPatientUuid.set((event.target as HTMLSelectElement).value);
+  }
+
+  createNote() {
+    const patientUuid = this.selectedPatientUuid();
+    const content = this.noteContent().trim();
+    if (!patientUuid || !content) return;
+
+    this.store.createNote({ patientUuid, content });
+    this.toggleCreateForm();
   }
 
   // Enrichir notes avec le nom du patient
@@ -74,19 +108,9 @@ export class NotesComponent {
     this.store.setCurrentPage(0);
   }
 
-  goToPage(page: number) {
-    this.store.setCurrentPage(page);
-  }
-
-  previousPage() {
-    const current = this.store.currentPage() ?? 0;
-    if (current > 0) this.store.setCurrentPage(current - 1);
-  }
-
-  nextPage() {
-    const current = this.store.currentPage() ?? 0;
-    if (current < this.totalPages() - 1) this.store.setCurrentPage(current + 1);
-  }
+  goToPage(page: number) { this.store.setCurrentPage(page); }
+  previousPage() { const c = this.store.currentPage() ?? 0; if (c > 0) this.store.setCurrentPage(c - 1); }
+  nextPage() { const c = this.store.currentPage() ?? 0; if (c < this.totalPages() - 1) this.store.setCurrentPage(c + 1); }
 
   deleteNote(noteUuid: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {

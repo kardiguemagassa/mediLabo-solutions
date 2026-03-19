@@ -1,12 +1,90 @@
 <div class="space-y-6">
 
-    <!-- Header -->
+     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Patients</h1>
             <p class="text-sm text-gray-500 mt-1">{{totalPatients()}} patient(s) enregistré(s)</p>
         </div>
+        @if (permission.canCreatePatient()) {
+            <button (click)="toggleCreateForm()" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nouveau patient
+            </button>
+        }
     </div>
+
+    <!-- Formulaire création patient (inline) -->
+    @if (showCreateForm()) {
+        <div class="bg-white rounded-xl border border-teal-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-teal-100 bg-teal-50">
+                <h2 class="text-base font-semibold text-teal-800">Créer un dossier patient</h2>
+                <button (click)="toggleCreateForm()" class="p-1.5 text-teal-600 hover:bg-teal-100 rounded-lg transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4">
+                <!-- Info -->
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-xs text-blue-700">Sélectionnez un utilisateur existant. Son nom, prénom et email seront automatiquement associés au dossier patient.</p>
+                </div>
+
+                <!-- Sélection utilisateur -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Utilisateur</label>
+                    <select (change)="onUserSelected($event)" [value]="selectedUserUuid()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                        <option value="">Sélectionnez un utilisateur</option>
+                        @for (user of availableUsers(); track user.userUuid) {
+                            <option [value]="user.userUuid">{{user.firstName}} {{user.lastName}} — {{user.email}}</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Aperçu utilisateur sélectionné -->
+                @if (selectedUser()) {
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <img [src]="selectedUser()!.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{selectedUser()!.firstName}} {{selectedUser()!.lastName}}</p>
+                            <p class="text-xs text-gray-500">{{selectedUser()!.email}}</p>
+                        </div>
+                    </div>
+
+                    <!-- Champs patient -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Date de naissance *</label>
+                            <input type="date" [value]="patientForm().dateOfBirth" (input)="updatePatientField('dateOfBirth', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Genre *</label>
+                            <select [value]="patientForm().gender" (change)="updatePatientField('gender', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                                <option value="">Sélectionnez</option>
+                                <option value="MALE">Homme</option>
+                                <option value="FEMALE">Femme</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Téléphone</label>
+                            <input type="tel" [value]="patientForm().phone" (input)="updatePatientField('phone', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="100-222-3333" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Adresse postale</label>
+                            <input type="text" [value]="patientForm().address" (input)="updatePatientField('address', $event)" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5" placeholder="1 Brookside St" />
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button (click)="toggleCreateForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
+                        <button (click)="createPatient()" [disabled]="!patientForm().dateOfBirth || !patientForm().gender" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                            Créer le dossier
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
