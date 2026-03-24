@@ -61,8 +61,6 @@ public class ResourceServerConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // endpoints actuator de manière sécurisée
-                       //.requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
                         .requestMatchers(AUTH_ENDPOINTS).permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(SWAGGER_ENDPOINTS).permitAll()

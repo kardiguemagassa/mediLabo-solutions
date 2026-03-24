@@ -120,8 +120,6 @@ public class MessageMapper {
         return existing;
     }
 
-    // PRIVATE METHODS
-
     private String buildFullName(UserRequest user) {
         String firstName = user.getFirstName() != null ? user.getFirstName() : "";
         String lastName = user.getLastName() != null ? user.getLastName() : "";

@@ -17,7 +17,7 @@ export const tokenInterceptor: HttpInterceptorFn = (request: HttpRequest<unknown
     return next(addAuthorizationTokenHeader(request, storage.get(Key.TOKEN)))
         .pipe(
             catchError(error => {
-                if (error instanceof HttpErrorResponse && error.error?.code === 401 && error.error?.message === 'Votre session a expiré. Veuillez vous reconnecter.') {
+                if (error instanceof HttpErrorResponse && error.error?.code === 401 && error.error?.message === 'Your session has expired.') {
                     console.log('REFRESHING TOKEN');
                     return handleRefreshToken(request, next, userService, storage);
                 } else {

@@ -16,7 +16,7 @@ public class NotificationUtils {
 
     public static Supplier<String> randomUUID = () -> UUID.randomUUID().toString();
 
-    // URLS D'AUTHENTIFICATION
+    /** URLS D'AUTHENTIFICATION */
     public static String getVerificationUrl(String host, String token) {
         return host + "/verify/account?token=" + token;
     }
@@ -25,7 +25,7 @@ public class NotificationUtils {
         return host + "/verify/password?token=" + token;
     }
 
-    // URLS MÉDICALES
+    /**URLS MÉDICALES*/
     public static String getPatientDashboardUrl(String host) {
         return host + "/dashboard";
     }

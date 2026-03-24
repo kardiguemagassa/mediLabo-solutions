@@ -17,17 +17,17 @@ export class NotificationService {
         .pipe(tap(console.log), catchError(this.handleError))
     );
 
-  sendMessages$ = (form: FormData) =>
+  sendMessages$ = (message: any) =>
     <Observable<IResponse>>(
       this.http
-        .post<IResponse>(`${server}/api/notifications/reply`, form)
+        .post<IResponse>(`${server}/api/notifications/reply`, message)
         .pipe(tap(console.log), catchError(this.handleError))
     );
 
-  replyToMessage$ = (form: FormData) =>
+  replyToMessage$ = (message: any) =>
     <Observable<IResponse>>(
       this.http
-        .post<IResponse>(`${server}/api/notifications/reply`, form)
+        .post<IResponse>(`${server}/api/notifications/reply`, message)
         .pipe(tap(console.log), catchError(this.handleError))
     );
 
@@ -38,10 +38,10 @@ export class NotificationService {
         .pipe(tap(console.log), catchError(this.handleError))
     );
 
-  sendMessage$ = (form: FormData) =>
+  sendMessage$ = (message: any) =>
     <Observable<IResponse>>(
       this.http
-        .post<IResponse>(`${server}/api/notifications/messages`, form)
+        .post<IResponse>(`${server}/api/notifications/messages`, message)
         .pipe(tap(console.log), catchError(this.handleError))
     );
 

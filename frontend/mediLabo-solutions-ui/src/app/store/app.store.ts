@@ -569,7 +569,7 @@ export const AppStore = signalStore(
                     }
                 })
             )))),
-        sendMessage: rxMethod<FormData>(pipe(
+        sendMessage: rxMethod<any>(pipe(
             tap(() => patchState(store, { loading: true, error: null })),
             switchMap((form) => notificationService.sendMessage$(form).pipe(
                 tapResponse({
@@ -595,7 +595,7 @@ export const AppStore = signalStore(
                     }
                 })
             )))),
-        replyToMessage: rxMethod<FormData>(pipe(
+        replyToMessage: rxMethod<any>(pipe(
             tap(() => patchState(store, { error: null })),
             switchMap((form) => notificationService.replyToMessage$(form).pipe(
                 tapResponse({

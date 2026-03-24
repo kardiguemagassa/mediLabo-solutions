@@ -4,6 +4,7 @@ import com.openclassrooms.notificationservice.domain.Response;
 import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
 import com.openclassrooms.notificationservice.dtorequest.UserRequest;
 import com.openclassrooms.notificationservice.service.NotificationService;
+import com.openclassrooms.notificationservice.service.UserServiceClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -46,19 +47,8 @@ import static org.springframework.http.HttpStatus.OK;
 @RequiredArgsConstructor
 @RequestMapping("/api/notifications")
 public class NotificationResource {
-
     private final NotificationService notificationService;
 
-    // ==================== ENVOI DE MESSAGES ====================
-
-    /**
-     * Envoie un nouveau message.
-     *
-     * FLUX:
-     * 1. Extraction des infos sender depuis le JWT
-     * 2. Appel réactif au service
-     * 3. Mapping du résultat vers ResponseEntity
-     */
     @Operation(summary = "Envoyer un nouveau message")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Message créé avec succès"),
@@ -68,33 +58,21 @@ public class NotificationResource {
             @ApiResponse(responseCode = "503", description = "Service Auth Server indisponible")
     })
     @PostMapping("/messages")
-    public Mono<ResponseEntity<Response>> sendMessage(
-            @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request,
-            @Valid @RequestBody MessageRequest messageRequest) {
+    public Mono<ResponseEntity<Response>> sendMessage(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) {
 
         log.info("Envoi message de {} vers {}", jwt.getClaim("email"), messageRequest.getReceiverEmail());
 
-        // Construire l'expéditeur depuis les claims JWT
         UserRequest sender = buildSenderFromJwt(jwt);
 
         return notificationService.sendMessage(messageRequest, sender)
-                // map : Transformer le MessageResponse en ResponseEntity
                 .map(messageResponse -> ResponseEntity
                         .created(URI.create("/api/notifications/messages/" + messageResponse.getConversationId()))
                         .body(getResponse(request, of("message", messageResponse), "Message envoyé avec succès", CREATED)));
     }
 
-    /**
-     * Répond à un message existant.
-     * Utilise le même flux que sendMessage car la logique est identique.
-     */
     @Operation(summary = "Répondre à un message")
     @PostMapping("/reply")
-    public Mono<ResponseEntity<Response>> replyMessage(
-            @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request,
-            @Valid @RequestBody MessageRequest messageRequest) {
+    public Mono<ResponseEntity<Response>> replyMessage(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) {
 
         log.info("Réponse de {} dans conversation {}", jwt.getClaim("email"), messageRequest.getConversationId());
 
@@ -106,47 +84,17 @@ public class NotificationResource {
                         .body(getResponse(request, of("message", messageResponse), "Réponse envoyée avec succès", CREATED)));
     }
 
-    // ==================== RÉCUPÉRATION DES MESSAGES ====================
-
-    /**
-     * Récupère tous les messages de l'utilisateur connecté (Inbox).
-     *
-     * FLUX:
-     * 1. Récupération des messages (Flux)
-     * 2. Récupération du compteur non-lus (Mono)
-     * 3. Combinaison des deux résultats avec Mono.zip()
-     * 4. Construction de la réponse
-     */
     @Operation(summary = "Récupérer tous les messages de l'utilisateur connecté")
     @GetMapping("/messages")
-    public Mono<ResponseEntity<Response>> getMessages(
-            @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> getMessages(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
 
         String userUuid = extractUserUuid(jwt);
         log.debug("Récupération messages pour user: {}", userUuid);
 
-        /*
-         * Mono.zip() : Combine plusieurs Mono en un seul
-         * - Premier argument : les messages collectés en liste
-         * - Deuxième argument : le compteur de non-lus
-         * Le résultat est un Tuple2 contenant les deux valeurs
-         */
-        return Mono.zip(
-                // collectList() : Convertit Flux<MessageResponse> → Mono<List<MessageResponse>>
-                notificationService.getMessages(userUuid).collectList(),
-                notificationService.getUnreadCount(userUuid)
-        ).map(tuple -> {
-            // tuple.getT1() = List<MessageResponse>
-            // tuple.getT2() = Integer (unreadCount)
+        return Mono.zip(notificationService.getMessages(userUuid).collectList(), notificationService.getUnreadCount(userUuid)).map(tuple -> {
             var messages = tuple.getT1();
             var unreadCount = tuple.getT2();
-
-            return ResponseEntity.ok(getResponse(
-                    request,
-                    of("messages", messages, "count", messages.size(), "unreadCount", unreadCount),
-                    "Messages récupérés avec succès",
-                    OK));
+            return ResponseEntity.ok(getResponse(request, of("messages", messages, "count", messages.size(), "unreadCount", unreadCount), "Messages récupérés avec succès", OK));
         });
     }
 
@@ -158,73 +106,39 @@ public class NotificationResource {
      */
     @Operation(summary = "Récupérer une conversation par ID")
     @GetMapping("/messages/{conversationId}")
-    public Mono<ResponseEntity<Response>> getConversation(
-            @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request,
-            @Parameter(description = "UUID de la conversation")
-            @PathVariable String conversationId) {
+    public Mono<ResponseEntity<Response>> getConversation(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Parameter(description = "UUID de la conversation") @PathVariable String conversationId) {
 
         String userUuid = extractUserUuid(jwt);
         log.debug("Récupération conversation {} pour user {}", conversationId, userUuid);
 
-        return notificationService.getConversation(userUuid, conversationId)
-                // collectList() : Flux → Mono<List>
-                .collectList()
-                .map(messages -> ResponseEntity.ok(getResponse(
-                        request,
-                        of("conversation", messages, "count", messages.size()),
-                        "Conversation récupérée avec succès",
-                        OK)));
+        return notificationService.getConversation(userUuid, conversationId).collectList()
+                .map(messages -> ResponseEntity.ok(getResponse(request, of("conversation", messages, "count", messages.size()), "Conversation récupérée avec succès", OK)));
     }
-
-    // ==================== COMPTEURS ====================
 
     /**
      * Récupère le nombre de messages non lus.
      */
     @Operation(summary = "Récupérer le nombre de messages non lus")
     @GetMapping("/messages/unread/count")
-    public Mono<ResponseEntity<Response>> getUnreadCount(
-            @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> getUnreadCount(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
 
         String userUuid = extractUserUuid(jwt);
         log.debug("Comptage non-lus pour user: {}", userUuid);
 
         return notificationService.getUnreadCount(userUuid)
-                .map(unreadCount -> ResponseEntity.ok(getResponse(
-                        request,
-                        of("unreadCount", unreadCount),
-                        "Compteur récupéré avec succès",
-                        OK)));
+                .map(unreadCount -> ResponseEntity.ok(getResponse(request, of("unreadCount", unreadCount), "Compteur récupéré avec succès", OK)));
     }
 
-    // ==================== ACTIONS ====================
-
-    /**
-     * Marque un message comme lu.
-     */
     @Operation(summary = "Marquer un message comme lu")
     @PatchMapping("/messages/{messageId}/read")
-    public Mono<ResponseEntity<Response>> markAsRead(
-            @AuthenticationPrincipal Jwt jwt,
-            HttpServletRequest request,
-            @Parameter(description = "ID du message")
-            @PathVariable Long messageId) {
+    public Mono<ResponseEntity<Response>> markAsRead(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Parameter(description = "ID du message") @PathVariable Long messageId) {
 
         String userUuid = extractUserUuid(jwt);
         log.debug("Marquage message {} comme lu pour user {}", messageId, userUuid);
 
         return notificationService.markMessageAsRead(userUuid, messageId)
-                // then() retourne Mono<Void>, on le transforme en Mono<ResponseEntity>
-                .then(Mono.just(ResponseEntity.ok(getResponse(
-                        request,
-                        of("messageId", messageId, "status", "READ"),
-                        "Message marqué comme lu",
-                        OK))));
+                .then(Mono.just(ResponseEntity.ok(getResponse(request, of("messageId", messageId, "status", "READ"), "Message marqué comme lu", OK))));
     }
-
-    // ==================== HELPER METHODS ====================
 
     /**
      * Construit un UserRequest à partir des claims JWT.
@@ -259,7 +173,7 @@ public class NotificationResource {
         String firstName = jwt.getClaim("first_name");
         if (firstName != null) return firstName;
 
-        // Fallback : essayer de parser le claim "name"
+        /** Fallback : essayer de parser le claim "name"*/
         String name = jwt.getClaim("name");
         if (name != null && name.contains(" ")) {
             return name.split(" ")[0];
@@ -275,7 +189,7 @@ public class NotificationResource {
         String lastName = jwt.getClaim("last_name");
         if (lastName != null) return lastName;
 
-        // Fallback : essayer de parser le claim "name"
+        /** Fallback : essayer de parser le claim "name"*/
         String name = jwt.getClaim("name");
         if (name != null && name.contains(" ")) {
             String[] parts = name.split(" ");
