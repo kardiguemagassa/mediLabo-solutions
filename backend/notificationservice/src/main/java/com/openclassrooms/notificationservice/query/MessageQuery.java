@@ -10,7 +10,6 @@ package com.openclassrooms.notificationservice.query;
  */
 public class MessageQuery {
 
-    // CREATE MESSAGE - APPELLE FONCTION POSTGRESQL
     public static final String CREATE_MESSAGE_FUNCTION =
             """
             SELECT * FROM create_message(
@@ -31,7 +30,6 @@ public class MessageQuery {
             )
             """;
 
-    // SELECT MESSAGES - TOUS LES MESSAGES D'UN USER
     public static final String SELECT_MESSAGES_QUERY =
             """
             SELECT 
@@ -59,7 +57,6 @@ public class MessageQuery {
             ORDER BY m.created_at DESC
             """;
 
-    // SELECT MESSAGES BY CONVERSATION - MESSAGES D'UNE CONVERSATION
     public static final String SELECT_MESSAGES_BY_CONVERSATION_ID_QUERY =
             """
             SELECT 
@@ -87,7 +84,6 @@ public class MessageQuery {
             ORDER BY m.created_at ASC
             """;
 
-    // SELECT MESSAGE STATUS - STATUS D'UN MESSAGE POUR UN USER
     public static final String SELECT_MESSAGE_STATUS_QUERY =
             """
             SELECT ms.message_status 
@@ -95,15 +91,12 @@ public class MessageQuery {
             WHERE ms.user_uuid = :userUuid AND ms.message_id = :messageId
             """;
 
-    // UPDATE MESSAGE STATUS - MARQUER COMME LU/NON-LU
     public static final String UPDATE_MESSAGE_STATUS_QUERY =
             """
             UPDATE message_statuses 
             SET message_status = :status, read_at = CASE WHEN :status = 'READ' THEN NOW() ELSE read_at END
             WHERE user_uuid = :userUuid AND message_id = :messageId
             """;
-
-    // COUNT MESSAGES - VERIFIER SI UNE CONVERSATION EXISTE
     public static final String SELECT_MESSAGE_COUNT_QUERY =
             """
             SELECT COUNT(m.message_id) 
@@ -112,7 +105,6 @@ public class MessageQuery {
                OR (m.sender_email = :receiverEmail AND m.receiver_uuid = :userUuid)
             """;
 
-    // SELECT CONVERSATION ID - RECUPERER ID D'UNE CONVERSATION EXISTANTE
     public static final String SELECT_CONVERSATION_ID_QUERY =
             """
             SELECT m.conversation_id 
@@ -122,7 +114,6 @@ public class MessageQuery {
             LIMIT 1
             """;
 
-    // SELECT CONVERSATIONS - LISTE DES CONVERSATION D'UN USER
     public static final String SELECT_USER_CONVERSATIONS_QUERY =
             """
             SELECT 
@@ -157,7 +148,6 @@ public class MessageQuery {
             ORDER BY c.last_message_at DESC
             """;
 
-    // GET UNREAD COUNT - NOMBRE DE MESSAGES NON LUS POUR UN USER
     public static final String SELECT_UNREAD_COUNT_QUERY =
             """
             SELECT COUNT(*) 

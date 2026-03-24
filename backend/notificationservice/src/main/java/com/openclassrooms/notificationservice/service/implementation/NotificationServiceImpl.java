@@ -20,13 +20,9 @@ import static com.openclassrooms.notificationservice.utils.NotificationUtils.ran
 
 /**
  * Implémentation réactive du service de notification.
- *
- * ARCHITECTURE RÉACTIVE:
  * - Mono<T> : Représente 0 ou 1 élément (équivalent à Optional réactif)
  * - Flux<T> : Représente 0 à N éléments (équivalent à Stream réactif)
  * - Schedulers.boundedElastic() : Thread-pool pour opérations bloquantes (JDBC)
- *
- * PATTERN UTILISÉ:
  * - Mono.fromCallable() : Encapsule les appels JDBC synchrones dans un contexte réactif
  * - subscribeOn() : Déplace l'exécution vers un thread-pool dédié
  * - flatMap() : Chaîne les opérations asynchrones séquentiellement
@@ -45,12 +41,8 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserServiceClient userService;
     private final MessageMapper messageMapper;
 
-    // ==================== ENVOI DE MESSAGE ====================
-
     /**
      * Envoie un message de manière réactive.
-     *
-     * FLUX D'EXÉCUTION:
      * 1. Appel réactif à Auth Server pour récupérer le destinataire (UserService)
      * 2. Si destinataire introuvable → erreur
      * 3. Vérification/création de conversation (JDBC sur boundedElastic)
@@ -65,44 +57,29 @@ public class NotificationServiceImpl implements NotificationService {
     public Mono<MessageResponse> sendMessage(MessageRequest request, UserRequest sender) {
         log.info("Envoi de message de {} vers {}", sender.getEmail(), request.getReceiverEmail());
 
-        // Étape 1: Récupérer le destinataire via Auth Server (appel HTTP réactif)
-        return userService.getUserByEmail(request.getReceiverEmail())
-                // Étape 2: Si Mono vide (user non trouvé) → erreur
-                .switchIfEmpty(Mono.error(new ApiException("Destinataire introuvable : " + request.getReceiverEmail())))
-                // Étape 3: Traitement JDBC (bloquant) → on le déplace sur boundedElastic
-                .flatMap(receiver -> Mono.fromCallable(() -> {
-                            /*
-                             * fromCallable() encapsule le code bloquant dans un Callable
-                             * Ce code sera exécuté sur le Scheduler spécifié (boundedElastic)
-                             * et non sur le thread principal (event loop)
-                             */
+        return Mono.zip(userService.getUserByEmail(sender.getEmail()).defaultIfEmpty(sender), userService.getUserByEmail(request.getReceiverEmail())
+                        .switchIfEmpty(Mono.error(new ApiException("Destinataire introuvable : " + request.getReceiverEmail()))))
+                .flatMap(tuple -> {UserRequest enrichedSender = tuple.getT1();UserRequest receiver = tuple.getT2();
 
-                            // Vérifier si une conversation existe déjà entre les deux utilisateurs
-                            String conversationId = notificationRepository.conversationExists(sender.getUserUuid(), receiver.getEmail())
-                                    ? notificationRepository.getConversationId(sender.getUserUuid(), receiver.getEmail())
-                                    : randomUUID.get();
+            UserRequest finalSender = sender.toBuilder().imageUrl(enrichedSender.getImageUrl()).build();
 
-                            // Mapper la requête + infos users → Entity Message
-                            Message messageToSave = messageMapper.toEntity(request, sender, receiver);
-                            messageToSave.setConversationId(conversationId);
+            return Mono.fromCallable(() -> {
+                String conversationId = notificationRepository.conversationExists(finalSender.getUserUuid(), receiver.getEmail())
+                        ? notificationRepository.getConversationId(finalSender.getUserUuid(), receiver.getEmail())
+                        : randomUUID.get();
 
-                            // Sauvegarder en base (appel JDBC bloquant)
-                            Message savedMessage = notificationRepository.saveMessage(messageToSave);
-                            log.info("Message créé avec succès: {}", savedMessage.getMessageUuid());
+                Message messageToSave = messageMapper.toEntity(request, finalSender, receiver);
+                messageToSave.setConversationId(conversationId);
 
-                            // Mapper Entity → Response DTO
-                            return messageMapper.toResponseWithUserInfo(savedMessage);
-                        })
-                        // subscribeOn() déplace TOUTE la chaîne fromCallable sur boundedElastic
-                        .subscribeOn(Schedulers.boundedElastic()));
+                Message savedMessage = notificationRepository.saveMessage(messageToSave);
+                log.info("Message créé avec succès: {}", savedMessage.getMessageUuid());
+                return messageMapper.toResponseWithUserInfo(savedMessage);
+            }).subscribeOn(Schedulers.boundedElastic());
+        });
     }
-
-    // RÉCUPÉRATION DES MESSAGES
 
     /**
      * Récupère tous les messages d'un utilisateur (Inbox).
-     *
-     * FLUX D'EXÉCUTION:
      * 1. Appel JDBC pour récupérer la liste des messages
      * 2. Conversion List<Message> → Flux<Message>
      * 3. Mapping de chaque message vers MessageResponse
@@ -113,31 +90,17 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Flux<MessageResponse> getMessages(String userUuid) {
         log.debug("Récupération messages pour user: {}", userUuid);
-
-        // Mono.fromCallable : encapsule l'appel JDBC bloquant
         return Mono.fromCallable(() -> notificationRepository.getMessages(userUuid))
-                // Exécuter sur thread-pool élastique (pour ne pas bloquer l'event loop)
                 .subscribeOn(Schedulers.boundedElastic())
-                // flatMapMany : Convertit Mono<List<Message>> → Flux<Message>
-                // Chaque élément de la liste devient un élément du Flux
                 .flatMapMany(Flux::fromIterable)
-                // map : Transformer chaque Message → MessageResponse
                 .map(messageMapper::toResponseWithUserInfo);
     }
 
-    //  RÉCUPÉRATION D'UNE CONVERSATION
-
     /**
      * Récupère les messages d'une conversation et marque les non-lus comme lus.
-     *
-     * FLUX D'EXÉCUTION:
      * 1. Appel JDBC pour récupérer les messages de la conversation
      * 2. Pour chaque message UNREAD → mise à jour du statut en READ
      * 3. Mapping vers MessageResponse
-     *
-     * NOTE: Le marquage comme lu est fait de manière réactive pour chaque message
-     * individuellement. Une alternative serait de faire un UPDATE en batch.
-     *
      * @param userUuid L'UUID de l'utilisateur
      * @param conversationId L'ID de la conversation
      * @return Flux<MessageResponse> Stream réactif des messages de la conversation
@@ -149,16 +112,9 @@ public class NotificationServiceImpl implements NotificationService {
         return Mono.fromCallable(() -> notificationRepository.getConversations(userUuid, conversationId))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
-                // flatMap (au lieu de map) car l'opération interne retourne un Mono
                 .flatMap(message -> {
-                    // Si le message est non lu, le marquer comme lu
                     if ("UNREAD".equals(message.getStatus())) {
-                        /*
-                         * On retourne un Mono qui:
-                         * 1. Met à jour le statut en base (JDBC)
-                         * 2. Met à jour l'objet en mémoire
-                         * 3. Retourne l'objet mis à jour
-                         */
+
                         return Mono.fromCallable(() -> {
                                     notificationRepository.updateMessageStatus(userUuid, message.getMessageId(), "READ");
                                     message.setStatus("READ");
@@ -166,14 +122,10 @@ public class NotificationServiceImpl implements NotificationService {
                                 })
                                 .subscribeOn(Schedulers.boundedElastic());
                     }
-                    // Si déjà lu, retourner directement (pas d'appel JDBC)
                     return Mono.just(message);
                 })
-                // Transformer chaque Message → MessageResponse
                 .map(messageMapper::toResponseWithUserInfo);
     }
-
-    // ==================== COMPTAGE DES NON-LUS ====================
 
     /**
      * Compte le nombre de messages non lus pour un utilisateur.
@@ -184,13 +136,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Mono<Integer> getUnreadCount(String userUuid) {
         log.debug("Comptage messages non lus pour user: {}", userUuid);
-
-        // Simple encapsulation d'un appel JDBC
-        return Mono.fromCallable(() -> notificationRepository.getUnreadCount(userUuid))
-                .subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(() -> notificationRepository.getUnreadCount(userUuid)).subscribeOn(Schedulers.boundedElastic());
     }
-
-    // ==================== MARQUAGE COMME LU ====================
 
     /**
      * Marque un message spécifique comme lu.
@@ -205,10 +152,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         return Mono.fromCallable(() -> notificationRepository.updateMessageStatus(userUuid, messageId, "READ"))
                 .subscribeOn(Schedulers.boundedElastic())
-                // doOnSuccess : Side effect pour logging (n'affecte pas le flux)
                 .doOnSuccess(status -> log.info("Message {} marqué comme lu", messageId))
-                // then() : Ignore la valeur retournée et convertit en Mono<Void>
-                // Utile pour les opérations "fire and forget" où seul le succès compte
                 .then();
     }
 }

@@ -43,7 +43,7 @@ public class EmailServiceImpl implements EmailService {
     private String fromEmail;
 
 
-    // AUTHENTIFICATION
+    /** AUTHENTIFICATION */
     @Override
     @Async
     public void sendAccountVerificationEmail(String name, String email, String token) {
@@ -68,7 +68,7 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(email, SUBJECT_PASSWORD_RESET, TEMPLATE_PASSWORD_RESET, variables);
     }
 
-    // PATIENTS
+    /** PATIENTS */
     @Override
     @Async
     public void sendWelcomePatientEmail(String name, String email, String recordNumber) {
@@ -109,7 +109,7 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(email, SUBJECT_PATIENT_DELETED, TEMPLATE_PATIENT_DELETED, variables);
     }
 
-    // RENDEZ-VOUS
+    /** RENDEZ-VOUS */
     @Override
     @Async
     public void sendAppointmentConfirmationEmail(String name, String email, String appointmentDate, String appointmentTime, String doctorName, String department, String location) {
@@ -143,7 +143,7 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(email, SUBJECT_APPOINTMENT_REMINDER, TEMPLATE_APPOINTMENT_REMINDER, variables);
     }
 
-    // NOTES MÉDICALES
+    /** NOTES MÉDICALES */
     @Override
     @Async
     public void sendNewMedicalNoteEmail(String name, String email, String patientNumber, String doctorName, String department, String date, String notePreview) {
@@ -258,7 +258,7 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(email, SUBJECT_FILE_DELETED, TEMPLATE_FILE_DELETED, variables);
     }
 
-    // RÉSULTATS & ÉVALUATIONS
+    /** RÉSULTATS & ÉVALUATIONS */
     @Override
     @Async
     public void sendResultsAvailableEmail(String name, String email, String patientNumber, String analysisType, String laboratory, String sampleDate, String files) {
@@ -313,7 +313,7 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(email, SUBJECT_ASSESSMENT_COMPLETED, TEMPLATE_ASSESSMENT_COMPLETED, variables);
     }
 
-    // MESSAGES
+    /** MESSAGES */
     @Override
     @Async
     public void sendNewMessageEmail(String name, String email, String senderName, String senderRole, String subject, String messagePreview) {
@@ -329,8 +329,6 @@ public class EmailServiceImpl implements EmailService {
 
         sendEmail(email, SUBJECT_NEW_MESSAGE + " de " + senderName, TEMPLATE_NEW_MESSAGE, variables);
     }
-
-    // MÉTHODES UTILITAIRES PRIVÉES
 
     /**
      * Envoie un email avec le template Thymeleaf spécifié.

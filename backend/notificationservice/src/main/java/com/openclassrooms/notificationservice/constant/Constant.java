@@ -14,7 +14,7 @@ public class Constant {
     // ENCODAGE
     public static final String UTF_8_ENCODING = "UTF-8";
 
-    // SUJETS D'EMAIL
+    /** SUJETS D'EMAIL */
     public static final String SUBJECT_ACCOUNT_VERIFICATION = "MediLabo - Vérification de votre compte";
     public static final String SUBJECT_PASSWORD_RESET = "MediLabo - Réinitialisation de votre mot de passe";
     public static final String SUBJECT_APPOINTMENT_CONFIRMATION = "MediLabo - Confirmation de votre rendez-vous";
@@ -35,7 +35,7 @@ public class Constant {
     public static final String SUBJECT_PATIENT_UPDATED = "MediLabo - Votre dossier patient a été mis à jour";
     public static final String SUBJECT_PATIENT_DELETED = "MediLabo - Votre dossier patient a été supprimé";
 
-    // NOMS DES TEMPLATES THYMELEAF
+    /** NOMS DES TEMPLATES THYMELEAF */
     public static final String TEMPLATE_ACCOUNT_VERIFICATION = "account-verification";
     public static final String TEMPLATE_PASSWORD_RESET = "password-reset";
     public static final String TEMPLATE_WELCOME_PATIENT = "welcome-patient";

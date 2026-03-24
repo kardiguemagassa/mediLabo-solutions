@@ -50,7 +50,6 @@ public class NotificationListener {
     private void processNotification(Notification notification, Data data) {
         switch (notification.getPayload().getEventType()) {
 
-            // AUTHENTIFICATION
             case USER_CREATED -> {
                 log.info("Traitement USER_CREATED pour: {}", data.getEmail());
                 emailService.sendAccountVerificationEmail(
@@ -98,7 +97,6 @@ public class NotificationListener {
                 );
             }
 
-            // RENDEZ-VOUS
             case APPOINTMENT_CREATED -> {
                 log.info("Traitement APPOINTMENT_CREATED pour: {}", data.getEmail());
                 emailService.sendAppointmentConfirmationEmail(
@@ -124,7 +122,6 @@ public class NotificationListener {
                 );
             }
 
-            // NOTES MÉDICALES
             case NOTE_CREATED -> {
                 log.info("Traitement NOTE_CREATED pour: {}", data.getEmail());
                 emailService.sendNewMedicalNoteEmail(
@@ -211,7 +208,6 @@ public class NotificationListener {
                 );
             }
 
-            // RÉSULTATS & ÉVALUATIONS
             case RESULTS_AVAILABLE -> {
                 log.info("Traitement RESULTS_AVAILABLE pour: {}", data.getEmail());
                 emailService.sendResultsAvailableEmail(
@@ -253,7 +249,6 @@ public class NotificationListener {
                 );
             }
 
-            // MESSAGES
             case NEW_MESSAGE -> {
                 log.info("Traitement NEW_MESSAGE pour: {}", data.getEmail());
                 emailService.sendNewMessageEmail(

@@ -9,18 +9,17 @@ package com.openclassrooms.notificationservice.enumeration;
  */
 public enum EventType {
 
-    // AUTHENTIFICATION
     USER_CREATED,
     PASSWORD_RESET,
-    // PATIENTS
+
     PATIENT_CREATED,
     PATIENT_UPDATED,
     PATIENT_DELETED,
-    // RENDEZ-VOUS
+
     APPOINTMENT_CREATED,
     APPOINTMENT_REMINDER,
     APPOINTMENT_CANCELLED,
-    // NOTES MÉDICALES
+
     NOTE_CREATED,
     NOTE_UPDATED,
     COMMENT_CREATED,
@@ -28,11 +27,11 @@ public enum EventType {
     COMMENT_DELETED,
     FILE_DELETED,
     FILE_UPLOADED,
-    // RÉSULTATS & ÉVALUATIONS
+
     RESULTS_AVAILABLE,
     RISK_ASSESSMENT,
-    ASSESSMENT_COMPLETED,  // Nouveau
-    // MESSAGES
+    ASSESSMENT_COMPLETED,
+
     NEW_MESSAGE
 
 }

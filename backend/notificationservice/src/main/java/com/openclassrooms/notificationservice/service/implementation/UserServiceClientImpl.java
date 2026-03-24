@@ -35,16 +35,13 @@ public class UserServiceClientImpl implements UserServiceClient {
         return authServerWebClient.get()
                 .uri("/user/{uuid}", userUuid)
                 .retrieve()
-                // On transforme le 404 en Mono vide proprement
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
-                // On vérifie la présence de la donnée "user"
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
                 .map(response -> RequestUtils.convertResponse(response, UserRequest.class, "user"))
                 .timeout(TIMEOUT)
-                // En cas d'erreur inattendue, on bascule sur le fallback via un flux vide
                 .onErrorResume(e -> {
                     log.error("Erreur lors de la récupération de l'utilisateur {}: {}", userUuid, e.getMessage());
                     return Mono.empty();
@@ -73,7 +70,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                 });
     }
 
-    // FALLBACKS
+    /** FALLBACKS */
 
     public Mono<UserRequest> getUserByUuidFallback(String userUuid, Throwable t) {
         log.error("Fallback getUserByUuid - UUID: {}, Cause: {}", userUuid, t.getMessage());

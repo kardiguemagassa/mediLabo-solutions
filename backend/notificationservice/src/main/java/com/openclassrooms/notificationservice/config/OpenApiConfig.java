@@ -27,10 +27,8 @@ public class OpenApiConfig {
                 final String securitySchemeName = "bearerAuth";
 
                 return new OpenAPI()
-                        // (Security Requirement) sur toutes les routes
                         .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                         .components(new Components()
-                                // 1. Définition du schéma de sécurité pour le JWT
                                 .addSecuritySchemes(securitySchemeName,
                                         new SecurityScheme()
                                                 .name(securitySchemeName)
@@ -39,7 +37,6 @@ public class OpenApiConfig {
                                                 .bearerFormat("JWT")
                                                 .description("Entrez le token JWT extrait du cookie d'authentification pour tester les routes."))
 
-                                // Réponses d'erreurs réutilisables
                                 .addResponses("Unauthorized", new ApiResponse().description("Échec de l'authentification : Token manquant, invalide ou expiré."))
                                 .addResponses("Forbidden", new ApiResponse().description("Accès refusé : Vous n'avez pas les permissions nécessaires pour voir ces messages."))
                                 .addResponses("NotFound", new ApiResponse().description("La conversation ou le message demandé n'existe pas."))

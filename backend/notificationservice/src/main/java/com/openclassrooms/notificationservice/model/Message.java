@@ -22,17 +22,14 @@ public class Message {
     private Long messageId;
     private String messageUuid;
     private String conversationId;
-    // Message content
     private String subject;
     private String message;
     private String status;
-    // Sender info Auth Server
     private String senderUuid;
     private String senderName;
     private String senderEmail;
     private String senderImageUrl;
     private String senderRole;
-    // Receiver info Auth Server
     private String receiverUuid;
     private String receiverName;
     private String receiverEmail;
