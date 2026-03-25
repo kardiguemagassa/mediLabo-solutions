@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { UserService } from '../../service/user.service';
 import { StorageService } from '../../service/storage.service';
+import { PermissionService } from '../../service/permission.service';
 import { AppStore } from '../../store/app.store';
 import { logoutUrl } from '../../utils/fileutils';
 
@@ -17,14 +18,20 @@ import { logoutUrl } from '../../utils/fileutils';
 export class NavbarComponent {
   isNavOpen = signal(false);
   isMenuOpen = signal(false);
-  private userService = inject(UserService);
-  private storage = inject(StorageService);
-  protected store = inject(AppStore);
+
+  private readonly userService = inject(UserService);
+  private readonly storage = inject(StorageService);
+  protected readonly store = inject(AppStore);
+  protected readonly perm = inject(PermissionService);
 
   ngOnInit() {
-    this.store?.getProfile();
-    this.store?.getMessages();
-    this.store?.getAllPatients();
+    this.store.getProfile();
+    this.store.getMessages();
+
+    // Charger les patients uniquement si l'utilisateur a la permission
+    if (this.perm.canViewPatients()) {
+      this.store.getAllPatients();
+    }
   }
 
   onClick = (event: MouseEvent) => {

@@ -1,248 +1,368 @@
+
 @if (store.loading()) {
-  <div class="flex justify-center items-center py-24">
-    <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin fill-teal-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-      <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
-    </svg>
-  </div>
-} @else if (allPatients()?.length > 0) {
-  <div class="container mx-auto">
-    <!-- Stats Cards -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-      <!-- Total Patients -->
-      <div class="flex flex-col bg-blue-50 border border-blue-100 shadow-sm rounded-xl">
-        <div class="p-4 md:p-5 flex justify-between gap-x-3">
-          <div>
-            <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">TOTAL PATIENTS</p>
-            <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients()?.length }}</h3>
-            </div>
-          </div>
-          <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-500 text-white rounded-full">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
-          </div>
-        </div>
-        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-blue-200 hover:bg-blue-100 focus:outline-none rounded-b-xl transition-colors">
-          Voir les patients
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-        </a>
-      </div>
-
-      <!-- Borderline -->
-      <div class="flex flex-col bg-green-50 border border-green-100 shadow-sm rounded-xl">
-        <div class="p-4 md:p-5 flex justify-between gap-x-3">
-          <div>
-            <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">BORDERLINE</p>
-            <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'BORDERLINE'] }}</h3>
-            </div>
-          </div>
-          <div class="shrink-0 flex justify-center items-center size-[46px] bg-green-500 text-white rounded-full">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-        </div>
-        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-green-200 hover:bg-green-100 focus:outline-none rounded-b-xl transition-colors">
-          Voir les patients
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-        </a>
-      </div>
-
-      <!-- En danger -->
-      <div class="flex flex-col bg-yellow-50 border border-yellow-100 shadow-sm rounded-xl">
-        <div class="p-4 md:p-5 flex justify-between gap-x-3">
-          <div>
-            <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">EN DANGER</p>
-            <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'IN_DANGER'] }}</h3>
-            </div>
-          </div>
-          <div class="shrink-0 flex justify-center items-center size-[46px] bg-yellow-500 text-white rounded-full">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-          </div>
-        </div>
-        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-yellow-200 hover:bg-yellow-100 focus:outline-none rounded-b-xl transition-colors">
-          Voir les patients
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-        </a>
-      </div>
-
-      <!-- Apparition précoce -->
-      <div class="flex flex-col bg-red-50 border border-red-100 shadow-sm rounded-xl">
-        <div class="p-4 md:p-5 flex justify-between gap-x-3">
-          <div>
-            <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">APPARITION PRÉCOCE</p>
-            <div class="mt-1 flex items-center gap-x-2">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'EARLY_ONSET'] }}</h3>
-            </div>
-          </div>
-          <div class="shrink-0 flex justify-center items-center size-[46px] bg-red-500 text-white rounded-full">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-        </div>
-        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-red-200 hover:bg-red-100 focus:outline-none rounded-b-xl transition-colors">
-          Voir les patients
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-        </a>
-      </div>
+    <div class="flex justify-center items-center py-24">
+        <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin fill-teal-600" viewBox="0 0 100 101" fill="none">
+            <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+            <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+        </svg>
     </div>
-
-    <!-- Charts Row -->
-    <div class="mt-7 grid grid-cols-1 gap-y-12 gap-x-6 lg:grid-cols-2">
-      <!-- Répartition des risques (Pie Chart) -->
-      <div class="rounded-xl bg-white border border-gray-200">
-        <div id="riskPieChart">
-          <apx-chart
-            [series]="allPatients() | PieDataValue: ['riskCounts']"
-            [chart]="pieChartOptions.chart"
-            [labels]="['Faible', 'Modéré', 'Élevé']"
-            [colors]="['#22c55e', '#eab308', '#ef4444']"
-            [legend]="pieChartOptions.legend">
-          </apx-chart>
-        </div>
-        <div class="p-6 border-t border-gray-200 px-6 py-5">
-          <div class="antialiased font-sans text-sm leading-normal flex items-center font-normal text-blue-gray-600">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-            </svg>
-            &nbsp;Survolez chaque section pour plus de détails
-          </div>
-        </div>
-      </div>
-
-      <!-- Patients par âge (Bar Chart) -->
-      <div class="relative flex flex-col bg-clip-border rounded-xl bg-white border border-gray-200 shadow-sm">
-        <div class="relative bg-clip-border mx-4 rounded-xl overflow-hidden bg-white text-gray-700">
-          <div id="ageBarChart">
-            <apx-chart
-              [series]="allPatients() | ChartDataValue: ['ageGroups']"
-              [chart]="barChartOptions.chart"
-              [xaxis]="barChartOptions.xaxis"
-              [colors]="['#3b82f6']"
-              [plotOptions]="barChartOptions.plotOptions"
-              [dataLabels]="barChartOptions.dataLabels"
-              [legend]="barChartOptions.legend">
-            </apx-chart>
-          </div>
-        </div>
-        <div class="p-6 border-t border-gray-200 px-6 py-5">
-          <div class="antialiased font-sans text-sm leading-normal flex items-center font-normal text-blue-gray-600">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-            </svg>
-            &nbsp;Survolez chaque section pour plus de détails
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tendances des évaluations (Line Chart) -->
-    <div class="mt-7 p-5 rounded-xl bg-white border border-gray-200">
-      <h6 class="text-base font-semibold text-blue-gray-900">
-        Tendances des évaluations
-      </h6>
-      <div id="trendLineChart">
-        <apx-chart
-          [series]="store.allAssessments() | ChartDataValue: ['trends']"
-          [chart]="lineChartOptions.chart"
-          [xaxis]="lineChartOptions.xaxis"
-          [dataLabels]="lineChartOptions.dataLabels"
-          [grid]="lineChartOptions.grid"
-          [stroke]="lineChartOptions.stroke"
-          [colors]="['#8b5cf6']">
-        </apx-chart>
-      </div>
-    </div>
-
-    <!-- Recent Patients & Alerts -->
-    <div class="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-3">
-      <!-- Patients par risque (Column Chart) -->
-      <div class="flex flex-col bg-clip-border rounded-xl bg-white overflow-hidden xl:col-span-2 border border-gray-200 shadow-sm">
-        <div class="bg-clip-border rounded-xl overflow-hidden bg-transparent shadow-none m-0 flex items-center justify-between p-6">
-          <h6 class="text-base font-semibold text-blue-gray-900">
-            Patients par niveau de risque
-          </h6>
-        </div>
-        <div class="p-6 pb-2">
-          <div id="riskColumnChart">
-            <apx-chart
-              [series]="allPatients() | ChartDataValue: ['riskColumns']"
-              [chart]="columnChartOptions.chart"
-              [dataLabels]="columnChartOptions.dataLabels"
-              [plotOptions]="columnChartOptions.plotOptions"
-              [yaxis]="columnChartOptions.yaxis"
-              [colors]="['#22c55e', '#eab308', '#ef4444']"
-              [fill]="columnChartOptions.fill"
-              [title]="columnChartOptions.title">
-            </apx-chart>
-          </div>
-        </div>
-      </div>
-
-      <!-- Patients à risque élevé -->
-      <div class="flex flex-col rounded-xl bg-white p-6 text-gray-700 border border-gray-200">
-        <div class="rounded-xl text-gray-700">
-          <h6 class="text-base font-semibold text-blue-gray-900">
-            Patients à risque élevé
-          </h6>
-          <div class="mx-auto mt-2 mb-2 border-t border-gray-200"></div>
-        </div>
-        <div class="w-full max-h-96 overflow-y-auto">
-          @if (highRiskPatients().length === 0) {
-            <div class="flex flex-col items-center justify-center py-8">
-              <svg class="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <p class="text-sm text-gray-400">Aucun patient à risque élevé</p>
-            </div>
-          } @else {
-            @for (patient of highRiskPatients() | slice:0:10; track patient.patientUuid) {
-              <div [routerLink]="['/patients/', patient.patientUuid]" class="flex items-center justify-between mb-1.5 py-2 px-1.5 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
-                <div class="flex items-start gap-1">
-                  <img [src]="patient.userInfo?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/2966/2966327.png'" 
-                       [alt]="patient.firstName"
-                       class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-200"
-                       onerror="this.src=`https://cdn-icons-png.flaticon.com/512/2966/2966327.png`">
-                  <div>
-                    <p class="antialiased font-sans text-sm leading-normal text-blue-gray-900 font-medium">
-                      {{ patient.firstName }} {{ patient.lastName }}
-                    </p>
-                    <span class="block antialiased font-sans text-xs font-medium text-blue-gray-500">
-                      {{ patient.age }} ans — Depuis le {{ patient.createdAt | date: 'dd MMM yyyy' }}
-                    </span>
-                  </div>
-                </div>
-                <span [ngClass]="{
-                  'bg-red-500': patient.riskLevel === 'EARLY_ONSET',
-                  'bg-yellow-400': patient.riskLevel === 'IN_DANGER',
-                  'bg-green-500': patient.riskLevel === 'BORDERLINE'
-                }" class="px-1 py-0.5 text-[10px] align-middle text-white font-bold rounded-md">
-                  {{ patient.riskLevel === 'EARLY_ONSET' ? 'DANGER' : patient.riskLevel === 'IN_DANGER' ? 'LIMITE' : 'AUCUN' }}
-                </span>
-              </div>
-            }
-          }
-        </div>
-      </div>
-    </div>
-  </div>
 } @else {
-  <div class="flex flex-col items-center justify-center py-24">
-    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-    <p class="text-gray-500 font-medium">Aucun patient enregistré</p>
-    <p class="text-sm text-gray-400 mt-1">Ajoutez un patient pour commencer</p>
-  </div>
+    <div class="container mx-auto space-y-6">
+
+        <!-- BIENVENUE tous les rôles -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div class="flex items-center gap-4">
+                <img [src]="store.profile()?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+                     class="w-16 h-16 rounded-full object-cover ring-2 ring-gray-100"
+                     onerror="this.src=`https://cdn-icons-png.flaticon.com/512/149/149071.png`">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Bonjour, {{store.profile()?.firstName}} !</h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        @if (perm.isStaff()) {
+                            Bienvenue sur votre espace clinique MediLabo
+                        } @else {
+                            Bienvenue sur votre espace patient MediLabo
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!--  LINKS tous les rôles  -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a routerLink="/profile" class="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-teal-300 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-900">Mon profil</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Gérer mes informations</p>
+                </div>
+            </a>
+
+            <a routerLink="/messages" class="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-teal-300 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-900">Messages</p>
+                    <p class="text-xs text-gray-500 mt-0.5">{{store.unreadMessageCount() || 0}} non lu(s)</p>
+                </div>
+            </a>
+
+            @if (perm.canViewPatients()) {
+                <a routerLink="/patients" class="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-teal-300 hover:shadow-md transition-all">
+                    <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">Patients</p>
+                        <p class="text-xs text-gray-500 mt-0.5">{{allPatients()?.length || 0}} enregistrés</p>
+                    </div>
+                </a>
+            }
+
+            <a routerLink="/profile" fragment="password" class="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-teal-300 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-900">Sécurité</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Mot de passe & 2FA</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- SECTION PATIENT (USER sans accès clinique)-->
+        @if (!perm.isStaff()) {
+
+            <!-- Mon dossier médical -->
+            @if (myRecord()) {
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Mon dossier médical
+                            </h2>
+                            <span class="text-xs text-gray-400 font-mono">N° {{myRecord()!.medicalRecordNumber}}</span>
+                        </div>
+                    </div>
+
+                    <div class="p-5 space-y-5">
+                        <!-- Infos générales -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p class="text-xs text-gray-400">Âge</p>
+                                <p class="text-lg font-bold text-gray-900">{{myRecord()!.age}} ans</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p class="text-xs text-gray-400">Genre</p>
+                                <p class="text-lg font-bold text-gray-900">{{myRecord()!.gender === 'MALE' ? 'Homme' : 'Femme'}}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p class="text-xs text-gray-400">Groupe sanguin</p>
+                                <p class="text-lg font-bold text-gray-900">{{myRecord()!.bloodType || '—'}}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p class="text-xs text-gray-400">Date de naissance</p>
+                                <p class="text-sm font-bold text-gray-900">{{myRecord()!.dateOfBirth}}</p>
+                            </div>
+                        </div>
+
+                        <!-- Mesures physiques -->
+                        @if (myRecord()!.heightCm || myRecord()!.weightKg) {
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                                    <p class="text-xs text-blue-500">Taille</p>
+                                    <p class="text-lg font-bold text-blue-700">{{myRecord()!.heightCm ? myRecord()!.heightCm + ' cm' : '—'}}</p>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-3 border border-green-100">
+                                    <p class="text-xs text-green-500">Poids</p>
+                                    <p class="text-lg font-bold text-green-700">{{myRecord()!.weightKg ? myRecord()!.weightKg + ' kg' : '—'}}</p>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Infos médicales -->
+                        @if (myRecord()!.allergies || myRecord()!.chronicConditions || myRecord()!.currentMedications) {
+                            <div class="space-y-3">
+                                @if (myRecord()!.allergies) {
+                                    <div class="flex items-start gap-3 p-3 bg-red-50 border border-red-100 rounded-lg">
+                                        <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <div>
+                                            <p class="text-xs font-medium text-red-700">Allergies</p>
+                                            <p class="text-sm text-red-600">{{myRecord()!.allergies}}</p>
+                                        </div>
+                                    </div>
+                                }
+                                @if (myRecord()!.chronicConditions) {
+                                    <div class="flex items-start gap-3 p-3 bg-amber-50 border border-amber-100 rounded-lg">
+                                        <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <div>
+                                            <p class="text-xs font-medium text-amber-700">Conditions chroniques</p>
+                                            <p class="text-sm text-amber-600">{{myRecord()!.chronicConditions}}</p>
+                                        </div>
+                                    </div>
+                                }
+                                @if (myRecord()!.currentMedications) {
+                                    <div class="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                                        <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                        <div>
+                                            <p class="text-xs font-medium text-blue-700">Médicaments actuels</p>
+                                            <p class="text-sm text-blue-600">{{myRecord()!.currentMedications}}</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Évaluation du risque -->
+                        @if (myAssessment()) {
+                            <div class="border-t border-gray-100 pt-4">
+                                <h3 class="text-sm font-medium text-gray-700 mb-3">Évaluation du risque diabète</h3>
+                                <div class="flex items-center gap-3">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border" [ngClass]="getRiskBadgeClass(myAssessment()!.riskLevel)">
+                                        <span class="w-2 h-2 rounded-full" [ngClass]="{
+                                            'bg-emerald-500': myAssessment()!.riskLevel === 'NONE',
+                                            'bg-amber-500': myAssessment()!.riskLevel === 'BORDERLINE',
+                                            'bg-orange-500': myAssessment()!.riskLevel === 'IN_DANGER',
+                                            'bg-red-500': myAssessment()!.riskLevel === 'EARLY_ONSET'
+                                        }"></span>
+                                        {{getRiskLabel(myAssessment()!.riskLevel)}}
+                                    </span>
+                                    <span class="text-sm text-gray-500">{{myAssessment()!.triggerCount}} déclencheur(s)</span>
+                                </div>
+                                @if (myAssessment()!.triggersFound?.length > 0) {
+                                    <div class="flex flex-wrap gap-1.5 mt-3">
+                                        @for (trigger of myAssessment()!.triggersFound; track trigger) {
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-600">{{trigger}}</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Contact urgence -->
+                        @if (myRecord()!.emergencyContactName) {
+                            <div class="border-t border-gray-100 pt-4">
+                                <p class="text-xs text-gray-400 mb-1">Contact d'urgence</p>
+                                <p class="text-sm text-gray-700">
+                                    {{myRecord()!.emergencyContactName}}
+                                    @if (myRecord()!.emergencyContactRelationship) { ({{myRecord()!.emergencyContactRelationship}}) }
+                                    @if (myRecord()!.emergencyContactPhone) { — {{myRecord()!.emergencyContactPhone}} }
+                                </p>
+                            </div>
+                        }
+
+                        <!-- Assurance -->
+                        @if (myRecord()!.insuranceProvider) {
+                            <div class="border-t border-gray-100 pt-4">
+                                <p class="text-xs text-gray-400 mb-1">Assurance</p>
+                                <p class="text-sm text-gray-700">{{myRecord()!.insuranceProvider}} — N° {{myRecord()!.insuranceNumber || myRecord()!.insurancePolicyNumber || '—'}}</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            } @else {
+                <!-- Pas de dossier patient -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <p class="text-sm font-medium text-blue-800">Espace patient</p>
+                            <p class="text-sm text-blue-600 mt-1">Aucun dossier médical n'est encore associé à votre compte. Si vous êtes suivi par un praticien MediLabo, contactez-le pour qu'il crée votre dossier.</p>
+                            <a routerLink="/messages" class="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-blue-700 hover:text-blue-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                Contacter l'équipe médicale
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- SECTION CLINIQUE (PRACTITIONER+) -->
+        @if (perm.canViewPatients()) {
+            @if (allPatients()?.length > 0) {
+                <!-- Stats Cards -->
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="flex flex-col bg-blue-50 border border-blue-100 shadow-sm rounded-xl">
+                        <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">TOTAL PATIENTS</p>
+                                <div class="mt-1"><h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients()?.length }}</h3></div>
+                            </div>
+                            <div class="shrink-0 flex justify-center items-center size-[46px] bg-blue-500 text-white rounded-full">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </div>
+                        </div>
+                        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-blue-200 hover:bg-blue-100 rounded-b-xl transition-colors">
+                            Voir les patients <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                    <div class="flex flex-col bg-green-50 border border-green-100 shadow-sm rounded-xl">
+                        <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">BORDERLINE</p>
+                                <div class="mt-1"><h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'BORDERLINE'] }}</h3></div>
+                            </div>
+                            <div class="shrink-0 flex justify-center items-center size-[46px] bg-green-500 text-white rounded-full">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                        </div>
+                        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-green-200 hover:bg-green-100 rounded-b-xl transition-colors">
+                            Voir les patients <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                    <div class="flex flex-col bg-yellow-50 border border-yellow-100 shadow-sm rounded-xl">
+                        <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">EN DANGER</p>
+                                <div class="mt-1"><h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'IN_DANGER'] }}</h3></div>
+                            </div>
+                            <div class="shrink-0 flex justify-center items-center size-[46px] bg-yellow-500 text-white rounded-full">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            </div>
+                        </div>
+                        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-yellow-200 hover:bg-yellow-100 rounded-b-xl transition-colors">
+                            Voir les patients <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                    <div class="flex flex-col bg-red-50 border border-red-100 shadow-sm rounded-xl">
+                        <div class="p-4 md:p-5 flex justify-between gap-x-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-wide text-gray-700 font-extrabold">APPARITION PRÉCOCE</p>
+                                <div class="mt-1"><h3 class="text-xl sm:text-2xl font-extrabold text-gray-800">{{ allPatients() | DataValue: ['risk', 'EARLY_ONSET'] }}</h3></div>
+                            </div>
+                            <div class="shrink-0 flex justify-center items-center size-[46px] bg-red-500 text-white rounded-full">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                        </div>
+                        <a routerLink="/patients" class="py-3 px-4 md:px-5 inline-flex justify-between items-center text-sm text-gray-600 border-t border-red-200 hover:bg-red-100 rounded-b-xl transition-colors">
+                            Voir les patients <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 gap-y-12 gap-x-6 lg:grid-cols-2">
+                    <div class="rounded-xl bg-white border border-gray-200">
+                        <apx-chart [series]="allPatients() | PieDataValue: ['riskCounts']" [chart]="pieChartOptions.chart" [labels]="['Faible', 'Modéré', 'Élevé']" [colors]="['#22c55e', '#eab308', '#ef4444']" [legend]="pieChartOptions.legend"></apx-chart>
+                        <div class="p-6 border-t border-gray-200 px-6 py-5">
+                            <div class="text-sm flex items-center text-blue-gray-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>
+                                &nbsp;Survolez chaque section pour plus de détails
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative flex flex-col bg-clip-border rounded-xl bg-white border border-gray-200 shadow-sm">
+                        <div class="relative bg-clip-border mx-4 rounded-xl overflow-hidden bg-white text-gray-700">
+                            <apx-chart [series]="allPatients() | ChartDataValue: ['ageGroups']" [chart]="barChartOptions.chart" [xaxis]="barChartOptions.xaxis" [colors]="['#3b82f6']" [plotOptions]="barChartOptions.plotOptions" [dataLabels]="barChartOptions.dataLabels" [legend]="barChartOptions.legend"></apx-chart>
+                        </div>
+                        <div class="p-6 border-t border-gray-200 px-6 py-5">
+                            <div class="text-sm flex items-center text-blue-gray-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>
+                                &nbsp;Survolez chaque section pour plus de détails
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tendances -->
+                @if (perm.canViewAssessments()) {
+                    <div class="p-5 rounded-xl bg-white border border-gray-200">
+                        <h6 class="text-base font-semibold text-blue-gray-900">Tendances des évaluations</h6>
+                        <apx-chart [series]="store.allAssessments() | ChartDataValue: ['trends']" [chart]="lineChartOptions.chart" [xaxis]="lineChartOptions.xaxis" [dataLabels]="lineChartOptions.dataLabels" [grid]="lineChartOptions.grid" [stroke]="lineChartOptions.stroke" [colors]="['#8b5cf6']"></apx-chart>
+                    </div>
+                }
+
+                <!-- Patients par risque & Alertes -->
+                <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+                    <div class="flex flex-col bg-clip-border rounded-xl bg-white overflow-hidden xl:col-span-2 border border-gray-200 shadow-sm">
+                        <div class="bg-clip-border rounded-xl overflow-hidden bg-transparent shadow-none m-0 flex items-center justify-between p-6">
+                            <h6 class="text-base font-semibold text-blue-gray-900">Patients par niveau de risque</h6>
+                        </div>
+                        <div class="p-6 pb-2">
+                            <apx-chart [series]="allPatients() | ChartDataValue: ['riskColumns']" [chart]="columnChartOptions.chart" [dataLabels]="columnChartOptions.dataLabels" [plotOptions]="columnChartOptions.plotOptions" [yaxis]="columnChartOptions.yaxis" [colors]="['#22c55e', '#eab308', '#ef4444']" [fill]="columnChartOptions.fill" [title]="columnChartOptions.title"></apx-chart>
+                        </div>
+                    </div>
+                    <div class="flex flex-col rounded-xl bg-white p-6 text-gray-700 border border-gray-200">
+                        <h6 class="text-base font-semibold text-blue-gray-900">Patients à risque élevé</h6>
+                        <div class="mx-auto mt-2 mb-2 border-t border-gray-200 w-full"></div>
+                        <div class="w-full max-h-96 overflow-y-auto">
+                            @if (highRiskPatients().length === 0) {
+                                <div class="flex flex-col items-center justify-center py-8">
+                                    <svg class="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <p class="text-sm text-gray-400">Aucun patient à risque élevé</p>
+                                </div>
+                            } @else {
+                                @for (patient of highRiskPatients() | slice:0:10; track patient.patientUuid) {
+                                    <div [routerLink]="['/patients/', patient.patientUuid]" class="flex items-center justify-between mb-1.5 py-2 px-1.5 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <div class="flex items-start gap-1">
+                                            <img [src]="patient.userInfo?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" [alt]="patient.firstName" class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-200" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                            <div>
+                                                <p class="text-sm font-medium text-blue-gray-900">{{ patient.firstName }} {{ patient.lastName }}</p>
+                                                <span class="block text-xs font-medium text-blue-gray-500">{{ patient.age }} ans — Depuis le {{ patient.createdAt | date: 'dd MMM yyyy' }}</span>
+                                            </div>
+                                        </div>
+                                        <span [ngClass]="{'bg-red-500': patient.riskLevel === 'EARLY_ONSET', 'bg-yellow-400': patient.riskLevel === 'IN_DANGER'}" class="px-1 py-0.5 text-[10px] align-middle text-white font-bold rounded-md">
+                                            {{ patient.riskLevel === 'EARLY_ONSET' ? 'DANGER' : 'LIMITE' }}
+                                        </span>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            } @else {
+                <div class="flex flex-col items-center justify-center py-24">
+                    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <p class="text-gray-500 font-medium">Aucun patient enregistré</p>
+                    <p class="text-sm text-gray-400 mt-1">Ajoutez un patient pour commencer</p>
+                </div>
+            }
+        }
+    </div>
 }
