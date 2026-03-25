@@ -30,7 +30,6 @@ public class FileResponse {
     private String formattedSize;
     private String downloadUrl;
 
-    // Uploader info
     private String uploadedByUuid;
     private String uploadedByName;
     private String uploadedByRole;

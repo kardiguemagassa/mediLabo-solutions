@@ -33,7 +33,6 @@ import java.util.List;
 @Component
 public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    // Liste des rôles connus qui doivent avoir le préfixe ROLE_
     private static final List<String> KNOWN_ROLES = List.of(
             "SUPER_ADMIN", "ADMIN", "HEAD_PRACTITIONER", "PRACTITIONER", "DOCTOR", "USER", "ORGANIZER"
     );

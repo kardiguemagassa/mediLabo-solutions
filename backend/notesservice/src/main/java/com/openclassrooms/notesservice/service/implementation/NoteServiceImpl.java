@@ -46,8 +46,6 @@ public class NoteServiceImpl implements NoteService {
     private final PatientServiceClient patientServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
-    //  CREATE
-
     /**
      * Crée une nouvelle note pour un patient.
      *
@@ -82,8 +80,6 @@ public class NoteServiceImpl implements NoteService {
                 .doOnSuccess(note -> publishNoteCreatedEvent(note, practitionerName))
                 .map(this::toResponse);
     }
-
-    //  READ
 
     /**
      * Récupère une note par son UUID.
@@ -125,12 +121,8 @@ public class NoteServiceImpl implements NoteService {
                 .map(this::toResponse);
     }
 
-    // UPDATE
-
     /**
      * Met à jour une note existante.
-     *
-     * FLUX:
      * 1. Récupération de la note existante
      * 2. Vérification des droits (praticien = auteur)
      * 3. Mise à jour du contenu
@@ -167,9 +159,6 @@ public class NoteServiceImpl implements NoteService {
                 });
     }
 
-
-    // DELETE
-
     /**
      * Supprime une note (soft delete).
      */
@@ -198,8 +187,6 @@ public class NoteServiceImpl implements NoteService {
                 .then();
     }
 
-    //COUNT
-
     /**
      * Compte le nombre de notes pour un patient.
      */
@@ -211,7 +198,7 @@ public class NoteServiceImpl implements NoteService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    //  EVENT PUBLISHING
+    /**  EVENT PUBLISHING */
 
     private void publishNoteCreatedEvent(Note note, String practitionerName) {
         patientServiceClient.getPatientContactInfo(note.getPatientUuid())
@@ -261,8 +248,6 @@ public class NoteServiceImpl implements NoteService {
                         () -> log.debug("No patient info found for event, skipping notification")
                 );
     }
-
-    // PRIVATE METHODS
 
     /**
      * Convertit une entité Note en NoteResponse.

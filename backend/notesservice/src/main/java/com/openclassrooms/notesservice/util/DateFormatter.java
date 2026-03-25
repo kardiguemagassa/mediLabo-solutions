@@ -22,7 +22,7 @@ public class DateFormatter {
     public static String formattedDate() {
         var cal = Calendar.getInstance();
 
-        // Exemple : 17 février 2026 - 14:30:25
+        /** exemple : 17 février 2026 - 14:30:25 */
         var dateFormat = new SimpleDateFormat("d MMMM yyyy - HH:mm:ss", Locale.FRENCH);
         return dateFormat.format(cal.getTime());
     }

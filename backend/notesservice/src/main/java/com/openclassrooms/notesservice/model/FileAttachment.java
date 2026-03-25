@@ -30,7 +30,6 @@ public class FileAttachment {
     private String formattedSize;
     private String uri;
 
-    // Informations sur l'uploader (dénormalisé)
     private String uploadedByUuid;
     private String uploadedByName;
     private String uploadedByRole;

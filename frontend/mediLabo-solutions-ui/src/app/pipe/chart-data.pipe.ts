@@ -41,7 +41,7 @@ export class ChartDataValue implements PipeTransform {
   private getAgeGroups(patients: any[]): number[] {
     const groups = [0, 0, 0, 0, 0];
     patients.forEach(p => {
-      const age = p.age ?? 0; // ← utilise age du backend directement
+      const age = p.age ?? 0; 
       if (age <= 18) groups[0]++;
       else if (age <= 30) groups[1]++;
       else if (age <= 45) groups[2]++;

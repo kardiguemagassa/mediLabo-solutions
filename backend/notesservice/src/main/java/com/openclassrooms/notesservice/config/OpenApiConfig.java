@@ -25,7 +25,6 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
-                        // 1. Définition du schéma de sécurité pour les notes (données sensibles)
                         .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
                                         .name(securitySchemeName)
@@ -34,7 +33,6 @@ public class OpenApiConfig {
                                         .bearerFormat("JWT")
                                         .description("Entrez le token JWT fourni par l'Authorization Server"))
 
-                        // 2. Réponses d'erreurs standardisées
                         .addResponses("Unauthorized", new ApiResponse().description("Accès refusé : Jeton absent ou invalide"))
                         .addResponses("Forbidden", new ApiResponse().description("Permissions insuffisantes pour consulter ces notes"))
                         .addResponses("NotFound", new ApiResponse().description("La note ou le dossier patient n'a pas été trouvé"))

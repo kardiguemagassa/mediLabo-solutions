@@ -19,11 +19,30 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            Nouveau Message
+            @if (perm.isStaff()) {
+                Nouveau Message
+            } @else {
+                Contacter l'équipe médicale
+            }
         </button>
     </div>
 
     <div class="border-t border-gray-200 mb-6"></div>
+
+    <!-- Info pour les patients sans conversations -->
+    @if (!perm.isStaff() && (store?.messages() | MessageGroup: [store?.profile()?.email]).length === 0) {
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-blue-800">Messagerie patient</p>
+                    <p class="text-xs text-blue-600 mt-1">Vous pouvez envoyer un message à l'équipe médicale en cliquant sur le bouton ci-dessus. Une fois qu'un praticien vous aura répondu, vous pourrez poursuivre la conversation ici.</p>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Messages List -->
     <div class="bg-white rounded-2xl card-shadow p-4 border border-gray-100">
@@ -84,7 +103,9 @@
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg">
             <div class="flex items-center justify-between p-6 border-b border-gray-100">
-                <h3 class="text-xl font-semibold text-gray-800">Nouveau Message</h3>
+                <h3 class="text-xl font-semibold text-gray-800">
+                    @if (perm.isStaff()) { Nouveau Message } @else { Contacter l'équipe médicale }
+                </h3>
                 <button (click)="closeModal()" class="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -97,17 +118,29 @@
                         <!-- Destinataire -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">À</label>
-                            <select
-                                name="receiverEmail"
-                                ngModel
-                                required
-                                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:border-teal-500 transition-all">
-                                <option value="" disabled selected>Choisir un destinataire...</option>
-                                @for (recipient of recipients(); track recipient.userUuid) {
-                                    <!-- ({{recipient.role}}) -->
-                                    <option [value]="recipient.email">{{recipient.firstName}} {{recipient.lastName}}</option> 
-                                }
-                            </select>
+                            @if (recipients()?.length > 0) {
+                                <select
+                                    name="receiverEmail"
+                                    ngModel
+                                    required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:border-teal-500 transition-all">
+                                    <option value="" disabled selected>Choisir un destinataire...</option>
+                                    @for (recipient of recipients(); track recipient.userUuid) {
+                                        <option [value]="recipient.email">{{recipient.firstName}} {{recipient.lastName}} @if (recipient.role) { ({{recipient.role}}) }</option>
+                                    }
+                                </select>
+                            } @else {
+                                <!-- Patient sans contacts : saisie manuelle d'email -->
+                                <input
+                                    type="email"
+                                    name="receiverEmail"
+                                    ngModel
+                                    required
+                                    placeholder="Email du destinataire (ex: medecin@medilabo.com)"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 transition-all"
+                                />
+                                <p class="text-xs text-gray-400 mt-1">Saisissez l'email de votre praticien ou contactez support&#64;medilabo.com</p>
+                            }
                         </div>
                         <!-- Sujet -->
                         <div>
@@ -145,7 +178,7 @@
                                 type="submit"
                                 [disabled]="messageForm.invalid"
                                 class="disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white medical-gradient btn-shadow rounded-xl transition-all">
-                                Envoyer le Message
+                                Envoyer
                             </button>
                         </div>
                     </div>

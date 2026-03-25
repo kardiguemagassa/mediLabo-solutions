@@ -24,7 +24,6 @@ public class Comment {
     private String commentUuid;
     private String content;
 
-    // Informations sur l'auteur (dénormalisé)
     private String authorUuid;
     private String authorName;
     private String authorRole;

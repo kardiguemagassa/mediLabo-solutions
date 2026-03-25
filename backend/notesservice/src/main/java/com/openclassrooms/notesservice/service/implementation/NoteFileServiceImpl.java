@@ -50,12 +50,8 @@ public class NoteFileServiceImpl implements NoteFileService {
     private final PatientServiceClient patientServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
-    // ==================== UPLOAD FILE ====================
-
     /**
      * Upload un fichier et l'attache à une note.
-     *
-     * FLUX:
      * 1. Récupération de la note
      * 2. Stockage du fichier physiquement
      * 3. Création de l'attachment
@@ -69,10 +65,10 @@ public class NoteFileServiceImpl implements NoteFileService {
 
         return findNoteByUuid(noteUuid)
                 .flatMap(note -> Mono.fromCallable(() -> {
-                            // Stocker le fichier physiquement
+                            /** Stocker le fichier physiquement */
                             FileStorageService.StoredFileInfo storedInfo = fileStorageService.storeFile(noteUuid, file);
 
-                            // Créer l'attachment
+                            /** Créer l'attachment */
                             FileAttachment attachment = FileAttachment.builder()
                                     .fileUuid(storedInfo.getFileUuid())
                                     .originalName(storedInfo.getOriginalName())
@@ -88,22 +84,20 @@ public class NoteFileServiceImpl implements NoteFileService {
                                     .uploadedAt(LocalDateTime.now())
                                     .build();
 
-                            // Ajouter à la note
+                            /** Ajouter à la note */
                             note.addFile(attachment);
                             noteRepository.save(note);
 
                             log.info("Fichier uploadé: {} pour la note: {}", storedInfo.getOriginalName(), noteUuid);
 
-                            // Retourner un tuple (note, attachment) pour l'événement
+                            /** Retourner un tuple (note, attachment) pour l'événement */
                             return new NoteFileContext(note, attachment);
                         })
                         .subscribeOn(Schedulers.boundedElastic())
-                        // Publier l'événement de manière réactive (fire and forget)
+                        /** Publier l'événement de manière réactive (fire and forget) */
                         .doOnSuccess(context -> publishFileUploadedEvent(context.note(), context.attachment()))
                         .map(context -> mapToFileResponse(context.attachment(), noteUuid)));
     }
-
-    // GET FILES
 
     /**
      * Liste tous les fichiers d'une note.
@@ -116,8 +110,6 @@ public class NoteFileServiceImpl implements NoteFileService {
                 .flatMapMany(note -> Flux.fromIterable(note.getFiles()))
                 .map(file -> mapToFileResponse(file, noteUuid));
     }
-
-    // DOWNLOAD FILE
 
     /**
      * Télécharge un fichier.
@@ -133,7 +125,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                         return Mono.error(new ApiException("Fichier non trouvé: " + fileUuid));
                     }
 
-                    // Charger le fichier depuis le filesystem
+                    /** Charger le fichier depuis le filesystem */
                     return Mono.fromCallable(() -> {
                                 Resource resource = fileStorageService.loadFileAsResource(
                                         noteUuid,
@@ -150,8 +142,6 @@ public class NoteFileServiceImpl implements NoteFileService {
                             .subscribeOn(Schedulers.boundedElastic());
                 });
     }
-
-    // DELETE FILE
 
     /**
      * Supprime un fichier d'une note.
@@ -174,7 +164,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                         return Mono.error(new ApiException("Fichier non trouvé: " + fileUuid));
                     }
 
-                    // Vérifier les droits
+                    /** Vérifier les droits */
                     String userUuid = jwt.getSubject();
                     if (!attachment.getUploadedByUuid().equals(userUuid)
                             && !note.getPractitionerUuid().equals(userUuid)) {
@@ -182,7 +172,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                     }
 
                     return Mono.fromCallable(() -> {
-                                // Supprimer le fichier physique
+                                /** Supprimer le fichier physique */
                                 fileStorageService.deleteFile(noteUuid, fileUuid, attachment.getExtension());
 
                                 // Retirer de la note
@@ -221,8 +211,6 @@ public class NoteFileServiceImpl implements NoteFileService {
                         error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage())
                 );
     }
-
-    // PRIVATE METHODS
 
     /**
      * Recherche une note par UUID.

@@ -71,7 +71,7 @@ public class PatientServiceClientImpl implements PatientServiceClient {
 
                 .onErrorResume(WebClientResponseException.NotFound.class, e -> {
                     log.warn("Patient non trouvé (404) pour l'UUID: {}", patientUuid);
-                    return Mono.empty(); // Retourne un Mono<PatientInfo> vide (correct !)
+                    return Mono.empty();
                 })
 
                 .timeout(TIMEOUT)
