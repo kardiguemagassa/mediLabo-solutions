@@ -27,7 +27,6 @@ import java.util.UUID;
 
 /**
  * Implémentation réactive du service de gestion des commentaires.
- *
  * ARCHITECTURE RÉACTIVE:
  * - Mono.fromCallable() : Encapsule les appels MongoDB bloquants
  * - subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
@@ -46,12 +45,9 @@ public class NoteCommentServiceImpl implements NoteCommentService {
     private final PatientServiceClient patientServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
-    // ADD COMMENT
 
     /**
      * Ajoute un commentaire à une note.
-     *
-     * FLUX:
      * 1. Récupération de la note
      * 2. Construction du commentaire
      * 3. Ajout à la note et sauvegarde
@@ -64,7 +60,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
 
         return findNoteByUuid(noteUuid)
                 .flatMap(note -> {
-                    // Construction du commentaire
+                    /** Construction du commentaire */
                     Comment comment = Comment.builder()
                             .commentUuid(UUID.randomUUID().toString())
                             .content(request.getContent())
@@ -77,23 +73,21 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                             .updatedAt(LocalDateTime.now())
                             .build();
 
-                    // Ajout à la note
+                    /** Ajout à la note */
                     note.addComment(comment);
 
-                    // Sauvegarde MongoDB
+                    /** Sauvegarde MongoDB */
                     return Mono.fromCallable(() -> {
                                 noteRepository.save(note);
                                 log.info("Commentaire ajouté à la note: {} par: {}", noteUuid, comment.getAuthorName());
                                 return comment;
                             })
                             .subscribeOn(Schedulers.boundedElastic())
-                            // Publier l'événement de manière réactive (fire and forget)
+                            /** Publier l'événement de manière réactive (fire and forget) */
                             .doOnSuccess(savedComment -> publishCommentCreatedEvent(note, savedComment))
                             .map(this::mapToCommentResponse);
                 });
     }
-
-    // GET COMMENTS
 
     /**
      * Liste tous les commentaires d'une note.
@@ -103,18 +97,14 @@ public class NoteCommentServiceImpl implements NoteCommentService {
         log.debug("Getting comments for note: {}", noteUuid);
 
         return findNoteByUuid(noteUuid)
-                // Convertir la liste de commentaires en Flux
+                /** Convertir la liste de commentaires en Flux */
                 .flatMapMany(note -> Flux.fromIterable(note.getComments()))
-                // Mapper chaque Comment vers CommentResponse
+                /** Mapper chaque Comment vers CommentResponse */
                 .map(this::mapToCommentResponse);
     }
 
-    // UPDATE COMMENT
-
     /**
      * Met à jour un commentaire.
-     *
-     * FLUX:
      * 1. Récupération de la note
      * 2. Recherche du commentaire
      * 3. Vérification des droits (auteur uniquement)
@@ -126,13 +116,13 @@ public class NoteCommentServiceImpl implements NoteCommentService {
 
         return findNoteByUuid(noteUuid)
                 .flatMap(note -> {
-                    // Recherche du commentaire
+                    /** Recherche du commentaire */
                     Comment comment = note.findComment(commentUuid);
                     if (comment == null) {
                         return Mono.error(new ApiException("Commentaire non trouvé: " + commentUuid));
                     }
 
-                    // Vérification des droits
+                    /** Vérification des droits */
                     if (!comment.getAuthorUuid().equals(jwt.getSubject())) {
                         return Mono.error(new ApiException("Non autorisé à modifier ce commentaire"));
                     }
@@ -142,7 +132,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                     comment.setEdited(true);
                     comment.setUpdatedAt(LocalDateTime.now());
 
-                    // Sauvegarde
+                    /** Sauvegarde */
                     return Mono.fromCallable(() -> {
                                 noteRepository.save(note);
                                 log.info("Commentaire modifié: {} sur la note: {}", commentUuid, noteUuid);
@@ -153,12 +143,10 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                 });
     }
 
-    // DELETE COMMENT
+
 
     /**
      * Supprime un commentaire.
-     *
-     * FLUX:
      * 1. Récupération de la note
      * 2. Recherche du commentaire
      * 3. Vérification des droits (auteur ou praticien de la note)
@@ -170,20 +158,19 @@ public class NoteCommentServiceImpl implements NoteCommentService {
 
         return findNoteByUuid(noteUuid)
                 .flatMap(note -> {
-                    // Recherche du commentaire
+
                     Comment comment = note.findComment(commentUuid);
                     if (comment == null) {
                         return Mono.error(new ApiException("Commentaire non trouvé: " + commentUuid));
                     }
 
-                    // Vérification des droits
+                    /** Vérification des droits */
                     String userUuid = jwt.getSubject();
                     if (!comment.getAuthorUuid().equals(userUuid)
                             && !note.getPractitionerUuid().equals(userUuid)) {
                         return Mono.error(new ApiException("Non autorisé à supprimer ce commentaire"));
                     }
 
-                    // Suppression
                     note.removeComment(commentUuid);
 
                     return Mono.fromCallable(() -> {
@@ -196,8 +183,6 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                 })
                 .then();
     }
-
-    // PRIVATE METHODS
 
     /**
      * Recherche une note par UUID.

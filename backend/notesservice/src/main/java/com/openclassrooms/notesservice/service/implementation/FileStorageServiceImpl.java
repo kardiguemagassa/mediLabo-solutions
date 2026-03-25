@@ -57,11 +57,11 @@ public class FileStorageServiceImpl implements FileStorageService {
         String storedFilename = fileUuid + "." + extension;
 
         try {
-            // Créer le sous-répertoire pour la note
+            /** Créer le sous-répertoire pour la note */
             Path noteDir = this.rootLocation.resolve("notes").resolve(noteUuid);
             Files.createDirectories(noteDir);
 
-            // Stocker le fichier
+            /** Stocker le fichier */
             Path targetLocation = noteDir.resolve(storedFilename);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
@@ -126,8 +126,6 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
-    // PRIVATE METHODS
-
     /**
      * Valide un fichier avant stockage.
      */
@@ -142,18 +140,18 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new ApiException("Nom de fichier invalide: " + filename);
         }
 
-        // Vérifier la taille
+        /** Vérifier la taille */
         if (file.getSize() > config.getMaxFileSize()) {
             throw new ApiException("Fichier trop volumineux. Taille max: " + formatFileSize(config.getMaxFileSize()));
         }
 
-        // Vérifier l'extension
+        /** Vérifier l'extension */
         String extension = getExtension(filename).toLowerCase();
         if (!config.getAllowedExtensions().contains(extension)) {
             throw new ApiException("Extension non autorisée: " + extension + ". Extensions autorisées: " + config.getAllowedExtensions());
         }
 
-        // Vérifier le type MIME
+        /** Vérifier le type MIME */
         String contentType = file.getContentType();
         if (contentType != null && !config.getAllowedContentTypes().contains(contentType)) {
             throw new ApiException("Type de fichier non autorisé: " + contentType);

@@ -48,13 +48,11 @@ public class Note {
      * Index: idx_practitioner_uuid - géré par script MongoDB
      */
     private String practitionerUuid;
-    private String practitionerName;  // Pour affichage (évite un appel API)
+    private String practitionerName;
     private String content;
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // NOUVEAUX CHAMPS V2 : Fichiers et Commentaires embedded
 
     /**
      * Liste des fichiers attachés à cette note.
@@ -69,8 +67,6 @@ public class Note {
      */
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
-
-    // MÉTHODES UTILITAIRES - Fichiers
 
     /**
      * Ajoute un fichier à la note.
@@ -112,8 +108,6 @@ public class Note {
     public int getFileCount() {
         return this.files == null ? 0 : this.files.size();
     }
-
-    // MÉTHODES UTILITAIRES - Commentaires
 
     /**
      * Ajoute un commentaire à la note.

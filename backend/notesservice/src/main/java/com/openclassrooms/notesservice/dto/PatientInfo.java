@@ -50,8 +50,6 @@ public class PatientInfo {
         private String imageUrl;
     }
 
-    // MÉTHODES UTILITAIRES
-
     /**
      * Retourne le nom complet du patient.
      */

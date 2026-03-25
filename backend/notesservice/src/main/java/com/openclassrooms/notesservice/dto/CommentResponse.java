@@ -25,7 +25,6 @@ public class CommentResponse {
     private String commentUuid;
     private String content;
 
-    // Author info
     private String authorUuid;
     private String authorName;
     private String authorRole;

@@ -23,9 +23,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class WebClientInterceptor {
 
-    private WebClientInterceptor() {
-        // Classe utilitaire
-    }
+    private WebClientInterceptor() {}
 
     /**
      * Propage automatiquement le JWT vers les services appelés.

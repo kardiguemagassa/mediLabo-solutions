@@ -14,12 +14,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
 import static com.openclassrooms.assessmentservice.util.RequestUtils.getResponse;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 /**
@@ -54,28 +56,14 @@ public class AssessmentController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Response> getAllAssessments(HttpServletRequest request) {
         log.info("Received request to get all cached assessments");
-        var assessments = assessmentService.getAllAssessments().stream()
-                .map(assessmentMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(getResponse(request,
-                Map.of("assessments", assessments),
-                "Évaluations récupérées avec succès", OK));
+        var assessments = assessmentService.getAllAssessments().stream().map(assessmentMapper::toResponse).toList();
+        return ResponseEntity.ok(getResponse(request, Map.of("assessments", assessments), "Évaluations récupérées avec succès", OK));
     }
 
-    /**
-     * Évalue le risque de diabète pour un patient.
-     * FLUX:
-     * 1. Réception de la requête avec JWT dans le header, Capturer le token AVANT d'entrer dans le contexte réactif
-     * 2. Spring Security extrait le JWT et le met dans SecurityContext
-     * 3. AssessmentService appelle PatientService et NotesService
-     * 4. WebClientInterceptor propage automatiquement le JWT à chaque appel
-     * 5. Résultat retourné au client
-     */
 
     @Operation(
             summary = "Évaluer le risque de diabète",
-            description = "Calcule le niveau de risque de diabète pour un patient " +
-                    "basé sur son âge, son genre et les termes déclencheurs dans ses notes médicales"
+            description = "Calcule le niveau de risque de diabète pour un patient " + "basé sur son âge, son genre et les termes déclencheurs dans ses notes médicales"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Évaluation réussie"),
@@ -91,11 +79,8 @@ public class AssessmentController {
         String authHeader = request.getHeader("Authorization");
         String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
 
-        return assessmentService.assessDiabetesRisk(patientUuid, token)
-                .map(assessmentMapper::toResponse)
-                .map(assessmentResponse -> ResponseEntity.ok(getResponse(request,
-                        Map.of("assessment", assessmentResponse),
-                        "Évaluation du risque effectuée avec succès", OK)))
+        return assessmentService.assessDiabetesRisk(patientUuid, token).map(assessmentMapper::toResponse).map(assessmentResponse -> ResponseEntity.ok(getResponse(request,
+                        Map.of("assessment", assessmentResponse), "Évaluation du risque effectuée avec succès", OK)))
                 .doOnError(error -> log.error("Assessment failed for patient {}: {}", patientUuid, error.getMessage()));
     }
 }

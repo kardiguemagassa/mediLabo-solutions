@@ -50,8 +50,6 @@ public class NoteController {
 
     private final NoteService noteService;
 
-    // ==================== CREATE ====================
-
     @Operation(summary = "Créer une nouvelle note",
             description = "Ajoute une note d'observation à l'historique du patient")
     @ApiResponses({
@@ -62,10 +60,7 @@ public class NoteController {
     })
     @PostMapping
     @PreAuthorize(PRACTITIONER_ONLY)
-    public Mono<ResponseEntity<Response>> createNote(
-            @Valid @RequestBody NoteRequest request,
-            @Parameter(hidden = true) Authentication authentication,
-            HttpServletRequest httpRequest) {
+    public Mono<ResponseEntity<Response>> createNote(@Valid @RequestBody NoteRequest request, @Parameter(hidden = true) Authentication authentication, HttpServletRequest httpRequest) {
 
         String practitionerUuid = authentication.getName();
         String practitionerName = extractPractitionerName(authentication);
@@ -80,8 +75,6 @@ public class NoteController {
                 });
     }
 
-    // ==================== READ ====================
-
     @Operation(summary = "Récupérer une note par UUID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Note trouvée"),
@@ -89,15 +82,10 @@ public class NoteController {
     })
     @GetMapping("/{noteUuid}")
     @PreAuthorize(ALL_STAFF)
-    public Mono<ResponseEntity<Response>> getNoteByUuid(
-            @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> getNoteByUuid(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, HttpServletRequest request) {
 
         log.debug("Fetching note: {}", noteUuid);
-
-        return noteService.getNoteByUuid(noteUuid)
-                .map(note -> ResponseEntity.ok(
-                        getResponse(request, Map.of("note", note), "Note récupérée avec succès", OK)));
+        return noteService.getNoteByUuid(noteUuid).map(note -> ResponseEntity.ok(getResponse(request, Map.of("note", note), "Note récupérée avec succès", OK)));
     }
 
     @Operation(summary = "Récupérer l'historique des notes d'un patient",
@@ -107,54 +95,31 @@ public class NoteController {
     })
     @GetMapping("/patient/{patientUuid}")
     @PreAuthorize(ALL_STAFF)
-    public Mono<ResponseEntity<Response>> getNotesByPatientUuid(
-            @Parameter(description = "UUID du patient") @PathVariable String patientUuid,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> getNotesByPatientUuid(@Parameter(description = "UUID du patient") @PathVariable String patientUuid, HttpServletRequest request) {
 
         log.debug("Fetching notes for patient: {}", patientUuid);
-
-        return noteService.getNotesByPatientUuid(patientUuid)
-                .collectList()
-                .map(notes -> ResponseEntity.ok(
-                        getResponse(request, Map.of("notes", notes, "count", notes.size()),
-                                "Historique récupéré avec succès", OK)));
+        return noteService.getNotesByPatientUuid(patientUuid).collectList().map(notes -> ResponseEntity.ok(getResponse(request, Map.of("notes", notes, "count", notes.size()), "Historique récupéré avec succès", OK)));
     }
 
     @Operation(summary = "Récupérer les notes créées par un praticien")
     @GetMapping("/practitioner/{practitionerUuid}")
     @PreAuthorize(ADMIN_ONLY)
-    public Mono<ResponseEntity<Response>> getNotesByPractitionerUuid(
-            @Parameter(description = "UUID du praticien") @PathVariable String practitionerUuid,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> getNotesByPractitionerUuid(@Parameter(description = "UUID du praticien") @PathVariable String practitionerUuid, HttpServletRequest request) {
 
         log.debug("Fetching notes by practitioner: {}", practitionerUuid);
-
-        return noteService.getNotesByPractitionerUuid(practitionerUuid)
-                .collectList()
-                .map(notes -> ResponseEntity.ok(
-                        getResponse(request, Map.of("notes", notes, "count", notes.size()),
-                                "Notes récupérées avec succès", OK)));
+        return noteService.getNotesByPractitionerUuid(practitionerUuid).collectList().map(notes -> ResponseEntity.ok(getResponse(request, Map.of("notes", notes, "count", notes.size()), "Notes récupérées avec succès", OK)));
     }
 
     @Operation(summary = "Récupérer mes propres notes",
             description = "Retourne les notes créées par le praticien connecté")
     @GetMapping("/my-notes")
     @PreAuthorize("hasAuthority('SUPER_ADMIN')")
-    public Mono<ResponseEntity<Response>> getMyNotes(
-            @Parameter(hidden = true) Authentication authentication,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> getMyNotes(@Parameter(hidden = true) Authentication authentication, HttpServletRequest request) {
 
         String practitionerUuid = authentication.getName();
         log.debug("Fetching notes for current practitioner: {}", practitionerUuid);
-
-        return noteService.getNotesByPractitionerUuid(practitionerUuid)
-                .collectList()
-                .map(notes -> ResponseEntity.ok(
-                        getResponse(request, Map.of("notes", notes, "count", notes.size()),
-                                "Mes notes récupérées avec succès", OK)));
+        return noteService.getNotesByPractitionerUuid(practitionerUuid).collectList().map(notes -> ResponseEntity.ok(getResponse(request, Map.of("notes", notes, "count", notes.size()), "Mes notes récupérées avec succès", OK)));
     }
-
-    // ==================== UPDATE ====================
 
     @Operation(summary = "Mettre à jour une note",
             description = "Seul l'auteur de la note peut la modifier")
@@ -165,21 +130,12 @@ public class NoteController {
     })
     @PutMapping("/{noteUuid}")
     @PreAuthorize(PRACTITIONER_ONLY)
-    public Mono<ResponseEntity<Response>> updateNote(
-            @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
-            @Valid @RequestBody NoteRequest request,
-            @Parameter(hidden = true) Authentication authentication,
-            HttpServletRequest httpRequest) {
+    public Mono<ResponseEntity<Response>> updateNote(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Valid @RequestBody NoteRequest request, @Parameter(hidden = true) Authentication authentication, HttpServletRequest httpRequest) {
 
         String practitionerUuid = authentication.getName();
         log.info("Practitioner {} updating note {}", practitionerUuid, noteUuid);
-
-        return noteService.updateNote(noteUuid, request, practitionerUuid)
-                .map(note -> ResponseEntity.ok(
-                        getResponse(httpRequest, Map.of("note", note), "Note mise à jour avec succès", OK)));
+        return noteService.updateNote(noteUuid, request, practitionerUuid).map(note -> ResponseEntity.ok(getResponse(httpRequest, Map.of("note", note), "Note mise à jour avec succès", OK)));
     }
-
-    // ==================== DELETE ====================
 
     @Operation(summary = "Supprimer une note (soft delete)")
     @ApiResponses({
@@ -188,35 +144,20 @@ public class NoteController {
     })
     @DeleteMapping("/{noteUuid}")
     @PreAuthorize(ADMIN_OR_PRACTITIONER)
-    public Mono<ResponseEntity<Response>> deleteNote(
-            @Parameter(description = "UUID de la note") @PathVariable String noteUuid,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> deleteNote(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, HttpServletRequest request) {
 
         log.info("Deleting note: {}", noteUuid);
-
-        return noteService.deleteNote(noteUuid)
-                .then(Mono.just(ResponseEntity.ok(
-                        getResponse(request, Map.of(), "Note supprimée avec succès", OK))));
+        return noteService.deleteNote(noteUuid).then(Mono.just(ResponseEntity.ok(getResponse(request, Map.of(), "Note supprimée avec succès", OK))));
     }
-
-    // ==================== STATS ====================
 
     @Operation(summary = "Compter les notes d'un patient")
     @GetMapping("/count/patient/{patientUuid}")
     @PreAuthorize(ALL_STAFF)
-    public Mono<ResponseEntity<Response>> countNotesByPatientUuid(
-            @Parameter(description = "UUID du patient") @PathVariable String patientUuid,
-            HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> countNotesByPatientUuid(@Parameter(description = "UUID du patient") @PathVariable String patientUuid, HttpServletRequest request) {
 
         log.debug("Counting notes for patient: {}", patientUuid);
-
-        return noteService.countNotesByPatientUuid(patientUuid)
-                .map(count -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patientUuid", patientUuid, "noteCount", count),
-                                "Comptage effectué", OK)));
+        return noteService.countNotesByPatientUuid(patientUuid).map(count -> ResponseEntity.ok(getResponse(request, Map.of("patientUuid", patientUuid, "noteCount", count), "Comptage effectué", OK)));
     }
-
-    // ==================== PRIVATE METHODS ====================
 
     /**
      * Extrait le nom du praticien depuis le JWT.
