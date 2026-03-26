@@ -1,4 +1,4 @@
-import { BehaviorSubject, catchError, Observable, switchMap, throwError } from "rxjs";
+import { BehaviorSubject, catchError, filter, Observable, switchMap, throwError } from "rxjs";
 import { IResponse } from "../interface/response";
 import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from "@angular/common/http";
 import { inject } from "@angular/core";
@@ -17,8 +17,8 @@ export const tokenInterceptor: HttpInterceptorFn = (request: HttpRequest<unknown
     return next(addAuthorizationTokenHeader(request, storage.get(Key.TOKEN)))
         .pipe(
             catchError(error => {
-                if (error instanceof HttpErrorResponse && error.error?.code === 401 && error.error?.message === 'Your session has expired.') {
-                    console.log('REFRESHING TOKEN');
+                if (error instanceof HttpErrorResponse && error.status === 401) {
+                    console.log('401 intercepted:', error.error?.message);
                     return handleRefreshToken(request, next, userService, storage);
                 } else {
                     return throwError(() => error);
@@ -41,24 +41,27 @@ const handleRefreshToken = (request: HttpRequest<unknown>, next: HttpHandlerFn, 
             switchMap((response: any) => {
                 console.log('Token refresh response', response);
                 isTokenRefreshing = false;
+                storage.set(Key.TOKEN, response.access_token);
+                if (response.refresh_token) {
+                    storage.set(Key.REFRESH_TOKEN, response.refresh_token);
+                }
                 refreshTokenSubject.next(response);
-                console.log('Sending original request', request);
                 return next(addAuthorizationTokenHeader(request, response.access_token));
             }),
             catchError(error => {
+                isTokenRefreshing = false;
                 userService.logOut();
                 return throwError(() => error);
             })
-        )
-
+        );
     } else {
         return refreshTokenSubject.pipe(
+            filter((response: any) => response !== null),
             switchMap((response: any) => {
-                console.log('Already refreshed');
                 return next(addAuthorizationTokenHeader(request, response.access_token));
             })
         );
     }
 };
 
-const formData = (refresh_token: string) => getFormData({ refresh_token, client_id: 'client', code_verifier: 'IXC0xF1i9LDClkUlrD58mkzI4lVw_uylG21z43xVct3Ro2GCJKV5iGJnN97CNbpmAoOCK94tc4MfvJ24q5ucCiKty3dBFMLbwqPE-vqOJ-s1axq86F0gev0j-Zv4cOSq', grant_type: 'refresh_token', redirect_url: 'http://localhost:4200' }, null);
+const formData = (refresh_token: string) => getFormData({ refresh_token, client_id: 'client', code_verifier: 'IXC0xF1i9LDClkUlrD58mkzI4lVw_uylG21z43xVct3Ro2GCJKV5iGJnN97CNbpmAoOCK94tc4MfvJ24q5ucCiKty3dBFMLbwqPE-vqOJ-s1axq86F0gev0j-Zv4cOSq', grant_type: 'refresh_token', redirect_uri: 'http://localhost:4200' }, null);
