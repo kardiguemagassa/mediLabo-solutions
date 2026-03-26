@@ -54,10 +54,6 @@ export const NAVBAR_ROUTES: Routes = [
             {
                 path: 'messages/:conversationId',
                 loadComponent: () => import('./message/message-detail/message-detail.component').then(c => c.MessageDetailComponent)
-            },
-            {
-                path: 'reports',
-                loadComponent: () => import('./reports/reports.component').then(c => c.ReportsComponent)
             }
         ]
     }

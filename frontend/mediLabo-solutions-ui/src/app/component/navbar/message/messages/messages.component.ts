@@ -16,7 +16,7 @@ import { PermissionService } from '../../../../service/permission.service';
 export class MessagesComponent {
   private readonly location = inject(Location);
   readonly store = inject(AppStore);
-  readonly perm = inject(PermissionService);
+  readonly permissionService = inject(PermissionService);
   private dialogService = inject(DialogService);
 
   /**
@@ -25,7 +25,7 @@ export class MessagesComponent {
    * - USER (patient) : extraite des conversations existantes (personnes qui lui ont déjà écrit)
    */
   protected recipients = computed(() => {
-    if (this.perm.canViewUsers()) {
+    if (this.permissionService.canViewUsers()) {
       const users = this.store.users() ?? [];
       const myEmail = this.store.profile()?.email;
       return users.filter(u => u.email !== myEmail);
@@ -37,7 +37,7 @@ export class MessagesComponent {
   ngOnInit(): void {
     this.store.getMessages();
     // Charger la liste des users uniquement si permission
-    if (this.perm.canViewUsers()) {
+    if (this.permissionService.canViewUsers()) {
       this.store.getUsers();
     }
   }

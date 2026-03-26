@@ -19,7 +19,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            @if (perm.isStaff()) {
+            @if (permissionService.isStaff()) {
                 Nouveau Message
             } @else {
                 Contacter l'équipe médicale
@@ -30,7 +30,7 @@
     <div class="border-t border-gray-200 mb-6"></div>
 
     <!-- Info pour les patients sans conversations -->
-    @if (!perm.isStaff() && (store?.messages() | MessageGroup: [store?.profile()?.email]).length === 0) {
+    @if (!permissionService.isStaff() && (store?.messages() | MessageGroup: [store?.profile()?.email]).length === 0) {
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
             <div class="flex items-start gap-3">
                 <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@
         <div class="bg-white rounded-2xl w-full max-w-lg">
             <div class="flex items-center justify-between p-6 border-b border-gray-100">
                 <h3 class="text-xl font-semibold text-gray-800">
-                    @if (perm.isStaff()) { Nouveau Message } @else { Contacter l'équipe médicale }
+                    @if (permissionService.isStaff()) { Nouveau Message } @else { Contacter l'équipe médicale }
                 </h3>
                 <button (click)="closeModal()" class="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

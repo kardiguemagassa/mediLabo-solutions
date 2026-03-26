@@ -17,7 +17,7 @@ import { PermissionService } from '../../../service/permission.service';
 })
 export class DashboardComponent {
   protected readonly store = inject(AppStore);
-  protected readonly perm = inject(PermissionService);
+  protected readonly permissionService = inject(PermissionService);
   private dataLoaded = false;
 
   allPatients = computed(() => {
@@ -62,13 +62,13 @@ export class DashboardComponent {
       if (!profile || this.dataLoaded) return;
       this.dataLoaded = true;
 
-      if (this.perm.canViewPatients()) {
+      if (this.permissionService.canViewPatients()) {
         this.store.getAllPatients();
       }
-      if (this.perm.canViewAssessments()) {
+      if (this.permissionService.canViewAssessments()) {
         this.store.getAllAssessments();
       }
-      if (!this.perm.isStaff()) {
+      if (!this.permissionService.isStaff()) {
         this.store.getMyPatientRecord();
         this.store.getAllAssessments();
         this.store.getMyMedicalNotes();

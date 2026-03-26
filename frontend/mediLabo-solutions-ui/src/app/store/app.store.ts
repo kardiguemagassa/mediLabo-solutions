@@ -587,6 +587,7 @@ export const AppStore = signalStore(
                 tapResponse({
                     next: (response: IResponse) => {
                         patchState(store, { messages: response.data.messages, loading: false, error: null });
+                        toastService.success(response.message);
                     },
                     error: (error: string) => {
                         toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
@@ -600,6 +601,7 @@ export const AppStore = signalStore(
                 tapResponse({
                     next: (response: IResponse) => {
                         patchState(store, { conversation: response.data.conversation, messages: response.data.messages, loading: false, error: null });
+                        toastService.success(response.message);
                     },
                     error: (error: string) => {
                         toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
@@ -613,6 +615,7 @@ export const AppStore = signalStore(
                 tapResponse({
                     next: (response: IResponse) => {
                         patchState(store, (state) => ({ conversation: [...state.conversation, response.data.message], loading: false, error: null }));
+                        toastService.success(response.message);
                     },
                     error: (error: string) => {
                         toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);

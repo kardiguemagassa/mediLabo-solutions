@@ -22,14 +22,14 @@ export class NavbarComponent {
   private readonly userService = inject(UserService);
   private readonly storage = inject(StorageService);
   protected readonly store = inject(AppStore);
-  protected readonly perm = inject(PermissionService);
+  protected readonly permissionService = inject(PermissionService);
 
   ngOnInit() {
     this.store.getProfile();
     this.store.getMessages();
 
     // Charger les patients uniquement si l'utilisateur a la permission
-    if (this.perm.canViewPatients()) {
+    if (this.permissionService.canViewPatients()) {
       this.store.getAllPatients();
     }
   }
