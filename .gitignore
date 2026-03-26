@@ -185,8 +185,12 @@ jacoco.exec
 docs/
 scripts/
 
+uploads/
+
 # ══════════════════════════════════════════════════════════════════
 # macOS
 # ══════════════════════════════════════════════════════════════════
 .DS_Store
 database/authdata/data.sql
+uploads/
+uploads/
