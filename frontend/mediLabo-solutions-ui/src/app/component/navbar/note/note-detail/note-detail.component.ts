@@ -19,7 +19,7 @@ export class NoteDetailComponent {
   private noteService = inject(NoteService);
   private sanitizer = inject(DomSanitizer);
   private cdr = inject(ChangeDetectorRef);
-  protected perm = inject(PermissionService);
+  protected permissionService = inject(PermissionService);
 
   // Édition
   isEditing = signal(false);
@@ -44,7 +44,7 @@ export class NoteDetailComponent {
     if (!note) return null;
 
     // Staff : enrichir via allPatients
-    if (this.perm.isStaff()) {
+    if (this.permissionService.isStaff()) {
       const patients = this.store.allPatients() ?? [];
       const patient = patients.find(p => p.patientUuid === note.patientUuid);
       return {
@@ -70,7 +70,7 @@ export class NoteDetailComponent {
   ngOnInit() {
     this.noteUuid = this.route.snapshot.params['noteUuid'];
     this.store.getNote(this.noteUuid);
-    if (this.perm.isStaff()) {
+    if (this.permissionService.isStaff()) {
       this.store.getAllPatients();
     }
   }

@@ -81,7 +81,7 @@ public class NotificationResource {
         return notificationService.sendMessage(messageRequest, sender)
                 .map(messageResponse -> ResponseEntity
                         .created(URI.create("/api/notifications/messages/" + messageResponse.getConversationId()))
-                        .body(getResponse(request, of("message", messageResponse), "Réponse envoyée avec succès", CREATED)));
+                        .body(getResponse(request, of("message", messageResponse), "Message envoyé avec succès", CREATED)));
     }
 
     @Operation(summary = "Récupérer tous les messages de l'utilisateur connecté")

@@ -29,16 +29,16 @@
                 <div class="hidden lg:ml-6 lg:flex lg:items-center lg:gap-1">
                     <a routerLink="/dashboard" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Tableau de bord</a>
 
-                    @if (perm.canViewUsers()) {
+                    @if (permissionService.canViewUsers()) {
                         <a routerLink="/users" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Utilisateurs</a>
                     }
-                    @if (perm.canViewPatients()) {
+                    @if (permissionService.canViewPatients()) {
                         <a routerLink="/patients" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Patients</a>
                     }
-                    @if (perm.canViewNotes()) {
+                    @if (permissionService.canViewNotes()) {
                         <a routerLink="/notes" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Notes</a>
                     }
-                    @if (perm.canViewAssessments()) {
+                    @if (permissionService.canViewAssessments()) {
                         <a routerLink="/assessments" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Évaluations</a>
                     }
 
@@ -106,16 +106,16 @@
             <div class="space-y-1 pb-3 pt-2 px-2">
                 <a routerLink="/dashboard" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Tableau de bord</a>
 
-                @if (perm.canViewUsers()) {
+                @if (permissionService.canViewUsers()) {
                     <a routerLink="/users" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Utilisateurs</a>
                 }
-                @if (perm.canViewPatients()) {
+                @if (permissionService.canViewPatients()) {
                     <a routerLink="/patients" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Patients</a>
                 }
-                @if (perm.canViewNotes()) {
+                @if (permissionService.canViewNotes()) {
                     <a routerLink="/notes" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Notes</a>
                 }
-                @if (perm.canViewAssessments()) {
+                @if (permissionService.canViewAssessments()) {
                     <a routerLink="/assessments" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Évaluations</a>
                 }
 
