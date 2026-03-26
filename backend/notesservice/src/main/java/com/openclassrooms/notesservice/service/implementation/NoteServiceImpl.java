@@ -1,8 +1,12 @@
 package com.openclassrooms.notesservice.service.implementation;
 
+import com.openclassrooms.notesservice.dto.CommentResponse;
+import com.openclassrooms.notesservice.dto.FileResponse;
 import com.openclassrooms.notesservice.dto.NoteRequest;
 import com.openclassrooms.notesservice.dto.NoteResponse;
 import com.openclassrooms.notesservice.exception.ApiException;
+import com.openclassrooms.notesservice.model.Comment;
+import com.openclassrooms.notesservice.model.FileAttachment;
 import com.openclassrooms.notesservice.model.Note;
 import com.openclassrooms.notesservice.repository.NoteRepository;
 import com.openclassrooms.notesservice.service.NoteService;
@@ -20,9 +24,7 @@ import com.openclassrooms.notesservice.event.Event;
 
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Implémentation réactive du service de gestion des notes.
@@ -46,10 +48,23 @@ public class NoteServiceImpl implements NoteService {
     private final PatientServiceClient patientServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Override
+    public Flux<NoteResponse> getAllActiveNotes() {
+        return Mono.fromCallable(noteRepository::findByActiveTrueOrderByCreatedAtDesc)
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable)
+                .map(this::toResponse);
+    }
+
+    @Override
+    public Flux<NoteResponse> getNotesByUserUuid(String userUuid) {
+        log.debug("Fetching notes for userUuid: {}", userUuid);
+        return patientServiceClient.getMyPatient()
+                .flatMapMany(patient -> getNotesByPatientUuid(patient.getPatientUuid()));
+    }
+
     /**
      * Crée une nouvelle note pour un patient.
-     *
-     * FLUX:
      * 1. Construction de l'entité Note
      * 2. Sauvegarde en MongoDB (sur boundedElastic)
      * 3. Conversion en NoteResponse
@@ -141,9 +156,9 @@ public class NoteServiceImpl implements NoteService {
 
                     Note existingNote = optional.get();
 
-                    if (!existingNote.getPractitionerUuid().equals(practitionerUuid)) {
-                        return Mono.error(new ApiException("Vous n'êtes pas autorisé à modifier cette note"));
-                    }
+//                    if (!existingNote.getPractitionerUuid().equals(practitionerUuid)) {
+//                        return Mono.error(new ApiException("Vous n'êtes pas autorisé à modifier cette note"));
+//                    }
 
                     existingNote.setContent(request.getContent());
                     existingNote.setUpdatedAt(LocalDateTime.now());
@@ -263,6 +278,35 @@ public class NoteServiceImpl implements NoteService {
                 .updatedAt(note.getUpdatedAt())
                 .fileCount(note.getFileCount())
                 .commentCount(note.getCommentCount())
+                .files(note.getFiles() != null ? note.getFiles().stream().map(this::toFileResponse).toList() : List.of())
+                .comments(note.getComments() != null ? note.getComments().stream().map(this::toCommentResponse).toList() : List.of())
+                .build();
+    }
+
+    private FileResponse toFileResponse(FileAttachment file) {
+        return FileResponse.builder()
+                .fileUuid(file.getFileUuid())
+                .name(file.getOriginalName())
+                .extension(file.getExtension())
+                .contentType(file.getContentType())
+                .size(file.getSize())
+                .formattedSize(file.getFormattedSize())
+                .uploadedByName(file.getUploadedByName())
+                .uploadedAt(file.getUploadedAt())
+                .build();
+    }
+
+    private CommentResponse toCommentResponse(Comment comment) {
+        return CommentResponse.builder()
+                .commentUuid(comment.getCommentUuid())
+                .content(comment.getContent())
+                .authorUuid(comment.getAuthorUuid())
+                .authorName(comment.getAuthorName())
+                .authorRole(comment.getAuthorRole())
+                .authorImageUrl(comment.getAuthorImageUrl())
+                .edited(comment.getEdited())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
                 .build();
     }
 

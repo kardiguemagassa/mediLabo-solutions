@@ -358,6 +358,18 @@ export const AppStore = signalStore(
                     }
                 })
             )))),
+        getMyMedicalNotes: rxMethod<void>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap(() => noteService.myMedicalNotes$().pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { notes: response.data.notes, loading: false, error: null });
+                    },
+                    error: (error: string) => {
+                        patchState(store, { loading: false, error });
+                    }
+                })
+            )))),
         getNote: rxMethod<string>(pipe(
             tap(() => patchState(store, { loading: true, error: null })),
             switchMap((noteUuid) => noteService.note$(noteUuid).pipe(

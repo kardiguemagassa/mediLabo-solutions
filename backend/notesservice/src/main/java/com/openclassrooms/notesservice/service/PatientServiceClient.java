@@ -28,4 +28,6 @@ public interface PatientServiceClient {
      * @return Mono<PatientInfo> ou Mono.empty()
      */
     Mono<PatientInfo> getPatientContactInfo(String patientUuid);
+
+    Mono<PatientInfo> getMyPatient();
 }

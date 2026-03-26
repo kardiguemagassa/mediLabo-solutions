@@ -14,6 +14,10 @@ import reactor.core.publisher.Mono;
  */
 public interface NoteService {
 
+    Flux<NoteResponse> getAllActiveNotes();
+
+    Flux<NoteResponse> getNotesByUserUuid(String userUuid);
+
     /**
      * Crée une nouvelle note pour un patient.
      */

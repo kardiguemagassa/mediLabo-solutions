@@ -11,17 +11,24 @@ export class NoteService {
 
   constructor() {}
 
+  allNotes$ = () =>
+    <Observable<IResponse>>(
+      this.http
+        .get<IResponse>(`${server}/api/notes`)
+        .pipe(tap(console.log), catchError(this.handleError))
+    );
+
+  myMedicalNotes$ = () =>
+    <Observable<IResponse>>(
+      this.http
+        .get<IResponse>(`${server}/api/notes/my-records`)
+        .pipe(tap(console.log), catchError(this.handleError))
+    );
+
   createNote$ = (note: any) =>
     <Observable<IResponse>>(
       this.http
         .post<IResponse>(`${server}/api/notes`, note)
-        .pipe(tap(console.log), catchError(this.handleError))
-    );
-
-  allNotes$ = () =>
-    <Observable<IResponse>>(
-      this.http
-        .get<IResponse>(`${server}/api/notes/my-notes`)
         .pipe(tap(console.log), catchError(this.handleError))
     );
 

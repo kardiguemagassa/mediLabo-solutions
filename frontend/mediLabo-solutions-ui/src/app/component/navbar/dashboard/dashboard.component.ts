@@ -57,7 +57,6 @@ export class DashboardComponent {
 
   constructor() {
 
-    // Charger les données UNE FOIS quand le profil est disponible
     effect(() => {
       const profile = this.store.profile();
       if (!profile || this.dataLoaded) return;
@@ -69,10 +68,10 @@ export class DashboardComponent {
       if (this.perm.canViewAssessments()) {
         this.store.getAllAssessments();
       }
-      // Patient uniquement : charger son propre dossier
       if (!this.perm.isStaff()) {
         this.store.getMyPatientRecord();
         this.store.getAllAssessments();
+        this.store.getMyMedicalNotes();
       }
     });
 

@@ -50,6 +50,18 @@ public class NoteController {
 
     private final NoteService noteService;
 
+    @Operation(summary = "Récupérer toutes les notes actives")
+    @GetMapping
+    @PreAuthorize(ALL_STAFF)
+    public Mono<ResponseEntity<Response>> getAllNotes(HttpServletRequest request) {
+        log.debug("Fetching all notes");
+        return noteService.getAllActiveNotes()
+                .collectList()
+                .map(notes -> ResponseEntity.ok(
+                        getResponse(request, Map.of("notes", notes, "count", notes.size()),
+                                "Notes récupérées avec succès", OK)));
+    }
+
     @Operation(summary = "Créer une nouvelle note",
             description = "Ajoute une note d'observation à l'historique du patient")
     @ApiResponses({
@@ -75,13 +87,30 @@ public class NoteController {
                 });
     }
 
+    @Operation(summary = "Récupérer mes notes médicales (vue patient)")
+    @GetMapping("/my-records")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<ResponseEntity<Response>> getMyMedicalNotes(
+            @Parameter(hidden = true) Authentication authentication,
+            HttpServletRequest request) {
+
+        String userUuid = authentication.getName();
+        log.debug("Patient fetching own medical notes, userUuid: {}", userUuid);
+
+        return noteService.getNotesByUserUuid(userUuid)
+                .collectList()
+                .map(notes -> ResponseEntity.ok(
+                        getResponse(request, Map.of("notes", notes, "count", notes.size()),
+                                "Notes récupérées avec succès", OK)));
+    }
+
     @Operation(summary = "Récupérer une note par UUID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Note trouvée"),
             @ApiResponse(responseCode = "404", description = "Note introuvable")
     })
     @GetMapping("/{noteUuid}")
-    @PreAuthorize(ALL_STAFF)
+    @PreAuthorize("isAuthenticated()")
     public Mono<ResponseEntity<Response>> getNoteByUuid(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, HttpServletRequest request) {
 
         log.debug("Fetching note: {}", noteUuid);
@@ -129,7 +158,7 @@ public class NoteController {
             @ApiResponse(responseCode = "404", description = "Note introuvable")
     })
     @PutMapping("/{noteUuid}")
-    @PreAuthorize(PRACTITIONER_ONLY)
+    @PreAuthorize(ALL_STAFF)
     public Mono<ResponseEntity<Response>> updateNote(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Valid @RequestBody NoteRequest request, @Parameter(hidden = true) Authentication authentication, HttpServletRequest httpRequest) {
 
         String practitionerUuid = authentication.getName();

@@ -17,6 +17,7 @@ import java.util.Optional;
 @Repository
 public interface NoteRepository extends MongoRepository<Note, String> {
 
+    List<Note> findByActiveTrueOrderByCreatedAtDesc();
     Optional<Note> findByNoteUuidAndActiveTrue(String noteUuid);
     List<Note> findByPatientUuidAndActiveTrueOrderByCreatedAtDesc(String patientUuid);
     List<Note> findByPractitionerUuidAndActiveTrueOrderByCreatedAtDesc(String practitionerUuid);

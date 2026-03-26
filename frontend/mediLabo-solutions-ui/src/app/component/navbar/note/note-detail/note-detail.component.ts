@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AppStore } from '../../../../store/app.store';
 import { NoteService } from '../../../../service/note.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { PermissionService } from '../../../../service/permission.service';
 
 @Component({
   selector: 'app-note-detail',
@@ -18,6 +19,7 @@ export class NoteDetailComponent {
   private noteService = inject(NoteService);
   private sanitizer = inject(DomSanitizer);
   private cdr = inject(ChangeDetectorRef);
+  protected perm = inject(PermissionService);
 
   // Édition
   isEditing = signal(false);
@@ -36,18 +38,30 @@ export class NoteDetailComponent {
   previewFile = signal<{ fileName: string, fileUuid: string, fileType: string, url: SafeResourceUrl | null } | null>(null);
   previewLoading = signal(false);
 
-  // Note enrichie
+  // Note enrichie avec patientName/patientImageUrl
   note = computed(() => {
     const note = this.store.noteDetail();
     if (!note) return null;
-    const patients = this.store.allPatients() ?? [];
-    const patient = patients.find(p => p.patientUuid === note.patientUuid);
+
+    // Staff : enrichir via allPatients
+    if (this.perm.isStaff()) {
+      const patients = this.store.allPatients() ?? [];
+      const patient = patients.find(p => p.patientUuid === note.patientUuid);
+      return {
+        ...note,
+        patientName: patient?.userInfo
+          ? `${patient.userInfo.firstName} ${patient.userInfo.lastName}`
+          : 'Patient inconnu',
+        patientImageUrl: patient?.userInfo?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+      };
+    }
+
+    // Patient : utiliser le profil connecté
+    const profile = this.store.profile();
     return {
       ...note,
-      patientName: patient?.userInfo
-        ? `${patient.userInfo.firstName} ${patient.userInfo.lastName}`
-        : 'Patient inconnu',
-      patientImageUrl: patient?.userInfo?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+      patientName: profile ? `${profile.firstName} ${profile.lastName}` : 'Mon dossier',
+      patientImageUrl: profile?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
     };
   });
 
@@ -56,7 +70,9 @@ export class NoteDetailComponent {
   ngOnInit() {
     this.noteUuid = this.route.snapshot.params['noteUuid'];
     this.store.getNote(this.noteUuid);
-    this.store.getAllPatients();
+    if (this.perm.isStaff()) {
+      this.store.getAllPatients();
+    }
   }
 
   startEditing() {
@@ -77,7 +93,7 @@ export class NoteDetailComponent {
     this.isEditing.set(false);
   }
 
-  // ── FICHIERS ──
+  //  FICHIERS 
 
   onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -140,13 +156,11 @@ export class NoteDetailComponent {
 
   openPreview(file: any, event?: Event) {
     event?.stopPropagation();
-
-    // Déjà en cours de chargement
     if (this.previewLoading()) return;
 
-    const name = file.fileName || file.name || '';
-    const ext = name.split('.').pop()?.toLowerCase() ?? '';
-    const mimeType = file.fileType || file.contentType || '';
+    const name = file.name || file.fileName || '';
+    const ext = file.extension || (name.split('.').pop()?.toLowerCase() ?? '');
+    const mimeType = file.contentType || file.fileType || '';
 
     const isPreviewable =
       ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext) ||
@@ -206,7 +220,7 @@ export class NoteDetailComponent {
     return 'text-gray-500';
   }
 
-  // ── COMMENTAIRES ──
+  //  COMMENTAIRES 
 
   addComment() {
     const content = this.newComment().trim();
