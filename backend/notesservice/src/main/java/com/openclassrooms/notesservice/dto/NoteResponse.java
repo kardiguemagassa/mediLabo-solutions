@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * DTO de réponse pour une note
@@ -35,10 +36,12 @@ public class NoteResponse {
      * Permet au frontend d'afficher un badge sans appel API supplémentaire.
      */
     private Integer fileCount;
+    private List<FileResponse> files;
 
     /**
      * Nombre de commentaires sur cette note.
      * Permet au frontend d'afficher un badge sans appel API supplémentaire.
      */
     private Integer commentCount;
+    private List<CommentResponse> comments;
 }

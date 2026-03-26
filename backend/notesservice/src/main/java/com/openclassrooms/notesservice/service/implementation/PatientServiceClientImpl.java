@@ -104,6 +104,24 @@ public class PatientServiceClientImpl implements PatientServiceClient {
                 .switchIfEmpty(Mono.empty());
     }
 
+    @Override
+    public Mono<PatientInfo> getMyPatient() {
+        log.debug("Fetching current user's patient record via /me");
+        return patientServiceWebClient.get()
+                .uri("/api/patients/me")
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
+                .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur PatientService")))
+                .bodyToMono(ExternalResponse.class)
+                .flatMap(response -> {
+                    if (response == null || response.data() == null || !response.data().containsKey("patient")) {
+                        return Mono.empty();
+                    }
+                    return Mono.just(extractPatientInfo(response));
+                })
+                .timeout(TIMEOUT);
+    }
+
     /**
      * Fallback pour getPatientByUuid.
      * Appelé quand le Circuit Breaker est ouvert ou timeout.

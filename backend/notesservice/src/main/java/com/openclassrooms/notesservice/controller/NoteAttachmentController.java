@@ -75,7 +75,7 @@ public class NoteAttachmentController {
             @ApiResponse(responseCode = "404", description = "Note non trouvée")
     })
     @GetMapping("/files")
-    @PreAuthorize(ALL_STAFF)
+    @PreAuthorize("isAuthenticated()")
     public Mono<ResponseEntity<Response>> getFiles(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, HttpServletRequest request) {
 
         log.debug("Liste des fichiers pour note: {}", noteUuid);
@@ -89,7 +89,7 @@ public class NoteAttachmentController {
             @ApiResponse(responseCode = "404", description = "Fichier non trouvé")
     })
     @GetMapping("/files/{fileUuid}/download")
-    @PreAuthorize(ALL_STAFF)
+    @PreAuthorize("isAuthenticated()")
     public Mono<ResponseEntity<Resource>> downloadFile(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Parameter(description = "UUID du fichier") @PathVariable String fileUuid) {
 
         log.debug("Téléchargement fichier: {} de la note: {}", fileUuid, noteUuid);
@@ -117,7 +117,7 @@ public class NoteAttachmentController {
             @ApiResponse(responseCode = "404", description = "Note non trouvée")
     })
     @PostMapping("/comments")
-    @PreAuthorize(ALL_STAFF)
+    @PreAuthorize("isAuthenticated()")
     public Mono<ResponseEntity<Response>> addComment(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Valid @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
 
         log.info("Ajout commentaire sur note: {} par: {}", noteUuid, jwt.getSubject());
@@ -130,7 +130,7 @@ public class NoteAttachmentController {
             @ApiResponse(responseCode = "404", description = "Note non trouvée")
     })
     @GetMapping("/comments")
-    @PreAuthorize(ALL_STAFF)
+    @PreAuthorize("isAuthenticated()")
     public Mono<ResponseEntity<Response>> getComments(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, HttpServletRequest request) {
 
         log.debug("Liste des commentaires pour note: {}", noteUuid);
