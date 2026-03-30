@@ -118,6 +118,43 @@ services:
       retries: 5
       start_period: 60s
 
+  user-service:
+    <<: *common-java
+    build:
+      context: ./backend/userservice
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY:-medilabo}/userservice:${IMAGE_TAG:-latest}
+    container_name: medilabo-user
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${USER_SERVICE_PORT:-8085}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_AUTHORIZATION:-medilabo_authorization}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_HOST: discovery-server
+      JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      APP_PHOTO_DIRECTORY: /app/uploads/
+    volumes:
+      - user_uploads:/app/uploads
+    ports:
+      - "${USER_SERVICE_PORT:-8085}:${USER_SERVICE_PORT:-8085}"
+    networks:
+      - medilabo-network
+      - postgres-network
+      - kafka-network
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      authorization-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:${USER_SERVICE_PORT:-8085}/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   patient-service:
     <<: *common-java
     build:
@@ -307,3 +344,4 @@ networks:
 # VOLUMES
 volumes:
   notes_uploads:
+  user_uploads:

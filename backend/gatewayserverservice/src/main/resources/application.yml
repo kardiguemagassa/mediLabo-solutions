@@ -45,21 +45,25 @@ spring:
         - id: authorization-server
           uri: lb://AUTHORIZATIONSERVERSERVICE
           predicates:
-            - Path=/authorization/**
+            #- Path=/authorization/**
+            - Path=/user/register/**,/user/verify/**,/user/resetpassword/**
           metadata:
             response-timeout: 15000
             connect-timeout: 30000
-          filters:
-            - StripPrefix=1
 
-        # AUTHORIZATION SERVER - user endpoints
-        - id: authorization-server-users
-          uri: lb://AUTHORIZATIONSERVERSERVICE
+        # USER SERVICE - all other user endpoints (user IS logged in with JWT)
+        - id: user-service
+          uri: lb://USERSERVICE
           predicates:
             - Path=/user/**
           metadata:
             response-timeout: 30000
             connect-timeout: 10000
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/users
 
         # PATIENT SERVICE
         - id: patient-service
@@ -181,6 +185,8 @@ resilience4j:
         baseConfig: default
       notesServiceCircuitBreaker:
         baseConfig: default
+      userServiceCircuitBreaker:
+        baseConfig: default
 
 # UPLOAD
 servlet:
@@ -236,6 +242,9 @@ springdoc:
 
       - name: Assessment-Service
         url: /api/assessments/v3/api-docs
+
+      - name: User-Service
+        url: /user/v3/api-docs
 
 # LOGGING CONFIGURATION
 logging:
