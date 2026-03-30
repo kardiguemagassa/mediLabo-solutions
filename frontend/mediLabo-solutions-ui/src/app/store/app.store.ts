@@ -192,6 +192,92 @@ export const AppStore = signalStore(
                     }
                 })
             )))),
+        
+        // ADMIN OPERATIONS ON OTHER USERS
+        updateRoleByUuid: rxMethod<{ userUuid: string, role: string }>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap(({ userUuid, role }) => userService.updateRoleByUuid$(userUuid, role).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { user: response.data.user, loading: false, error: null });
+                        toastService.success(response.message);
+                    },
+                    error: (error: string) => {
+                        patchState(store, { loading: false, error });
+                        toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
+                    }
+                })
+            )))),
+        toggleAccountLockedByUuid: rxMethod<string>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap((userUuid) => userService.toggleAccountLockedByUuid$(userUuid).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { user: response.data.user, loading: false, error: null });
+                        toastService.success(response.message);
+                    },
+                    error: (error: string) => {
+                        patchState(store, { loading: false, error });
+                        toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
+                    }
+                })
+            )))),
+        toggleAccountExpiredByUuid: rxMethod<string>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap((userUuid) => userService.toggleAccountExpiredByUuid$(userUuid).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { user: response.data.user, loading: false, error: null });
+                        toastService.success(response.message);
+                    },
+                    error: (error: string) => {
+                        patchState(store, { loading: false, error });
+                        toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
+                    }
+                })
+            )))),
+        toggleAccountEnabledByUuid: rxMethod<string>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap((userUuid) => userService.toggleAccountEnabledByUuid$(userUuid).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { user: response.data.user, loading: false, error: null });
+                        toastService.success(response.message);
+                    },
+                    error: (error: string) => {
+                        patchState(store, { loading: false, error });
+                        toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
+                    }
+                })
+            )))),
+        enableMfaByUuid: rxMethod<string>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap((userUuid) => userService.enableMfaByUuid$(userUuid).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { user: response.data.user, loading: false, error: null });
+                        toastService.success(response.message);
+                    },
+                    error: (error: string) => {
+                        patchState(store, { loading: false, error });
+                        toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
+                    }
+                })
+            )))),
+        disableMfaByUuid: rxMethod<string>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap((userUuid) => userService.disableMfaByUuid$(userUuid).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, { user: response.data.user, loading: false, error: null });
+                        toastService.success(response.message);
+                    },
+                    error: (error: string) => {
+                        patchState(store, { loading: false, error });
+                        toastService.error(error ? error : `Une erreur s'est produite. Veuillez réessayer.`);
+                    }
+                })
+            )))),
 
         // PATIENTSSERVICE
         getAllPatients: rxMethod<void>(pipe(
