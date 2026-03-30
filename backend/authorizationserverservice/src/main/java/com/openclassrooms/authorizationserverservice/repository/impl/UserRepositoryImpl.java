@@ -125,16 +125,16 @@ public class UserRepositoryImpl implements UserRepository {
      * @param id
      * @return
      */
-    @Override
-    public User getUserById(Long id) {
-        try {
-            return jdbc.sql(SELECT_USER_BY_ID_QUERY).param("id", id).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            throw new ApiException(format("Aucun utilisateur trouvé avec l'ID %s", id));
-        } catch (Exception exception) {
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User getUserById(Long id) {
+//        try {
+//            return jdbc.sql(SELECT_USER_BY_ID_QUERY).param("id", id).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            throw new ApiException(format("Aucun utilisateur trouvé avec l'ID %s", id));
+//        } catch (Exception exception) {
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -358,18 +358,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param address nouvelle adresse postale
      * @return utilisateur mis à jour
      */
-    @Override
-    public User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address) {
-        try {
-            return jdbc.sql(UPDATE_USER_FUNCTION).paramSource(getParamSource(userUuid, firstName, lastName, email, phone, bio, address)).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException(format("Aucun utilisateur trouvé POUR UUI %s", userUuid));
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address) {
+//        try {
+//            return jdbc.sql(UPDATE_USER_FUNCTION).paramSource(getParamSource(userUuid, firstName, lastName, email, phone, bio, address)).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException(format("Aucun utilisateur trouvé POUR UUI %s", userUuid));
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -392,20 +392,20 @@ public class UserRepositoryImpl implements UserRepository {
      * @param password mot de passe encodé
      * @return token d’activation du compte
      */
-    @Override
-    public String createUser(String firstName, String lastName, String email, String username, String password) {
-        try {
-            var token = randomUUUID.get();
-            jdbc.sql(CREATE_USER_STORED_PROCEDURE).paramSource(getParamSource(firstName, lastName, email, username, password, token)).update();
-            return token;
-        } catch (DuplicateKeyException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Adresse e-mail ou nom d'utilisateur déjà utilisé. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public String createUser(String firstName, String lastName, String email, String username, String password) {
+//        try {
+//            var token = randomUUUID.get();
+//            jdbc.sql(CREATE_USER_STORED_PROCEDURE).paramSource(getParamSource(firstName, lastName, email, username, password, token)).update();
+//            return token;
+//        } catch (DuplicateKeyException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Adresse e-mail ou nom d'utilisateur déjà utilisé. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -425,26 +425,25 @@ public class UserRepositoryImpl implements UserRepository {
      * </p>
      *
      * @param token valeur du token
-     * @return {@link AccountToken} associé
      * @throws ApiException si le token est invalide ou inexistant
      */
-    @Override
-    public AccountToken getAccountToken(String token) {
-        try {
-            return jdbc.sql(SELECT_ACCOUNT_TOKEN_QUERY).param("token", token).query(AccountToken.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Lien invalide. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public AccountToken getAccountToken(String token) {
+//        try {
+//            return jdbc.sql(SELECT_ACCOUNT_TOKEN_QUERY).param("token", token).query(AccountToken.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Lien invalide. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
-    @Override
-    public User verifyPasswordToken(String token) {
-        return null;
-    }
+//    @Override
+//    public User verifyPasswordToken(String token) {
+//        return null;
+//    }
 
     /**
      * <p>
@@ -463,18 +462,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userUuid UUID de l'utilisateur
      * @return utilisateur mis à jour
      */
-    @Override
-    public User enableMfa(String userUuid) {
-        try {
-            return jdbc.sql(ENABLE_USER_MFA_FUNCTION).paramSource(getParamSource(userUuid, qrCodeSecret.get())).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User enableMfa(String userUuid) {
+//        try {
+//            return jdbc.sql(ENABLE_USER_MFA_FUNCTION).paramSource(getParamSource(userUuid, qrCodeSecret.get())).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -497,18 +496,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userUuid identifiant fonctionnel unique de l’utilisateur
      * @return utilisateur mis à jour après la désactivation du MFA
      */
-    @Override
-    public User disableMfa(String userUuid) {
-        try {
-            return jdbc.sql(DISABLE_USER_MFA_FUNCTION).param("userUuid", userUuid).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User disableMfa(String userUuid) {
+//        try {
+//            return jdbc.sql(DISABLE_USER_MFA_FUNCTION).param("userUuid", userUuid).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -530,18 +529,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userUuid identifiant unique de l'utilisateur
      * @return utilisateur après mise à jour de l’état d’expiration
      */
-    @Override
-    public User toggleAccountExpired(String userUuid) {
-        try {
-            return jdbc.sql(TOGGLE_ACCOUNT_EXPIRED_FUNCTION).param("userUuid", userUuid).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User toggleAccountExpired(String userUuid) {
+//        try {
+//            return jdbc.sql(TOGGLE_ACCOUNT_EXPIRED_FUNCTION).param("userUuid", userUuid).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -563,64 +562,64 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userUuid identifiant unique de l'utilisateur
      * @return utilisateur après modification de l’état de verrouillage
      */
-    @Override
-    public User toggleAccountLocked(String userUuid) {
-        try {
-            return jdbc.sql(TOGGLE_ACCOUNT_LOCKED_FUNCTION).param("userUuid", userUuid).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User toggleAccountLocked(String userUuid) {
+//        try {
+//            return jdbc.sql(TOGGLE_ACCOUNT_LOCKED_FUNCTION).param("userUuid", userUuid).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      *
      * @param userUuid
      * @return
      */
-    @Override
-    public User toggleAccountEnabled(String userUuid) {
-        try {
-            return jdbc.sql(TOGGLE_ACCOUNT_ENABLED_FUNCTION).param("userUuid", userUuid).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User toggleAccountEnabled(String userUuid) {
+//        try {
+//            return jdbc.sql(TOGGLE_ACCOUNT_ENABLED_FUNCTION).param("userUuid", userUuid).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      *
      * @param userUuid
      * @return
      */
-    @Override
-    public User toggleCredentialsExpired(String userUuid) {
-        return null;
-    }
+//    @Override
+//    public User toggleCredentialsExpired(String userUuid) {
+//        return null;
+//    }
 
     /**
      *
      * @param userUuid
      * @param encodedPassword
      */
-    @Override
-    public void updatePassword(String userUuid, String encodedPassword) {
-        try {
-            jdbc.sql(UPDATE_USER_PASSWORD_QUERY).params(of("userUuid", userUuid, "password", encodedPassword)).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public void updatePassword(String userUuid, String encodedPassword) {
+//        try {
+//            jdbc.sql(UPDATE_USER_PASSWORD_QUERY).params(of("userUuid", userUuid, "password", encodedPassword)).update();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -639,18 +638,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param role nouveau rôle
      * @return utilisateur mis à jour
      */
-    @Override
-    public User updateRole(String userUuid, String role) {
-        try {
-            return jdbc.sql(UPDATE_USER_ROLE_FUNCTION).params(of("userUuid", userUuid, "role", role)).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User updateRole(String userUuid, String role) {
+//        try {
+//            return jdbc.sql(UPDATE_USER_ROLE_FUNCTION).params(of("userUuid", userUuid, "role", role)).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -675,10 +674,10 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @param email adresse e-mail de l’utilisateur ayant demandé la réinitialisation
      */
-    @Override
-    public void resetPassword(String email) {
-
-    }
+//    @Override
+//    public void resetPassword(String email) {
+//
+//    }
 
     /**
      * <p>
@@ -711,10 +710,10 @@ public class UserRepositoryImpl implements UserRepository {
      * @param password nouveau mot de passe
      * @param confirmPassword confirmation du nouveau mot de passe
      */
-    @Override
-    public void doResetPassword(String userUuid, String token, String password, String confirmPassword) {
-
-    }
+//    @Override
+//    public void doResetPassword(String userUuid, String token, String password, String confirmPassword) {
+//
+//    }
 
     /**
      * <p>
@@ -732,18 +731,18 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @return liste des {@link User}
      */
-    @Override
-    public List<User> getUsers() {
-        try {
-            return jdbc.sql(SELECT_USERS_QUERY).query(User.class).list();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public List<User> getUsers() {
+//        try {
+//            return jdbc.sql(SELECT_USERS_QUERY).query(User.class).list();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -760,18 +759,18 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @param token valeur du token
      */
-    @Override
-    public void deleteAccountToken(String token) {
-        try {
-            jdbc.sql(DELETE_ACCOUNT_TOKEN_QUERY).param("token", token).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Token introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public void deleteAccountToken(String token) {
+//        try {
+//            jdbc.sql(DELETE_ACCOUNT_TOKEN_QUERY).param("token", token).update();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Token introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -784,18 +783,18 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @param token valeur du token
      */
-    @Override
-    public void deletePasswordToken(String token) {
-        try {
-            jdbc.sql("").param("token", token).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Token introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
-        }
-    }
+//    @Override
+//    public void deletePasswordToken(String token) {
+//        try {
+//            jdbc.sql("").param("token", token).update();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Token introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
+//        }
+//    }
 
     /**
      * <p>
@@ -812,18 +811,18 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @param userId identifiant de l'utilisateur
      */
-    @Override
-    public void deletePasswordToken(Long userId) {
-        try {
-            jdbc.sql(DELETE_PASSWORD_TOKEN_QUERY).param("userId", userId).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Token not found. Please try again.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public void deletePasswordToken(Long userId) {
+//        try {
+//            jdbc.sql(DELETE_PASSWORD_TOKEN_QUERY).param("userId", userId).update();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Token not found. Please try again.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -841,18 +840,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param patientUuid UUID du patient
      * @return utilisateur associé
      */
-    @Override
-    public User getPatientUser(String patientUuid) {
-        try {
-            return jdbc.sql(SELECT_PATIENT_USER_QUERY).params(of("patientUuid", patientUuid)).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException(format("Aucun patient trouvé par UUID %s", patientUuid));
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
-        }
-    }
+//    @Override
+//    public User getPatientUser(String patientUuid) {
+//        try {
+//            return jdbc.sql(SELECT_PATIENT_USER_QUERY).params(of("patientUuid", patientUuid)).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException(format("Aucun patient trouvé par UUID %s", patientUuid));
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
+//        }
+//    }
 
     /**
      * <p>
@@ -867,20 +866,20 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userId identifiant interne de l'utilisateur
      * @return valeur du token généré
      */
-    @Override
-    public String createPasswordToken(Long userId) {
-        try {
-            var token = randomUUUID.get();
-            jdbc.sql(CREATE_PASSWORD_TOKEN_QUERY).params(of("userId", userId, "token", token)).update();
-            return token;
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
-        }
-    }
+//    @Override
+//    public String createPasswordToken(Long userId) {
+//        try {
+//            var token = randomUUUID.get();
+//            jdbc.sql(CREATE_PASSWORD_TOKEN_QUERY).params(of("userId", userId, "token", token)).update();
+//            return token;
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
+//        }
+//    }
 
     /**
      * <p>
@@ -897,18 +896,18 @@ public class UserRepositoryImpl implements UserRepository {
      *
      * @return liste des supports techniques
      */
-    @Override
-    public List<User> getMediLaboSupports() {
-        try {
-            return jdbc.sql(SELECT_TECH_SUPPORTS_QUERY).query(User.class).list();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
-        }
-    }
+//    @Override
+//    public List<User> getMediLaboSupports() {
+//        try {
+//            return jdbc.sql(SELECT_TECH_SUPPORTS_QUERY).query(User.class).list();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer");
+//        }
+//    }
 
     /**
      * <p>
@@ -926,18 +925,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userUuid UUID de l'utilisateur
      * @return mot de passe chiffré
      */
-    @Override
-    public String getPassword(String userUuid) {
-        try {
-            return jdbc.sql(SELECT_USER_PASSWORD_QUERY).param("userUuid", userUuid).query(String.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public String getPassword(String userUuid) {
+//        try {
+//            return jdbc.sql(SELECT_USER_PASSWORD_QUERY).param("userUuid", userUuid).query(String.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -947,18 +946,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userUuid UUID de l'utilisateur
      * @param imageUrl URL de l’image
      */
-    @Override
-    public void updateImageUrl(String userUuid, String imageUrl) {
-        try {
-            jdbc.sql(UPDATE_USER_IMAGE_URL_QUERY).params(of("userUuid", userUuid, "imageUrl", imageUrl)).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public void updateImageUrl(String userUuid, String imageUrl) {
+//        try {
+//            jdbc.sql(UPDATE_USER_IMAGE_URL_QUERY).params(of("userUuid", userUuid, "imageUrl", imageUrl)).update();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -974,20 +973,19 @@ public class UserRepositoryImpl implements UserRepository {
      * </ul>
      *
      * @param userId identifiant interne de l'utilisateur
-     * @return {@link PasswordToken} ou {@code null} s'il n'existe pas
      */
-    @Override
-    public PasswordToken getPasswordToken(Long userId) {
-        try {
-            return jdbc.sql(SELECT_PASSWORD_TOKEN_BY_USER_ID_QUERY).params(of("userId", userId)).query(PasswordToken.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            return null;
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public PasswordToken getPasswordToken(Long userId) {
+//        try {
+//            return jdbc.sql(SELECT_PASSWORD_TOKEN_BY_USER_ID_QUERY).params(of("userId", userId)).query(PasswordToken.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            return null;
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -1003,21 +1001,20 @@ public class UserRepositoryImpl implements UserRepository {
      * </ul>
      *
      * @param token valeur du token
-     * @return {@link PasswordToken}
      * @throws ApiException si le token est invalide
      */
-    @Override
-    public PasswordToken getPasswordToken(String token) {
-        try {
-            return jdbc.sql(SELECT_PASSWORD_TOKEN_QUERY).param("token", token).query(PasswordToken.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Lien invalide. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public PasswordToken getPasswordToken(String token) {
+//        try {
+//            return jdbc.sql(SELECT_PASSWORD_TOKEN_QUERY).param("token", token).query(PasswordToken.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Lien invalide. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -1049,18 +1046,18 @@ public class UserRepositoryImpl implements UserRepository {
      * @param userId identifiant interne de l’utilisateur
      * @throws ApiException si l’utilisateur n’existe pas ou en cas d’erreur technique
      */
-    @Override
-    public void updateAccountSettings(Long userId) {
-        try {
-            jdbc.sql(UPDATE_ACCOUNT_SETTINGS_QUERY).param("userId", userId).update();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public void updateAccountSettings(Long userId) {
+//        try {
+//            jdbc.sql(UPDATE_ACCOUNT_SETTINGS_QUERY).param("userId", userId).update();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -1078,19 +1075,19 @@ public class UserRepositoryImpl implements UserRepository {
      * @param patientUuid UUID du patient
      * @return utilisateur assigné ou utilisateur vide
      */
-    @Override
-    public User getAssignee(String patientUuid) {
-        try {
-            return jdbc.sql(SELECT_PATIENT_ASSIGNEE_QUERY).param("patientUuid", patientUuid).query(User.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            log.error("Patient is not assigned.");
-            return User.builder().build();
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public User getAssignee(String patientUuid) {
+//        try {
+//            return jdbc.sql(SELECT_PATIENT_ASSIGNEE_QUERY).param("patientUuid", patientUuid).query(User.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            log.error("Patient is not assigned.");
+//            return User.builder().build();
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -1098,20 +1095,19 @@ public class UserRepositoryImpl implements UserRepository {
      * </p>
      *
      * @param userUuid UUID de l'utilisateur
-     * @return {@link Credential}
      */
-    @Override
-    public Credential getCredential(String userUuid) {
-        try {
-            return jdbc.sql(SELECT_USER_CREDENTIAL_QUERY).param("userUuid", userUuid).query(Credential.class).single();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Identifiants introuvables. Veuillez réessayer..");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public Credential getCredential(String userUuid) {
+//        try {
+//            return jdbc.sql(SELECT_USER_CREDENTIAL_QUERY).param("userUuid", userUuid).query(Credential.class).single();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Identifiants introuvables. Veuillez réessayer..");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>
@@ -1128,20 +1124,19 @@ public class UserRepositoryImpl implements UserRepository {
      * </ul>
      *
      * @param userUuid UUID de l'utilisateur
-     * @return liste des {@link Device}
      */
-    @Override
-    public List<Device> getDevices(String userUuid) {
-        try {
-            return jdbc.sql(SELECT_DEVICES_QUERY).param("userUuid", userUuid).query(Device.class).list();
-        } catch (EmptyResultDataAccessException exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
-        } catch (Exception exception) {
-            log.error(exception.getMessage());
-            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
-        }
-    }
+//    @Override
+//    public List<Device> getDevices(String userUuid) {
+//        try {
+//            return jdbc.sql(SELECT_DEVICES_QUERY).param("userUuid", userUuid).query(Device.class).list();
+//        } catch (EmptyResultDataAccessException exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Utilisateur introuvable. Veuillez réessayer.");
+//        } catch (Exception exception) {
+//            log.error(exception.getMessage());
+//            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+//        }
+//    }
 
     /**
      * <p>

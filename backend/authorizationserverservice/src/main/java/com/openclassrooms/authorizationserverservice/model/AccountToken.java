@@ -1,4 +1,4 @@
-package com.openclassrooms.authorizationserverservice.model;
+//package com.openclassrooms.authorizationserverservice.model;
 
 import lombok.*;
 
@@ -11,7 +11,7 @@ import lombok.*;
  * @since 2026-05-01
  */
 
-@Getter
+/*@Getter
 @Setter
 @ToString
 @Builder
@@ -24,4 +24,4 @@ public class AccountToken {
     private boolean expired;
     private String createdAt;
     private String updatedAt;
-}
+}*/

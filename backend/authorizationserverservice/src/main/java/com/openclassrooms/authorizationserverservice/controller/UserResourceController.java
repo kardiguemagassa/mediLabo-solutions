@@ -1,4 +1,4 @@
-package com.openclassrooms.authorizationserverservice.controller;
+/*package com.openclassrooms.authorizationserverservice.controller;
 
 import com.openclassrooms.authorizationserverservice.domain.Response;
 import com.openclassrooms.authorizationserverservice.dtorequest.PasswordRequest;
@@ -107,7 +107,7 @@ import static org.springframework.http.ResponseEntity.ok;
  * @since 2026-05-01
  */
 
-@Tag(
+/*@Tag(
         name = "User Management",
         description = "Public REST API for user registration, authentication, profile management and security (MFA, password, roles, photos)"
 )
@@ -124,7 +124,7 @@ public class UserResourceController {
 
     /** REGISTRATION AND ACCOUNT VERIFICATION */
 
-    @Operation(summary = "Register a new user", description = "Creates a new user and sends an email confirmation")
+    /*@Operation(summary = "Register a new user", description = "Creates a new user and sends an email confirmation")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data")
@@ -148,7 +148,7 @@ public class UserResourceController {
 
     /** MFA (MULTI-FACTOR AUTHENTICATION) */
 
-    @Operation(summary = "Enable MFA", description = "Activates two-factor authentication for the logged-in user")
+    /*@Operation(summary = "Enable MFA", description = "Activates two-factor authentication for the logged-in user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "2FA enabled successfully"),
             @ApiResponse(responseCode = "401", description = "User not authenticated")
@@ -172,7 +172,7 @@ public class UserResourceController {
 
     /** USER PROFILE */
 
-    @Operation(summary = "Get profile", description = "Retrieve profile and devices for the logged-in user")
+    /*@Operation(summary = "Get profile", description = "Retrieve profile and devices for the logged-in user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "User not authenticated")
@@ -330,7 +330,7 @@ public class UserResourceController {
 
     /** PASSWORD MANAGEMENT WHEN USER IS LOGGED IN */
 
-    @Operation(summary = "Update password", description = "Update the logged-in user's password")
+    /*@Operation(summary = "Update password", description = "Update the logged-in user's password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid password or confirmation mismatch")
@@ -342,7 +342,7 @@ public class UserResourceController {
     }
 
     /** WHEN USER IS NOT LOGGED */
-    @Operation(summary = "Request password reset", description = "Request password reset email (user not logged in)")
+    /*@Operation(summary = "Request password reset", description = "Request password reset email (user not logged in)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password reset email sent"),
             @ApiResponse(responseCode = "404", description = "Email not found")
@@ -354,7 +354,7 @@ public class UserResourceController {
     }
 
     /** WHEN USER IS NOT LOGGED */
-    @Operation(summary = "Verify password reset token", description = "Verifies the password reset token sent by email")
+    /*@Operation(summary = "Verify password reset token", description = "Verifies the password reset token sent by email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token verified successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid or expired token")
@@ -366,7 +366,7 @@ public class UserResourceController {
     }
 
     /** WHEN USER IS NOT LOGGED IN */
-    @Operation(summary = "Reset password", description = "Reset password using token sent by email")
+    /*@Operation(summary = "Reset password", description = "Reset password using token sent by email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password reset successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid token or mismatch")
@@ -391,7 +391,7 @@ public class UserResourceController {
 
     /** PHOTOS AND AVATARS */
 
-    @Operation(summary = "Upload user photo", description = "Uploads a photo for the logged-in user")
+    /*@Operation(summary = "Upload user photo", description = "Uploads a photo for the logged-in user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Photo uploaded successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid file")
@@ -414,7 +414,7 @@ public class UserResourceController {
 
     /** ADMIN OPERATIONS ON OTHER USERS */
 
-    @Operation(summary = "Update another user's role (admin)")
+    /*@Operation(summary = "Update another user's role (admin)")
     @PatchMapping("/{userUuid}/updaterole")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Response> updateRoleByUuid(@PathVariable("userUuid") String userUuid, @RequestBody RoleRequest roleRequest, HttpServletRequest request) {
@@ -459,8 +459,8 @@ public class UserResourceController {
 
     /** PRIVATE UTIL */
 
-    private URI getUri() {
+    /*private URI getUri() {
         return URI.create("/user/profile/userId");
     }
 
-}
+}*/

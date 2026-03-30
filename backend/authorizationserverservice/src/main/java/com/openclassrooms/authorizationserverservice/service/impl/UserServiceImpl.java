@@ -3,8 +3,8 @@ package com.openclassrooms.authorizationserverservice.service.impl;
 
 import com.openclassrooms.authorizationserverservice.event.Event;
 import com.openclassrooms.authorizationserverservice.exception.ApiException;
-import com.openclassrooms.authorizationserverservice.model.Credential;
-import com.openclassrooms.authorizationserverservice.model.Device;
+//import com.openclassrooms.authorizationserverservice.model.Credential;
+//import com.openclassrooms.authorizationserverservice.model.Device;
 import com.openclassrooms.authorizationserverservice.model.User;
 import com.openclassrooms.authorizationserverservice.repository.UserRepository;
 import com.openclassrooms.authorizationserverservice.service.UserService;
@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.openclassrooms.authorizationserverservice.enumeration.EventType.PASSWORD_RESET;
@@ -222,10 +223,10 @@ public class UserServiceImpl implements UserService {
      * @param userUuid identifiant unique de l’utilisateur
      * @return utilisateur correspondant
      */
-    @Override
-    public User getUserByUuid(String userUuid) {
-        return userRepository.getUserByUuid(userUuid);
-    }
+//    @Override
+//    public User getUserByUuid(String userUuid) {
+//        return userRepository.getUserByUuid(userUuid);
+//    }
 
 
     /**
@@ -240,10 +241,10 @@ public class UserServiceImpl implements UserService {
      * @param address adresse
      * @return {@link User} mis à jour
      */
-    @Override
-    public User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address) {
-        return userRepository.updateUser(userUuid, firstName, lastName, email, phone, bio, address);
-    }
+//    @Override
+//    public User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address) {
+//        return userRepository.updateUser(userUuid, firstName, lastName, email, phone, bio, address);
+//    }
 
     /**
      * Crée un nouvel utilisateur avec un mot de passe encodé et déclenche un événement de type USER_CREATED.
@@ -254,11 +255,11 @@ public class UserServiceImpl implements UserService {
      * @param username nom d'utilisateur
      * @param password mot de passe en clair
      */
-    @Override
-    public void createUser(String firstName, String lastName, String email, String username, String password) {
-        var token = userRepository.createUser(firstName, lastName, email, username, encoder.encode(password));
-        publisher.publishEvent(new Event(USER_CREATED, of("token", token, "name", capitalizeFully(firstName), "email", email)));
-    }
+//    @Override
+//    public void createUser(String firstName, String lastName, String email, String username, String password) {
+//        var token = userRepository.createUser(firstName, lastName, email, username, encoder.encode(password));
+//        publisher.publishEvent(new Event(USER_CREATED, of("token", token, "name", capitalizeFully(firstName), "email", email)));
+//    }
 
     /**
      * <p>
@@ -275,19 +276,19 @@ public class UserServiceImpl implements UserService {
      *
      * @param token token de validation reçu par e-mail
      */
-    @Override
-    public void verifyAccount(String token) {
-        var accountToken = userRepository.getAccountToken(token);
-        if(!nonNull(accountToken)) {
-            throw new ApiException("Lien invalide. Veuillez réessayer.");
-        }
-        if(accountToken.isExpired()) {
-            userRepository.deleteAccountToken(token);
-            throw new ApiException("Ce lien a expiré. Veuillez recréer votre compte.");
-        }
-        userRepository.updateAccountSettings(accountToken.getUserId());
-        userRepository.deleteAccountToken(token);
-    }
+//    @Override
+//    public void verifyAccount(String token) {
+//        var accountToken = userRepository.getAccountToken(token);
+//        if(!nonNull(accountToken)) {
+//            throw new ApiException("Lien invalide. Veuillez réessayer.");
+//        }
+//        if(accountToken.isExpired()) {
+//            userRepository.deleteAccountToken(token);
+//            throw new ApiException("Ce lien a expiré. Veuillez recréer votre compte.");
+//        }
+//        userRepository.updateAccountSettings(accountToken.getUserId());
+//        userRepository.deleteAccountToken(token);
+//    }
 
     /**
      * <p>
@@ -301,18 +302,18 @@ public class UserServiceImpl implements UserService {
      * @param token token de réinitialisation
      * @return utilisateur associé au token
      */
-    @Override
-    public User verifyPasswordToken(String token) {
-        var passwordToken = userRepository.getPasswordToken(token);
-        if(!nonNull(passwordToken)) {
-            throw new ApiException("Lien invalide. Veuillez réessayer.");
-        }
-        if(passwordToken.isExpired()) {
-            userRepository.deletePasswordToken(token);
-            throw new ApiException("Le lien a expiré. Veuillez réinitialiser votre mot de passe.");
-        }
-        return userRepository.getUserById(passwordToken.getUserId());
-    }
+//    @Override
+//    public User verifyPasswordToken(String token) {
+//        var passwordToken = userRepository.getPasswordToken(token);
+//        if(!nonNull(passwordToken)) {
+//            throw new ApiException("Lien invalide. Veuillez réessayer.");
+//        }
+//        if(passwordToken.isExpired()) {
+//            userRepository.deletePasswordToken(token);
+//            throw new ApiException("Le lien a expiré. Veuillez réinitialiser votre mot de passe.");
+//        }
+//        return userRepository.getUserById(passwordToken.getUserId());
+//    }
 
     /**
      * <p>
@@ -322,10 +323,10 @@ public class UserServiceImpl implements UserService {
      * @param userUuid identifiant de l’utilisateur
      * @return utilisateur après activation du MFA
      */
-    @Override
-    public User enableMfa(String userUuid) {
-        return userRepository.enableMfa(userUuid);
-    }
+//    @Override
+//    public User enableMfa(String userUuid) {
+//        return userRepository.enableMfa(userUuid);
+//    }
 
     /**
      * <p>
@@ -335,10 +336,10 @@ public class UserServiceImpl implements UserService {
      * @param userUuid identifiant de l’utilisateur
      * @return utilisateur après désactivation
      */
-    @Override
-    public User disableMfa(String userUuid) {
-        return userRepository.disableMfa(userUuid);
-    }
+//    @Override
+//    public User disableMfa(String userUuid) {
+//        return userRepository.disableMfa(userUuid);
+//    }
 
     /**
      * <p>
@@ -353,14 +354,14 @@ public class UserServiceImpl implements UserService {
      * @param file image à téléverser
      * @return utilisateur avec la nouvelle image
      */
-    @Override
-    public User uploadPhoto(String userUuid, MultipartFile file) {
-        var user = userRepository.getUserByUuid(userUuid);
-        var imageUrl = savePhoto(user.getImageUrl(), file);
-        userRepository.updateImageUrl(userUuid, imageUrl);
-        user.setImageUrl(imageUrl + "?timestamp=" + System.currentTimeMillis());
-        return user;
-    }
+//    @Override
+//    public User uploadPhoto(String userUuid, MultipartFile file) {
+//        var user = userRepository.getUserByUuid(userUuid);
+//        var imageUrl = savePhoto(user.getImageUrl(), file);
+//        userRepository.updateImageUrl(userUuid, imageUrl);
+//        user.setImageUrl(imageUrl + "?timestamp=" + System.currentTimeMillis());
+//        return user;
+//    }
 
     /**
      * <p>
@@ -379,25 +380,25 @@ public class UserServiceImpl implements UserService {
      * @param userUuid identifiant utilisateur
      * @return utilisateur mis à jour
      */
-    @Override
-    public User toggleAccountExpired(String userUuid) {
-        return userRepository.toggleAccountExpired(userUuid);
-    }
-
-    @Override
-    public User toggleAccountLocked(String userUuid) {
-        return userRepository.toggleAccountLocked(userUuid);
-    }
-
-    @Override
-    public User toggleAccountEnabled(String userUuid) {
-        return userRepository.toggleAccountEnabled(userUuid);
-    }
-
-    @Override
-    public User toggleCredentialsExpired(String userUuid) {
-        return null;
-    }
+//    @Override
+//    public User toggleAccountExpired(String userUuid) {
+//        return userRepository.toggleAccountExpired(userUuid);
+//    }
+//
+//    @Override
+//    public User toggleAccountLocked(String userUuid) {
+//        return userRepository.toggleAccountLocked(userUuid);
+//    }
+//
+//    @Override
+//    public User toggleAccountEnabled(String userUuid) {
+//        return userRepository.toggleAccountEnabled(userUuid);
+//    }
+//
+//    @Override
+//    public User toggleCredentialsExpired(String userUuid) {
+//        return null;
+//    }
 
     /**
      * <p>
@@ -413,21 +414,21 @@ public class UserServiceImpl implements UserService {
      * @param newPassword nouveau mot de passe
      * @param confirmNewPassword confirmation
      */
-    @Override
-    public void updatePassword(String userUuid, String currentPassword, String newPassword, String confirmNewPassword) {
-        if(!Objects.equals(confirmNewPassword, newPassword)) {
-            throw new ApiException("Les mots de passe ne correspondent pas. Veuillez réessayer.");
-        }
-        if(!encoder.matches(currentPassword, userRepository.getPassword(userUuid))) {
-            throw new ApiException("Le mot de passe actuel est incorrect. Veuillez réessayer.");
-        }
-        userRepository.updatePassword(userUuid, encoder.encode(newPassword));
-    }
-
-    @Override
-    public User updateRole(String userUuid, String role) {
-        return userRepository.updateRole(userUuid, role);
-    }
+//    @Override
+//    public void updatePassword(String userUuid, String currentPassword, String newPassword, String confirmNewPassword) {
+//        if(!Objects.equals(confirmNewPassword, newPassword)) {
+//            throw new ApiException("Les mots de passe ne correspondent pas. Veuillez réessayer.");
+//        }
+//        if(!encoder.matches(currentPassword, userRepository.getPassword(userUuid))) {
+//            throw new ApiException("Le mot de passe actuel est incorrect. Veuillez réessayer.");
+//        }
+//        userRepository.updatePassword(userUuid, encoder.encode(newPassword));
+//    }
+//
+//    @Override
+//    public User updateRole(String userUuid, String role) {
+//        return userRepository.updateRole(userUuid, role);
+//    }
 
     /**
      * <p>
@@ -440,21 +441,21 @@ public class UserServiceImpl implements UserService {
      *
      * @param email adresse e-mail de l'utilisateur
      */
-    @Override
-    public void resetPassword(String email) {
-        var user = userRepository.getUserByEmail(email);
-        var passwordToken = userRepository.getPasswordToken(user.getUserId());
-        if(!nonNull(passwordToken)) {
-            var newToken = userRepository.createPasswordToken(user.getUserId());
-            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", newToken, "email", email, "name", Objects.requireNonNull(capitalizeFully(user.getFirstName())))));
-        } else if (passwordToken.isExpired()) {
-            userRepository.deletePasswordToken(user.getUserId());
-            var newToken = userRepository.createPasswordToken(user.getUserId());
-            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", newToken, "email", email, "name", capitalizeFully(user.getFirstName()))));
-        } else {
-            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", passwordToken.getToken(), "email", email, "name", capitalizeFully(user.getFirstName()))));
-        }
-    }
+//    @Override
+//    public void resetPassword(String email) {
+//        var user = userRepository.getUserByEmail(email);
+//        var passwordToken = userRepository.getPasswordToken(user.getUserId());
+//        if(!nonNull(passwordToken)) {
+//            var newToken = userRepository.createPasswordToken(user.getUserId());
+//            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", newToken, "email", email, "name", Objects.requireNonNull(capitalizeFully(user.getFirstName())))));
+//        } else if (passwordToken.isExpired()) {
+//            userRepository.deletePasswordToken(user.getUserId());
+//            var newToken = userRepository.createPasswordToken(user.getUserId());
+//            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", newToken, "email", email, "name", capitalizeFully(user.getFirstName()))));
+//        } else {
+//            publisher.publishEvent(new Event(PASSWORD_RESET, of("token", passwordToken.getToken(), "email", email, "name", capitalizeFully(user.getFirstName()))));
+//        }
+//    }
 
     /**
      * <p>
@@ -470,54 +471,54 @@ public class UserServiceImpl implements UserService {
      * @param password nouveau mot de passe
      * @param confirmPassword confirmation
      */
-    @Override
-    public void doResetPassword(String userUuid, String token, String password, String confirmPassword) {
-        if(!Objects.equals(confirmPassword, password)) {
-            throw new ApiException("Les mots de passe ne correspondent pas. Veuillez réessayer.");
-        }
-        var user = userRepository.getUserByUuid(userUuid);
-        var passwordToken = userRepository.getPasswordToken(token);
-        if(!Objects.equals(user.getUserId(), passwordToken.getUserId())) {
-            throw new ApiException("Lien invalide. Veuillez réessayer.");
-        }
-        userRepository.updatePassword(userUuid, encoder.encode(password));
-        userRepository.deletePasswordToken(user.getUserId());
-    }
-
-    @Override
-    public List<User> getUsers() {
-        return userRepository.getUsers();
-    }
-
-    @Override
-    public User getAssignee(String ticketUuid) {
-        return userRepository.getAssignee(ticketUuid);
-    }
-
-    @Override
-    public Credential getCredential(String userUuid) {
-        return userRepository.getCredential(userUuid);
-    }
-
-    @Override
-    public List<Device> getDevices(String userUuid) {
-        return userRepository.getDevices(userUuid);
-    }
-
-    @Override
-    public User getPatientUser(String patientUuid) {
-        return userRepository.getPatientUser(patientUuid);
-    }
+//    @Override
+//    public void doResetPassword(String userUuid, String token, String password, String confirmPassword) {
+//        if(!Objects.equals(confirmPassword, password)) {
+//            throw new ApiException("Les mots de passe ne correspondent pas. Veuillez réessayer.");
+//        }
+//        var user = userRepository.getUserByUuid(userUuid);
+//        var passwordToken = userRepository.getPasswordToken(token);
+//        if(!Objects.equals(user.getUserId(), passwordToken.getUserId())) {
+//            throw new ApiException("Lien invalide. Veuillez réessayer.");
+//        }
+//        userRepository.updatePassword(userUuid, encoder.encode(password));
+//        userRepository.deletePasswordToken(user.getUserId());
+//    }
+//
+//    @Override
+//    public List<User> getUsers() {
+//        return userRepository.getUsers();
+//    }
+//
+//    @Override
+//    public User getAssignee(String ticketUuid) {
+//        return userRepository.getAssignee(ticketUuid);
+//    }
+//
+//    @Override
+//    public Credential getCredential(String userUuid) {
+//        return userRepository.getCredential(userUuid);
+//    }
+//
+//    @Override
+//    public List<Device> getDevices(String userUuid) {
+//        return userRepository.getDevices(userUuid);
+//    }
+//
+//    @Override
+//    public User getPatientUser(String patientUuid) {
+//        return userRepository.getPatientUser(patientUuid);
+//    }
 
     /**
      * Récupère la liste des utilisateurs support technique de MediLabo.
      *
      * @return Liste des utilisateurs support technique.
      */
-    @Override
-    public List<User> getMediLaboSupports() {
-        return userRepository.getMediLaboSupports();
-    }
+//    @Override
+//    public List<User> getMediLaboSupports() {
+//        return userRepository.getMediLaboSupports();
+//    }
 
     /**
      * Fonction utilitaire pour récupérer l'extension d'un fichier.
@@ -554,16 +555,16 @@ public class UserServiceImpl implements UserService {
      * @param userUuid UUID de l'utilisateur.
      * @return true si l'utilisateur existe, false sinon.
      */
-    @Override
-    public boolean userExistsByUuid(String userUuid) {
-        log.debug("Checking if user exists with UUID: {}", userUuid);
-
-        try {
-            userRepository.getUserByUuid(userUuid);
-            return true;
-        } catch (ApiException e) {
-            return false;
-        }
-    }
+//    @Override
+//    public boolean userExistsByUuid(String userUuid) {
+//        log.debug("Checking if user exists with UUID: {}", userUuid);
+//
+//        try {
+//            userRepository.getUserByUuid(userUuid);
+//            return true;
+//        } catch (ApiException e) {
+//            return false;
+//        }
+//    }
 
 }

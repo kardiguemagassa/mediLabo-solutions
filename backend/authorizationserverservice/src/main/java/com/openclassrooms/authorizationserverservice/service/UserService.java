@@ -1,8 +1,8 @@
 package com.openclassrooms.authorizationserverservice.service;
 
 //import com.openclassrooms.authorizationserverservice.dto.UserInfoDTO;
-import com.openclassrooms.authorizationserverservice.model.Credential;
-import com.openclassrooms.authorizationserverservice.model.Device;
+//import com.openclassrooms.authorizationserverservice.model.Credential;
+//import com.openclassrooms.authorizationserverservice.model.Device;
 import com.openclassrooms.authorizationserverservice.model.User;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,7 +17,6 @@ import java.util.List;
  */
 
 public interface UserService {
-    // USER MANAGEMENT TOKEN SERVICE
     User getUserByEmail(String email);
     void resetLoginAttempts(String userUuid);
     void updateLoginAttempts(String email);
@@ -25,7 +24,8 @@ public interface UserService {
     void setLastLogin(Long userId);
     void addLoginDevice(Long userId, String deviceName, String client, String ipAddress);
 
-    // USER MANAGEMENT SERVICE
+
+    /*// USER MANAGEMENT SERVICE
     User getUserByUuid(String userUuid);
     User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address);
     void createUser(String firstName, String lastName, String email, String username, String password);
@@ -52,4 +52,6 @@ public interface UserService {
     // USER PATIENT MANAGEMENT
     //UserInfoDTO getUserInfoByUuid(String userUuid);
     boolean userExistsByUuid(String userUuid);
+
+     */
 }

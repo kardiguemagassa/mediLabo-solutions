@@ -55,87 +55,87 @@ class UserServiceImplTest {
     void setUp() {
         ReflectionTestUtils.setField(userService, "photoDirectory", tempDir.toString() + "/");
     }
-
-    @Test
-    @DisplayName("createUser doit encoder le mot de passe et publier un événement")
-    void createUser_ShouldEncodePasswordAndPublishEvent() {
-        // GIVEN
-        String email = "john@example.com";
-        String password = "plainPassword";
-        String encodedPassword = "encodedPassword";
-        String token = "activation-token";
-
-        when(encoder.encode(password)).thenReturn(encodedPassword);
-        when(userRepository.createUser(anyString(), anyString(), eq(email), anyString(), eq(encodedPassword)))
-                .thenReturn(token);
-
-        // WHEN
-        userService.createUser("John", "Doe", email, "john123", password);
-
-        // THEN
-        verify(encoder).encode(password);
-        verify(userRepository).createUser(anyString(), anyString(), eq(email), anyString(), eq(encodedPassword));
-        verify(publisher).publishEvent(any(Event.class));
-    }
-
-    @Test
-    @DisplayName("getUserByUuid doit retourner l'utilisateur si présent")
-    void getUserByUuid_ShouldReturnUser() {
-        // GIVEN
-        User mockUser = new User();
-        mockUser.setUserUuid("uuid-123");
-        when(userRepository.getUserByUuid("uuid-123")).thenReturn(mockUser);
-
-        // WHEN
-        User result = userService.getUserByUuid("uuid-123");
-
-        // THEN
-        assertThat(result).isNotNull();
-        assertThat(result.getUserUuid()).isEqualTo("uuid-123");
-    }
-
-    @Test
-    @DisplayName("updatePassword doit lever une exception si les mots de passe ne matchent pas")
-    void updatePassword_ShouldThrowException_WhenPasswordsDoNotMatch() {
-        // WHEN & THEN
-        assertThatThrownBy(() ->
-                userService.updatePassword("uuid", "current", "newPass", "wrongConfirm")
-        ).isInstanceOf(ApiException.class)
-                .hasMessageContaining("Les mots de passe ne correspondent pas");
-    }
-
-    @Test
-    @DisplayName("updatePassword doit fonctionner si le mot de passe actuel est correct")
-    void updatePassword_ShouldWork_WhenCurrentPasswordIsCorrect() {
-        // GIVEN
-        String userUuid = "uuid-123";
-        String currentPlain = "oldPass";
-        String currentEncoded = "encodedOldPass";
-        String newPlain = "newPass";
-
-        when(userRepository.getPassword(userUuid)).thenReturn(currentEncoded);
-        when(encoder.matches(currentPlain, currentEncoded)).thenReturn(true);
-        when(encoder.encode(newPlain)).thenReturn("encodedNewPass");
-
-        // WHEN
-        userService.updatePassword(userUuid, currentPlain, newPlain, newPlain);
-
-        // THEN
-        verify(userRepository).updatePassword(eq(userUuid), anyString());
-    }
-
-    @Test
-    @DisplayName("userExistsByUuid doit retourner false en cas d'ApiException")
-    void userExistsByUuid_ShouldReturnFalse_WhenNotFound() {
-        // GIVEN
-        when(userRepository.getUserByUuid("invalid-uuid")).thenThrow(new ApiException("Not found"));
-
-        // WHEN
-        boolean exists = userService.userExistsByUuid("invalid-uuid");
-
-        // THEN
-        assertThat(exists).isFalse();
-    }
+//
+//    @Test
+//    @DisplayName("createUser doit encoder le mot de passe et publier un événement")
+//    void createUser_ShouldEncodePasswordAndPublishEvent() {
+//        // GIVEN
+//        String email = "john@example.com";
+//        String password = "plainPassword";
+//        String encodedPassword = "encodedPassword";
+//        String token = "activation-token";
+//
+//        when(encoder.encode(password)).thenReturn(encodedPassword);
+//        when(userRepository.createUser(anyString(), anyString(), eq(email), anyString(), eq(encodedPassword)))
+//                .thenReturn(token);
+//
+//        // WHEN
+//        userService.createUser("John", "Doe", email, "john123", password);
+//
+//        // THEN
+//        verify(encoder).encode(password);
+//        verify(userRepository).createUser(anyString(), anyString(), eq(email), anyString(), eq(encodedPassword));
+//        verify(publisher).publishEvent(any(Event.class));
+//    }
+//
+//    @Test
+//    @DisplayName("getUserByUuid doit retourner l'utilisateur si présent")
+//    void getUserByUuid_ShouldReturnUser() {
+//        // GIVEN
+//        User mockUser = new User();
+//        mockUser.setUserUuid("uuid-123");
+//        when(userRepository.getUserByUuid("uuid-123")).thenReturn(mockUser);
+//
+//        // WHEN
+//        User result = userService.getUserByUuid("uuid-123");
+//
+//        // THEN
+//        assertThat(result).isNotNull();
+//        assertThat(result.getUserUuid()).isEqualTo("uuid-123");
+//    }
+//
+//    @Test
+//    @DisplayName("updatePassword doit lever une exception si les mots de passe ne matchent pas")
+//    void updatePassword_ShouldThrowException_WhenPasswordsDoNotMatch() {
+//        // WHEN & THEN
+//        assertThatThrownBy(() ->
+//                userService.updatePassword("uuid", "current", "newPass", "wrongConfirm")
+//        ).isInstanceOf(ApiException.class)
+//                .hasMessageContaining("Les mots de passe ne correspondent pas");
+//    }
+//
+//    @Test
+//    @DisplayName("updatePassword doit fonctionner si le mot de passe actuel est correct")
+//    void updatePassword_ShouldWork_WhenCurrentPasswordIsCorrect() {
+//        // GIVEN
+//        String userUuid = "uuid-123";
+//        String currentPlain = "oldPass";
+//        String currentEncoded = "encodedOldPass";
+//        String newPlain = "newPass";
+//
+//        when(userRepository.getPassword(userUuid)).thenReturn(currentEncoded);
+//        when(encoder.matches(currentPlain, currentEncoded)).thenReturn(true);
+//        when(encoder.encode(newPlain)).thenReturn("encodedNewPass");
+//
+//        // WHEN
+//        userService.updatePassword(userUuid, currentPlain, newPlain, newPlain);
+//
+//        // THEN
+//        verify(userRepository).updatePassword(eq(userUuid), anyString());
+//    }
+//
+//    @Test
+//    @DisplayName("userExistsByUuid doit retourner false en cas d'ApiException")
+//    void userExistsByUuid_ShouldReturnFalse_WhenNotFound() {
+//        // GIVEN
+//        when(userRepository.getUserByUuid("invalid-uuid")).thenThrow(new ApiException("Not found"));
+//
+//        // WHEN
+//        boolean exists = userService.userExistsByUuid("invalid-uuid");
+//
+//        // THEN
+//        assertThat(exists).isFalse();
+//    }
 
     @Test
     @DisplayName("getUserByEmail doit retourner l'utilisateur correspondant à l'email")
@@ -157,19 +157,19 @@ class UserServiceImplTest {
         verify(userRepository, times(1)).getUserByEmail(email);
     }
 
-    @Test
-    @DisplayName("toggleAccountEnabled doit appeler le repository")
-    void toggleAccountEnabled_ShouldInvokeRepository() {
-        // GIVEN
-        String uuid = "uuid-123";
-        when(userRepository.toggleAccountEnabled(uuid)).thenReturn(new User());
-
-        // WHEN
-        userService.toggleAccountEnabled(uuid);
-
-        // THEN
-        verify(userRepository).toggleAccountEnabled(uuid);
-    }
+//    @Test
+//    @DisplayName("toggleAccountEnabled doit appeler le repository")
+//    void toggleAccountEnabled_ShouldInvokeRepository() {
+//        // GIVEN
+//        String uuid = "uuid-123";
+//        when(userRepository.toggleAccountEnabled(uuid)).thenReturn(new User());
+//
+//        // WHEN
+//        userService.toggleAccountEnabled(uuid);
+//
+//        // THEN
+//        verify(userRepository).toggleAccountEnabled(uuid);
+//    }
 
     @Test
     @DisplayName("resetLoginAttempts doit appeler le repository avec le bon userId")
@@ -270,98 +270,98 @@ class UserServiceImplTest {
         }
     }
 
-    @Test
-    @DisplayName("updateUser doit appeler le repository et retourner l'utilisateur mis à jour")
-    void updateUser_ShouldReturnUpdatedUser() {
-        // GIVEN
-        String uuid = "uuid-123";
-        String firstName = "John";
-        String lastName = "Doe";
-        String email = "john@example.com";
-        String phone = "0102030405";
-        String bio = "Développeur Java";
-        String address = "123 Rue de Paris";
+//    @Test
+//    @DisplayName("updateUser doit appeler le repository et retourner l'utilisateur mis à jour")
+//    void updateUser_ShouldReturnUpdatedUser() {
+//        // GIVEN
+//        String uuid = "uuid-123";
+//        String firstName = "John";
+//        String lastName = "Doe";
+//        String email = "john@example.com";
+//        String phone = "0102030405";
+//        String bio = "Développeur Java";
+//        String address = "123 Rue de Paris";
+//
+//        User updatedUser = new User();
+//        updatedUser.setUserUuid(uuid);
+//        updatedUser.setFirstName(firstName);
+//
+//        when(userRepository.updateUser(uuid, firstName, lastName, email, phone, bio, address))
+//                .thenReturn(updatedUser);
+//
+//        // WHEN
+//        User result = userService.updateUser(uuid, firstName, lastName, email, phone, bio, address);
+//
+//        // THEN
+//        assertThat(result).isNotNull();
+//        assertThat(result.getFirstName()).isEqualTo("John");
+//        verify(userRepository, times(1)).updateUser(uuid, firstName, lastName, email, phone, bio, address);
+//    }
 
-        User updatedUser = new User();
-        updatedUser.setUserUuid(uuid);
-        updatedUser.setFirstName(firstName);
+//    @Test
+//    @DisplayName("verifyAccount doit lever une exception si le token n'existe pas")
+//    void verifyAccount_ShouldThrowException_WhenTokenNotFound() {
+//        // GIVEN
+//        String token = "unknown-token";
+//        when(userRepository.getAccountToken(token)).thenReturn(null);
+//
+//        // WHEN & THEN
+//        assertThatThrownBy(() -> userService.verifyAccount(token))
+//                .isInstanceOf(ApiException.class)
+//                .hasMessageContaining("Lien invalide");
+//
+//        verify(userRepository, never()).updateAccountSettings(any());
+//    }
 
-        when(userRepository.updateUser(uuid, firstName, lastName, email, phone, bio, address))
-                .thenReturn(updatedUser);
+//    @Test
+//    @DisplayName("verifyAccount doit supprimer le token et lever une exception s'il est expiré")
+//    void verifyAccount_ShouldDeleteTokenAndThrow_WhenTokenExpired() {
+//        // GIVEN
+//        String token = "expired-token";
+//        // On simule un token expiré (on suppose qu'il y a un mock ou un objet réel AccountToken)
+//        var mockToken = mock(com.openclassrooms.authorizationserverservice.model.AccountToken.class);
+//        when(mockToken.isExpired()).thenReturn(true);
+//        when(userRepository.getAccountToken(token)).thenReturn(mockToken);
+//
+//        // WHEN & THEN
+//        assertThatThrownBy(() -> userService.verifyAccount(token))
+//                .isInstanceOf(ApiException.class)
+//                .hasMessageContaining("Ce lien a expiré");
+//
+//        verify(userRepository).deleteAccountToken(token);
+//        verify(userRepository, never()).updateAccountSettings(any());
+//    }
 
-        // WHEN
-        User result = userService.updateUser(uuid, firstName, lastName, email, phone, bio, address);
+//    @Test
+//    @DisplayName("verifyAccount doit activer le compte et supprimer le token en cas de succès")
+//    void verifyAccount_ShouldVerifyAndCleanup_WhenTokenIsValid() {
+//        // GIVEN
+//        String token = "valid-token";
+//        Long userId = 100L;
+//        var mockToken = mock(com.openclassrooms.authorizationserverservice.model.AccountToken.class);
+//        when(mockToken.isExpired()).thenReturn(false);
+//        when(mockToken.getUserId()).thenReturn(userId);
+//        when(userRepository.getAccountToken(token)).thenReturn(mockToken);
+//
+//        // WHEN
+//        userService.verifyAccount(token);
+//
+//        // THEN
+//        verify(userRepository).updateAccountSettings(userId);
+//        verify(userRepository).deleteAccountToken(token);
+//    }
 
-        // THEN
-        assertThat(result).isNotNull();
-        assertThat(result.getFirstName()).isEqualTo("John");
-        verify(userRepository, times(1)).updateUser(uuid, firstName, lastName, email, phone, bio, address);
-    }
+//    @Test
+//    @DisplayName("verifyPasswordToken doit lever une exception si le token est introuvable")
+//    void verifyPasswordToken_ShouldThrowException_WhenTokenNotFound() {
+//        when(userRepository.getPasswordToken("invalid")).thenReturn(null);
+//
+//        assertThatThrownBy(() -> userService.verifyPasswordToken("invalid"))
+//                .isInstanceOf(ApiException.class)
+//                .hasMessageContaining("Lien invalide");
+//    }
 
-    @Test
-    @DisplayName("verifyAccount doit lever une exception si le token n'existe pas")
-    void verifyAccount_ShouldThrowException_WhenTokenNotFound() {
-        // GIVEN
-        String token = "unknown-token";
-        when(userRepository.getAccountToken(token)).thenReturn(null);
-
-        // WHEN & THEN
-        assertThatThrownBy(() -> userService.verifyAccount(token))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining("Lien invalide");
-
-        verify(userRepository, never()).updateAccountSettings(any());
-    }
-
-    @Test
-    @DisplayName("verifyAccount doit supprimer le token et lever une exception s'il est expiré")
-    void verifyAccount_ShouldDeleteTokenAndThrow_WhenTokenExpired() {
-        // GIVEN
-        String token = "expired-token";
-        // On simule un token expiré (on suppose qu'il y a un mock ou un objet réel AccountToken)
-        var mockToken = mock(com.openclassrooms.authorizationserverservice.model.AccountToken.class);
-        when(mockToken.isExpired()).thenReturn(true);
-        when(userRepository.getAccountToken(token)).thenReturn(mockToken);
-
-        // WHEN & THEN
-        assertThatThrownBy(() -> userService.verifyAccount(token))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining("Ce lien a expiré");
-
-        verify(userRepository).deleteAccountToken(token);
-        verify(userRepository, never()).updateAccountSettings(any());
-    }
-
-    @Test
-    @DisplayName("verifyAccount doit activer le compte et supprimer le token en cas de succès")
-    void verifyAccount_ShouldVerifyAndCleanup_WhenTokenIsValid() {
-        // GIVEN
-        String token = "valid-token";
-        Long userId = 100L;
-        var mockToken = mock(com.openclassrooms.authorizationserverservice.model.AccountToken.class);
-        when(mockToken.isExpired()).thenReturn(false);
-        when(mockToken.getUserId()).thenReturn(userId);
-        when(userRepository.getAccountToken(token)).thenReturn(mockToken);
-
-        // WHEN
-        userService.verifyAccount(token);
-
-        // THEN
-        verify(userRepository).updateAccountSettings(userId);
-        verify(userRepository).deleteAccountToken(token);
-    }
-
-    @Test
-    @DisplayName("verifyPasswordToken doit lever une exception si le token est introuvable")
-    void verifyPasswordToken_ShouldThrowException_WhenTokenNotFound() {
-        when(userRepository.getPasswordToken("invalid")).thenReturn(null);
-
-        assertThatThrownBy(() -> userService.verifyPasswordToken("invalid"))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining("Lien invalide");
-    }
-
-    @Test
+    /*@Test
     @DisplayName("verifyPasswordToken doit supprimer le token et lever une exception si expiré")
     void verifyPasswordToken_ShouldDeleteAndThrow_WhenExpired() {
         var mockToken = mock(com.openclassrooms.authorizationserverservice.model.PasswordToken.class);
@@ -898,5 +898,7 @@ class UserServiceImplTest {
         // THEN
         assertThat(exists).isFalse();
     }
+
+     */
 
 }
