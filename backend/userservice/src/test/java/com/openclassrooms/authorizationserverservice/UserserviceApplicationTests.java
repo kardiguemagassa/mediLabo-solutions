@@ -11,7 +11,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
-class AuthorizationserverserviceApplicationTests {
+class UserserviceApplicationTests {
 
     @Container
     @ServiceConnection

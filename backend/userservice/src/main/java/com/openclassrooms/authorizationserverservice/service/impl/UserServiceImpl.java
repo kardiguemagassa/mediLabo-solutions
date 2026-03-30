@@ -89,8 +89,6 @@ public class UserServiceImpl implements UserService {
      * réinitialisation de mot de passe, ou autres actions utilisateur importantes.
      */
     private final ApplicationEventPublisher publisher;
-    @Value("${ui.app.url}")
-    private String uiAppUrl;
 
     @Value("${app.photo.directory}")
     private String photoDirectory;

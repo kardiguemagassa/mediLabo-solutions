@@ -1,0 +1,44 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              AUTHORIZATION SERVER - Development Profile                    ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+# SERVER CONFIGURATION
+server:
+  port: ${USER_SERVICE_PORT:8085}
+  shutdown: graceful
+  forward-headers-strategy: framework
+  error:
+    include-message: always
+    include-binding-errors: always
+
+#ui:
+  #app:
+    #url: ${UI_APP_URL:http://localhost:4200}
+
+#jwks:
+  #uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
+
+# LOGGING - VERBOSE FOR DEBUGGING
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
