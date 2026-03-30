@@ -302,7 +302,6 @@ public class UserResourceController {
         return ok(getResponse(request, of("user", user), "Utilisateur mis à jour avec succès", OK));
     }
 
-
     @Operation(summary = "Toggle account locked status", description = "Lock or unlock a user's account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account lock status toggled successfully"),
@@ -411,6 +410,51 @@ public class UserResourceController {
     @GetMapping(path = "/image/{filename}", produces = { IMAGE_PNG_VALUE, IMAGE_JPEG_VALUE })
     public byte [] getPhoto(@PathVariable("filename") String filename) throws IOException {
         return Files.readAllBytes(Paths.get(photoDirectory + filename));
+    }
+
+    /** ADMIN OPERATIONS ON OTHER USERS */
+
+    @Operation(summary = "Update another user's role (admin)")
+    @PatchMapping("/{userUuid}/updaterole")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> updateRoleByUuid(@PathVariable("userUuid") String userUuid, @RequestBody RoleRequest roleRequest, HttpServletRequest request) {
+        var updatedUser = userService.updateRole(userUuid, roleRequest.getRole());
+        return ok(getResponse(request, of("user", updatedUser), "Rôle mis à jour avec succès", OK));
+    }
+
+    @PatchMapping("/{userUuid}/toggleaccountlocked")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> toggleAccountLockedByUuid(@PathVariable("userUuid") String userUuid, HttpServletRequest request) {
+        var user = userService.toggleAccountLocked(userUuid);
+        return ok(getResponse(request, of("user", user), "Statut verrouillage mis à jour", OK));
+    }
+
+    @PatchMapping("/{userUuid}/toggleaccountexpired")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> toggleAccountExpiredByUuid(@PathVariable("userUuid") String userUuid, HttpServletRequest request) {
+        var user = userService.toggleAccountExpired(userUuid);
+        return ok(getResponse(request, of("user", user), "Statut expiration mis à jour", OK));
+    }
+
+    @PatchMapping("/{userUuid}/toggleaccountenabled")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> toggleAccountEnabledByUuid(@PathVariable("userUuid") String userUuid, HttpServletRequest request) {
+        var user = userService.toggleAccountEnabled(userUuid);
+        return ok(getResponse(request, of("user", user), "Statut activation mis à jour", OK));
+    }
+
+    @PatchMapping("/{userUuid}/mfa/enable")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> enableMfaByUuid(@PathVariable("userUuid") String userUuid, HttpServletRequest request) {
+        var user = userService.enableMfa(userUuid);
+        return ok(getResponse(request, of("user", user), "2FA activée", OK));
+    }
+
+    @PatchMapping("/{userUuid}/mfa/disable")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> disableMfaByUuid(@PathVariable("userUuid") String userUuid, HttpServletRequest request) {
+        var user = userService.disableMfa(userUuid);
+        return ok(getResponse(request, of("user", user), "2FA désactivée", OK));
     }
 
     /** PRIVATE UTIL */

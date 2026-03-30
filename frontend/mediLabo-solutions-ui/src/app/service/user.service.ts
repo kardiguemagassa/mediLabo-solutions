@@ -167,6 +167,37 @@ export class UserService {
         tap(console.log),
         catchError(this.handleError)
       );
+  
+  /** Admin operations on other users */
+  updateRoleByUuid$ = (userUuid: string, role: string) =>
+    <Observable<IResponse>>this.http
+        .patch<IResponse>(`${server}/user/${userUuid}/updaterole`, { role })
+        .pipe(tap(console.log), catchError(this.handleError));
+
+  toggleAccountLockedByUuid$ = (userUuid: string) =>
+    <Observable<IResponse>>this.http
+        .patch<IResponse>(`${server}/user/${userUuid}/toggleaccountlocked`, {})
+        .pipe(tap(console.log), catchError(this.handleError));
+
+  toggleAccountExpiredByUuid$ = (userUuid: string) =>
+    <Observable<IResponse>>this.http
+        .patch<IResponse>(`${server}/user/${userUuid}/toggleaccountexpired`, {})
+        .pipe(tap(console.log), catchError(this.handleError));
+
+  toggleAccountEnabledByUuid$ = (userUuid: string) =>
+    <Observable<IResponse>>this.http
+        .patch<IResponse>(`${server}/user/${userUuid}/toggleaccountenabled`, {})
+        .pipe(tap(console.log), catchError(this.handleError));
+
+  enableMfaByUuid$ = (userUuid: string) =>
+    <Observable<IResponse>>this.http
+        .patch<IResponse>(`${server}/user/${userUuid}/mfa/enable`, {})
+        .pipe(tap(console.log), catchError(this.handleError));
+
+  disableMfaByUuid$ = (userUuid: string) =>
+    <Observable<IResponse>>this.http
+        .patch<IResponse>(`${server}/user/${userUuid}/mfa/disable`, {})
+        .pipe(tap(console.log), catchError(this.handleError));
 
   refreshToken$ = (form: FormData) => <Observable<IAuthentication>>
     this.http.post<IAuthentication>

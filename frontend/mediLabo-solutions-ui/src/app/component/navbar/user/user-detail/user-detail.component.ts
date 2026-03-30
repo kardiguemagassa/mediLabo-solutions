@@ -17,15 +17,52 @@ export class UserDetailComponent {
 
   ngOnInit(): void {
     if (this.userUuid()) {
-      this.store.getUser(this.userUuid);
+      this.store.getUser(this.userUuid());  
     }
   }
+
+  onRoleChange = (event: Event) => {
+    const role = (event.target as HTMLSelectElement).value;
+    const userUuid = this.store.user()?.userUuid;
+    if (userUuid && confirm(`Changer le rôle en ${role} ?`)) {
+        this.store.updateRoleByUuid({ userUuid, role });
+    }
+  };
+
+  toggleAccountLocked = () => {
+    const userUuid = this.store.user()?.userUuid;
+    if (userUuid) this.store.toggleAccountLockedByUuid(userUuid);
+  };
+
+  toggleAccountExpired = () => {
+    const userUuid = this.store.user()?.userUuid;
+    if (userUuid) this.store.toggleAccountExpiredByUuid(userUuid);
+  };
+
+  toggleAccountEnabled = () => {
+    const userUuid = this.store.user()?.userUuid;
+    if (userUuid) this.store.toggleAccountEnabledByUuid(userUuid);
+  };
+
+  toggleMfa = () => {
+    const user = this.store.user();
+    if (!user?.userUuid) return;
+    if (user.mfa) {
+        this.store.disableMfaByUuid(user.userUuid);
+    } else {
+        this.store.enableMfaByUuid(user.userUuid);
+    }
+  };
 
   goBack = () => this.location.back();
 
   switchMode = () => this.mode() == 'view' ? this.mode.update(_mode => 'edit') : this.mode.update(_mode => 'view');
   
   updateUser = (form: NgForm) => {
-    console.log(form.value)
+    const userUuid = this.store.user()?.userUuid;
+    if (userUuid) {
+        this.store.updateUser({ ...form.value, userUuid });
+        this.mode.set('view');
+    }
   };
 }

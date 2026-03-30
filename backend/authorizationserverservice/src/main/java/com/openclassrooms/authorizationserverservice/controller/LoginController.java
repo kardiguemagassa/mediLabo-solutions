@@ -132,14 +132,11 @@ public class LoginController {
      */
     @PostMapping("/mfa")
     public void validateCode(@RequestParam("code") String code, HttpServletResponse response, HttpServletRequest request, @CurrentSecurityContext SecurityContext context) throws ServletException, IOException {
-        var user = getUser(context.getAuthentication()); // Récupère l'utilisateur courant
-        // Vérifie le code MFA via le service
+        var user = getUser(context.getAuthentication());
         if (userService.verifyQrCode(user.getUserUuid(), code)) {
-            // Code valide → authentification réussie
             this.authenticationSuccessHandler.onAuthenticationSuccess(request, response, getAuthentication(request, response));
             return;
         }
-        // Code invalide → déclenche échec MFA
         this.authenticatorFailureHandler.onAuthenticationFailure(request, response, new BadCredentialsException("Le code est invalide. Veuillez réessayer."));
     }
 
