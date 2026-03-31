@@ -107,7 +107,7 @@ eureka:
 
 
 # SWAGGER URL GATEWAY
-springdoc:
+spring doc:
   api-docs:
     path: /api/patients/v3/api-docs
 

@@ -1,11 +1,5 @@
 package com.openclassrooms.discoveryserverservice.query;
 
-/**
- * @author FirstName LastName
- * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
- * @since 1/5/25
- */
 
 public class UserQuery {
     public static final String SELECT_USER_BY_USERNAME_QUERY =

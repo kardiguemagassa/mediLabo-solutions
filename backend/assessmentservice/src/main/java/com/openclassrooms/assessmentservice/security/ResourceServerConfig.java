@@ -25,7 +25,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class ResourceServerConfig {
 
-    private static final String[] PUBLIC_ENDPOINTS = {"/actuator/health", "/actuator/health/**", "/actuator/info","/actuator/prometheus"};
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/actuator/health",
+            "/actuator/health/**",
+            "/actuator/info",
+            "/actuator/prometheus"
+    };
     private static final String[] SWAGGER_ENDPOINTS = {
             "/v3/api-docs/**",
             "/api/assessments/v3/api-docs/**",

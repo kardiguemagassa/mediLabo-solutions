@@ -81,7 +81,6 @@ server:
     include-binding-errors: always
 
 
-
 # EUREKA CLIENT
 eureka:
   client:
@@ -89,6 +88,11 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
+
+# SWAGGER URL GATEWAY
+spring doc:
+  api-docs:
+    path: /api/users/v3/api-docs
 
 # ACTUATOR - HEALTH & METRICS
 management:

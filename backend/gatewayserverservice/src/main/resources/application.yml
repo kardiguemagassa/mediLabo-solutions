@@ -41,21 +41,22 @@ spring:
 
       # ROUTES CONFIGURATION
       routes:
-        # AUTHORIZATION SERVER - authorization endpoints
+        # AUTHORIZATION SERVER - OAUTH2 + LOGIN PAGE
         - id: authorization-server
           uri: lb://AUTHORIZATIONSERVERSERVICE
           predicates:
-            #- Path=/authorization/**
-            - Path=/user/register/**,/user/verify/**,/user/resetpassword/**
+            - Path=/authorization/**
           metadata:
             response-timeout: 15000
             connect-timeout: 30000
+          filters:
+              - StripPrefix=1
 
-        # USER SERVICE - all other user endpoints (user IS logged in with JWT)
+        # USER SERVICE - all other user endpoints
         - id: user-service
           uri: lb://USERSERVICE
           predicates:
-            - Path=/user/**
+            - Path=/api/users/**
           metadata:
             response-timeout: 30000
             connect-timeout: 10000
@@ -218,9 +219,8 @@ management:
       application: ${spring.application.name}
 
 
-springdoc:
+spring doc:
   api-docs:
-    # On change le chemin de la Gateway pour qu'il ne collisionne pas
     path: /gateway/v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
@@ -230,7 +230,9 @@ springdoc:
       - name: Auth-Service
         url: /authorization/v3/api-docs
 
-      # Pour les autres, on garde le préfixe que la Gateway utilise pour router
+      - name: User-Service
+        url: /api/users/v3/api-docs
+
       - name: Patient-Service
         url: /api/patients/v3/api-docs
 
@@ -242,9 +244,6 @@ springdoc:
 
       - name: Assessment-Service
         url: /api/assessments/v3/api-docs
-
-      - name: User-Service
-        url: /user/v3/api-docs
 
 # LOGGING CONFIGURATION
 logging:
