@@ -11,43 +11,25 @@ import org.springframework.stereotype.Component;
 import static org.springframework.kafka.support.KafkaHeaders.TOPIC;
 
 /**
- * <p>
  * Écouteur central des événements métier de l’application.
- * </p>
- *
- * <p>
  * Cette classe est responsable de la publication des événements applicatifs
  * vers l’infrastructure de messagerie Kafka.
- * </p>
- *
- * <p>
  * Son rôle est de :
- * </p>
- * <ul>
- *   <li>Recevoir les événements métiers générés par l’application</li>
- *   <li>Les transformer en notifications transportables</li>
- *   <li>Les publier dans Kafka pour les autres microservices</li>
- * </ul>
- *
- * <p>
+ * Recevoir les événements métiers générés par l’application
+ * Les transformer en notifications transportables
+ * Les publier dans Kafka pour les autres microservices
+
  * Cette architecture permet :
- * </p>
- * <ul>
- *   <li>Un découplage fort entre les microservices</li>
- *   <li>Une communication asynchrone et scalable</li>
- *   <li>Une meilleure tolérance aux pannes</li>
- * </ul>
- *
- * <p>
+ * Un découplage fort entre les microservices
+ * Une communication asynchrone et scalable
+ * Une meilleure tolérance aux pannes
+
  * Exemple de consommateurs possibles :
- * </p>
- * <ul>
- *   <li>Service de notifications (email, SMS, push)</li>
- *   <li>Service d’audit</li>
- *   <li>Service de monitoring</li>
- * </ul>
+ * Service de notifications (email, SMS, push)
+ * Service d’audit
+ * Service de monitoring
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -59,38 +41,19 @@ public class ApiEventListener {
     private static final String NOTIFICATION_TOPIC = "MEDILABO_NOTIFICATIONS";
 
     /**
-     * <p>
      * Traite un événement métier et le publie dans Kafka.
-     * </p>
-     *
-     * <p>
      * Cette méthode est automatiquement déclenchée par Spring lorsqu’un
      * {@code Event} est publié dans le contexte applicatif.
-     * </p>
-     *
-     * <p>
      * Elle réalise les étapes suivantes :
-     * </p>
-     * <ul>
-     *   <li>Encapsule l’événement dans un objet {@link Notification}</li>
-     *   <li>Construit un message Kafka avec un header de topic</li>
-     *   <li>Envoie le message au broker Kafka</li>
-     * </ul>
-     *
-     * <p>
+     * Encapsule l’événement dans un objet {@link Notification}
+     * Construit un message Kafka avec un header de topic
+     * Envoie le message au broker Kafka
      * Le topic utilisé est {@code NOTIFICATION_TOPIC}, qui centralise
      * tous les événements métier de l’application.
-     * </p>
-     *
-     * <p>
      * Les microservices abonnés à ce topic peuvent alors :
-     * </p>
-     * <ul>
-     *   <li>Envoyer des emails</li>
-     *   <li>Déclencher des alertes</li>
-     *   <li>Historiser les actions utilisateur</li>
-     * </ul>
-     *
+     * Envoyer des emails
+     * Déclencher des alertes
+     * Historiser les actions utilisateur
      * @param event événement métier déclenché dans l’application
      */
     @EventListener

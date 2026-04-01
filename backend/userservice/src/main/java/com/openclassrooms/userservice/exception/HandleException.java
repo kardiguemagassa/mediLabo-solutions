@@ -38,60 +38,37 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 /**
  * Gestionnaire centralisé des exceptions pour l'API.
- *
- * <p>
  * Cette classe implémente un mécanisme global de gestion des erreurs pour l'application Spring Boot
  * en utilisant {@link RestControllerAdvice} et {@link ResponseEntityExceptionHandler}.
  * Elle intercepte les exceptions levées par les contrôleurs et les services et
  * renvoie une réponse structurée de type {@link Response}.
- * </p>
- *
- * <p>
  * Objectifs principaux :
- * <ul>
- *     <li>Uniformiser les réponses d'erreurs JSON pour le frontend (React, Angular, etc.).</li>
- *     <li>Logger toutes les exceptions pour faciliter le debug et la traçabilité.</li>
- *     <li>Gérer les exceptions spécifiques comme {@link BadCredentialsException}, {@link LockedException}, {@link DisabledException}, {@link DataAccessException}.</li>
- *     <li>Gérer les erreurs génériques et non prévues pour éviter des fuites d'informations sensibles.</li>
- * </ul>
- * </p>
- *
- * <h2>Fonctionnement</h2>
- * <ul>
- *     <li>Chaque méthode annotée {@link ExceptionHandler} capture un type spécifique d'exception et construit
- *         une {@link ResponseEntity} appropriée avec le code HTTP correspondant.</li>
- *     <li>Les exceptions de validation ({@link MethodArgumentNotValidException}) sont transformées en
- *         messages clairs pour le frontend.</li>
- *     <li>Les erreurs SQL ou de transaction sont détectées et traduites en messages lisibles.</li>
- *     <li>Les erreurs d'accès ou d'authentification renvoient des messages adaptés à la sécurité.</li>
- * </ul>
- *
- * <h2>Notes importantes</h2>
- * <ul>
- *     <li>La méthode {@link #processErrorMessage(Exception)} contient la logique de traduction des messages
- *         techniques en messages compréhensibles pour l’utilisateur.</li>
- *     <li>Le logger {@link lombok.extern.slf4j.Slf4j} permet de suivre toutes les exceptions interceptées.</li>
- *     <li>Le {@link HttpServletRequest} est utilisé pour inclure le contexte de la requête dans la réponse d'erreur.</li>
- * </ul>
- *
- * <h2>Exemple d'utilisation</h2>
- * <pre>{@code
- * // Si un utilisateur envoie un mauvais mot de passe
+ * Uniformiser les réponses d'erreurs JSON pour le frontend (React, Angular, etc.)>
+ * Logger toutes les exceptions pour faciliter le debug et la traçabilité
+ * Gérer les exceptions spécifiques comme {@link BadCredentialsException}, {@link LockedException}, {@link DisabledException}, {@link DataAccessException}
+ * Gérer les erreurs génériques et non prévues pour éviter des fuites d'informations sensibles
+ * Fonctionnement
+ * Chaque méthode annotée {@link ExceptionHandler} capture un type spécifique d'exception et construit
+ * {@link ResponseEntity} appropriée avec le code HTTP correspondant
+ * Les exceptions de validation ({@link MethodArgumentNotValidException}) sont transformées en messages clairs pour le frontend
+ * Les erreurs SQL ou de transaction sont détectées et traduites en messages lisibles
+ * Les erreurs d'accès ou d'authentification renvoient des messages adaptés à la sécurité
+ * Notes importantes
+ * La méthode {@link #processErrorMessage(Exception)} contient la logique de traduction des messages
+ * techniques en messages compréhensibles pour l’utilisateur
+ * Le logger {@link lombok.extern.slf4j.Slf4j} permet de suivre toutes les exceptions interceptées
+ * Le {@link HttpServletRequest} est utilisé pour inclure le contexte de la requête dans la réponse d'erreur
+ * Exemple d'utilisation
+ * Si un utilisateur envoie un mauvais mot de passe
  * POST /login avec email/mot de passe incorrect
- * -> HandleException.badCredentialsException(BadCredentialsException) est appelé
- * -> Retour JSON : { "message": "Adresse e-mail ou mot de passe incorrect", "details": "..." }
- * }</pre>
- *
- * <p>
+ * HandleException.badCredentialsException(BadCredentialsException) est appelé
+ * Retour JSON : { "message": "Adresse e-mail ou mot de passe incorrect", "details": "..." }
  * Cette classe est essentielle pour garantir :
- * <ul>
- *     <li>Une API REST robuste et sécurisée</li>
- *     <li>Des messages d’erreur clairs et centralisés</li>
- *     <li>La traçabilité complète des erreurs pour l’administration et le debug</li>
- * </ul>
- * </p>
+ * Une API REST robuste et sécurisée
+ * Des messages d’erreur clairs et centralisés
+ * La traçabilité complète des erreurs pour l’administration et le debug
  *
- * @author FirstName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */

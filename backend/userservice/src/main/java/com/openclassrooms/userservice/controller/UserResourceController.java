@@ -38,72 +38,47 @@ import static org.springframework.http.ResponseEntity.ok;
 
 /**
  * Contrôleur REST pour la gestion des utilisateurs de l'application.
- *
- * <p>
  * Cette classe expose les endpoints liés aux utilisateurs, tels que :
- * <ul>
- *     <li>Inscription et activation de compte</li>
- *     <li>Authentification multi-facteurs (MFA)</li>
- *     <li>Gestion du profil utilisateur (récupération et mise à jour)</li>
- *     <li>Gestion des rôles et des statuts de compte (verrouillé, activé, expiré)</li>
- *     <li>Gestion des mots de passe (mise à jour, réinitialisation)</li>
- *     <li>Gestion des photos et avatars des utilisateurs</li>
- *     <li>Récupération de listes d'utilisateurs et utilisateurs assignés à des patients</li>
- * </ul>
- * </p>
- *
- * <p>
+ * Inscription et activation de compte
+ * Authentification multi-facteurs (MFA)
+ * Gestion du profil utilisateur (récupération et mise à jour)
+ * Gestion des rôles et des statuts de compte (verrouillé, activé, expiré)
+ * Gestion des mots de passe (mise à jour, réinitialisation)
+ * Gestion des photos et avatars des utilisateurs
+ * Récupération de listes d'utilisateurs et utilisateurs assignés à des patients
+
  * La documentation Swagger/OpenAPI est générée automatiquement grâce aux annotations
  * {@link io.swagger.v3.oas.annotations.Operation}, {@link io.swagger.v3.oas.annotations.responses.ApiResponse}
  * et {@link io.swagger.v3.oas.annotations.tags.Tag}.
- * </p>
- *
- * <p>
+
  * Sécurité :
- * <ul>
- *     <li>Les méthodes sensibles (mise à jour des rôles, verrouillage de compte, activation/désactivation)
- *         sont protégées par {@link org.springframework.security.access.prepost.PreAuthorize}</li>
- *     <li>Les endpoints nécessitant une authentification récupèrent l'utilisateur courant via {@link org.springframework.security.core.Authentication}</li>
- * </ul>
- * </p>
+ * Les méthodes sensibles (mise à jour des rôles, verrouillage de compte, activation/désactivation)
+ * sont protégées par {@link org.springframework.security.access.prepost.PreAuthorize}
+ * Les endpoints nécessitant une authentification récupèrent l'utilisateur courant via {@link org.springframework.security.core.Authentication}
  *
- * <p>
  * Tous les endpoints renvoient des réponses uniformes encapsulées dans la classe
  * {@link Response}, permettant :
- * <ul>
- *     <li>Une structure JSON standardisée pour le frontend</li>
- *     <li>Le suivi des messages, codes HTTP et exceptions</li>
- * </ul>
- * </p>
- *
- * <h2>Exemples de fonctionnalités</h2>
- * <ul>
- *     <li>POST /user/register : création d'un compte utilisateur avec envoi de mail de confirmation</li>
- *     <li>GET /user/verify/account : vérification d'un compte via token</li>
- *     <li>PATCH /user/mfa/enable : activation de la MFA pour l'utilisateur connecté</li>
- *     <li>PATCH /user/updatepassword : mise à jour du mot de passe pour l'utilisateur connecté</li>
- *     <li>PATCH /user/photo : upload de la photo de profil de l'utilisateur</li>
- *     <li>GET /user/list : récupération de tous les utilisateurs (ADMIN/SUPER_ADMIN)</li>
- * </ul>
- *
- * <p>
+ * Une structure JSON standardisée pour le frontend
+ * Le suivi des messages, codes HTTP et exceptions
+
+ * Exemples de fonctionnalités
+ *  POST /user/register : création d'un compte utilisateur avec envoi de mail de confirmation
+ * GET /user/verify/account : vérification d'un compte via token
+ * PATCH /user/mfa/enable : activation de la MFA pour l'utilisateur connecté
+ * PATCH /user/updatepassword : mise à jour du mot de passe pour l'utilisateur connecté
+ * PATCH /user/photo : upload de la photo de profil de l'utilisateur
+ * GET /user/list : récupération de tous les utilisateurs (ADMIN/SUPER_ADMIN)
+
  * Notes techniques :
- * <ul>
- *     <li>Les endpoints manipulant des fichiers utilisent {@link org.springframework.web.multipart.MultipartFile}</li>
- *     <li>Les réponses contiennent toujours l'objet {@link Response}</li>
- *     <li>Les requêtes non authentifiées ou non autorisées déclenchent des exceptions gérées par
- *         {@link HandleException}</li>
- * </ul>
- * </p>
- *
- * <p>
+ * Les endpoints manipulant des fichiers utilisent {@link org.springframework.web.multipart.MultipartFile}</li>
+ * Les réponses contiennent toujours l'objet {@link Response}</li>
+ * Les requêtes non authentifiées ou non autorisées déclenchent des exceptions gérées par {@link HandleException}
  * Cette approche garantit une API REST sécurisée, cohérente et facile à maintenir,
  * avec une documentation automatique grâce à Springdoc/OpenAPI.
- * </p>
- *
+
  * http://localhost:8085/swagger-ui/index.html#/
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -122,8 +97,6 @@ public class UserResourceController {
         this.userService = userService;
         this.photoDirectory = photoDirectory;
     }
-
-    /** REGISTRATION AND ACCOUNT VERIFICATION */
 
     @Operation(summary = "Register a new user", description = "Creates a new user and sends an email confirmation")
     @ApiResponses(value = {
@@ -147,8 +120,6 @@ public class UserResourceController {
         return ok(getResponse(request, emptyMap(), "Compte vérifié. Vous pouvez vous connecter maintenant.", OK));
     }
 
-    /** MFA (MULTI-FACTOR AUTHENTICATION) */
-
     @Operation(summary = "Enable MFA", description = "Activates two-factor authentication for the logged-in user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "2FA enabled successfully"),
@@ -170,8 +141,6 @@ public class UserResourceController {
         var user = userService.disableMfa(authentication.getName());
         return ok(getResponse(request, of("user", user), "L'authentification 2FA a été désactivée avec succès", OK));
     }
-
-    /** USER PROFILE */
 
     @Operation(summary = "Get profile", description = "Retrieve profile and devices for the logged-in user")
     @ApiResponses(value = {
@@ -328,8 +297,6 @@ public class UserResourceController {
         var user = userService.toggleAccountEnabled(authentication.getName());
         return ok(getResponse(request, of("user", user), "Utilisateur mis à jour avec succès", OK));
     }
-
-    /** PASSWORD MANAGEMENT WHEN USER IS LOGGED IN */
 
     @Operation(summary = "Update password", description = "Update the logged-in user's password")
     @ApiResponses(value = {

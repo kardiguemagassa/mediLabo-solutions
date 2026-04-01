@@ -28,50 +28,31 @@ import java.util.function.Function;
 import static com.openclassrooms.userservice.enumeration.EventType.PASSWORD_RESET;
 import static com.openclassrooms.userservice.enumeration.EventType.USER_CREATED;
 import static com.openclassrooms.userservice.util.UserUtils.randomUUUID;
-import static com.openclassrooms.userservice.util.UserUtils.verifyCode;
+//import static com.openclassrooms.userservice.util.UserUtils.verifyCode;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Map.of;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang.WordUtils.capitalizeFully;
 
 /**
- * <p>
  * Implémentation du service métier responsable de la gestion des utilisateurs,
  * de l’authentification et de la sécurité dans l’application.
- * </p>
- *
- * <p>
  * Cette classe agit comme une couche d’orchestration entre :
- * </p>
- * <ul>
- *     <li>la couche <b>Repository</b> pour l’accès aux données</li>
- *     <li>la couche <b>Security</b> pour la gestion des mots de passe et du MFA</li>
- *     <li>le système d’<b>événements</b> pour la communication asynchrone (Kafka, emails, etc.)</li>
- * </ul>
- *
- * <p>
+ * la couche <b>Repository</b> pour l’accès aux données</li>
+ * la couche <b>Security</b> pour la gestion des mots de passe et du MFA
+ * le système d’<b>événements</b> pour la communication asynchrone (Kafka, emails, etc.)
  * Les responsabilités principales de ce service incluent :
- * </p>
- * <ul>
- *     <li>la création et la gestion des comptes utilisateurs</li>
- *     <li>la vérification des comptes et des mots de passe</li>
- *     <li>l'activation et la désactivation du MFA</li>
- *     <li>la gestion des appareils de connexion</li>
- *     <li>le téléversement des photos de profil</li>
- *     <li>la publication d'événements métiers</li>
- * </ul>
- *
- * <p>
+ * la création et la gestion des comptes utilisateurs
+ * la vérification des comptes et des mots de passe
+ * l'activation et la désactivation du MFA
+ * la gestion des appareils de connexion
+ * le téléversement des photos de profil
+ * la publication d'événements métiers
  * Cette classe est annotée avec {@link Service} afin d'être gérée par le
  * conteneur Spring et injectée dans les contrôleurs.
- * </p>
- *
- * <p>
- * L'annotation {@link lombok.RequiredArgsConstructor} permet l’injection
- * automatique des dépendances finales.
- * </p>
- *
- * @author FirstName LastName
+ * L'annotation {@link lombok.RequiredArgsConstructor} permet l’injection automatique des dépendances finales.
+
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -80,20 +61,12 @@ import static org.apache.commons.lang.WordUtils.capitalizeFully;
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
-
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
-    /**
-     * Éditeur d'événements Spring permettant de publier des événements métiers.
-     * Utilisé pour notifier d'autres composants de l'application lors de la création de compte,
-     * réinitialisation de mot de passe, ou autres actions utilisateur importantes.
-     */
     private final ApplicationEventPublisher publisher;
-
     @Value("${app.photo.directory}")
     private String photoDirectory;
 
-    // USER MANAGEMENT TOKEN SERVICE
 
     /**
      * @param email adresse e-mail de l'utilisateur
@@ -104,119 +77,8 @@ public class UserServiceImpl implements UserService {
         return userRepository.getUserByEmail(email);
     }
 
-    /**
-     * <p>
-     * Réinitialise le compteur de tentatives de connexion d’un utilisateur.
-     * </p>
-     *
-     * <p>
-     * Cette opération est déclenchée après :
-     * </p>
-     * <ul>
-     *     <li>une authentification réussie</li>
-     *     <li>un déverrouillage de compte</li>
-     * </ul>
-     *
-     * @param userId identifiant unique de l’utilisateur
-     */
-    @Override
-    public void resetLoginAttempts(String userId) {
-        userRepository.resetLoginAttempts(userId);
-    }
 
     /**
-     * <p>
-     * Incrémente le nombre de tentatives de connexion échouées.
-     * </p>
-     *
-     * <p>
-     * Cette information est utilisée pour :
-     * </p>
-     * <ul>
-     *     <li>détecter les attaques par force brute</li>
-     *     <li>verrouiller automatiquement un compte</li>
-     * </ul>
-     *
-     * @param email adresse e-mail utilisée pour la tentative
-     */
-    @Override
-    public void updateLoginAttempts(String email) {
-        userRepository.updateLoginAttempts(email);
-    }
-
-    /**
-     * <p>
-     * Met à jour la date de dernière connexion de l’utilisateur.
-     * </p>
-     *
-     * <p>
-     * Cette information est utilisée pour :
-     * </p>
-     * <ul>
-     *     <li>le suivi d’activité</li>
-     *     <li>les audits de sécurité</li>
-     * </ul>
-     *
-     * @param userId identifiant unique de l’utilisateur
-     */
-    @Override
-    public void setLastLogin(Long userId) {
-        userRepository.setLastLogin(userId);
-    }
-
-    /**
-     * <p>
-     * Enregistre un appareil utilisé lors d’une connexion.
-     * </p>
-     *
-     * <p>
-     * Ces informations permettent :
-     * </p>
-     * <ul>
-     *     <li>de détecter les connexions suspectes</li>
-     *     <li>d’afficher l’historique des appareils</li>
-     * </ul>
-     *
-     * @param userId identifiant de l’utilisateur
-     * @param deviceName nom de l’appareil
-     * @param client navigateur ou application
-     * @param ipAddress adresse IP utilisée
-     */
-    @Override
-    public void addLoginDevice(Long userId, String deviceName, String client, String ipAddress) {
-        userRepository.addLoginDevice(userId, deviceName, client, ipAddress);
-    }
-
-    /**
-     * <p>
-     * Valide un code MFA généré par une application d’authentification.
-     * </p>
-     *
-     * <p>
-     * Le code est comparé au secret MFA stocké pour l’utilisateur.
-     * </p>
-     *
-     * @param userId identifiant unique de l’utilisateur
-     * @param code code à usage unique fourni par l’utilisateur
-     * @return {@code true} si le code est valide, sinon {@code false}
-     */
-    @Override
-    public boolean verifyQrCode(String userId, String code) {
-        var user = userRepository.getUserByUuid(userId);
-        return verifyCode(user.getQrCodeSecret(), code);
-    }
-
-    // USER MANAGEMENT SERVICE
-
-    /**
-     * <p>
-     * Récupère un utilisateur à partir de son UUID.
-     * </p>
-     *
-     * <p>
-     * L’UUID est l’identifiant fonctionnel utilisé dans l’API.
-     * </p>
-     *
      * @param userUuid identifiant unique de l’utilisateur
      * @return utilisateur correspondant
      */
@@ -259,18 +121,10 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Valide un compte utilisateur à partir d’un token d’activation.
-     * </p>
-     *
-     * <p>
      * Cette opération :
-     * </p>
-     * <ul>
-     *     <li>active le compte</li>
-     *     <li>supprime le token</li>
-     * </ul>
-     *
+     * active le compte</li>
+     * supprime le token</li>>
      * @param token token de validation reçu par e-mail
      */
     @Override
@@ -288,14 +142,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Vérifie la validité d’un token de réinitialisation de mot de passe.
-     * </p>
-     *
-     * <p>
      * Si le token est valide, l’utilisateur correspondant est retourné.
-     * </p>
-     *
      * @param token token de réinitialisation
      * @return utilisateur associé au token
      */
@@ -313,10 +161,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Active l'authentification multi-facteurs pour un utilisateur.
-     * </p>
-     *
      * @param userUuid identifiant de l’utilisateur
      * @return utilisateur après activation du MFA
      */
@@ -326,10 +171,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Désactive l’authentification multi-facteurs pour un utilisateur.
-     * </p>
-     *
      * @param userUuid identifiant de l’utilisateur
      * @return utilisateur après désactivation
      */
@@ -339,14 +181,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Téléverse et associe une photo de profil à un utilisateur.
-     * </p>
-     *
-     * <p>
      * L'image est stockée sur le serveur et une URL est générée.
-     * </p>
-     *
      * @param userUuid identifiant utilisateur
      * @param file image à téléverser
      * @return utilisateur avec la nouvelle image
@@ -361,19 +197,11 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Bascule l'état du compte utilisateur.
-     * </p>
-     *
-     * <p>
      * Cette méthode inverse l'état actuel :
-     * </p>
-     * <ul>
-     *     <li>expiré ↔ valide</li>
-     *     <li>verrouillé ↔ déverrouillé</li>
-     *     <li>activé ↔ désactivé</li>
-     * </ul>
-     *
+     * expiré ↔ valide
+     * verrouillé ↔ déverrouillé
+     * activé ↔ désactivé
      * @param userUuid identifiant utilisateur
      * @return utilisateur mis à jour
      */
@@ -398,14 +226,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Modifie le mot de passe d’un utilisateur.
-     * </p>
-     *
-     * <p>
      * Le mot de passe actuel est vérifié avant la mise à jour.
-     * </p>
-     *
      * @param userUuid identifiant utilisateur
      * @param currentPassword mot de passe actuel
      * @param newPassword nouveau mot de passe
@@ -428,14 +250,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Lance le processus de réinitialisation du mot de passe.
-     * </p>
-     *
-     * <p>
      * Un token est généré et envoyé par e-mail à l’utilisateur.
-     * </p>
-     *
      * @param email adresse e-mail de l'utilisateur
      */
     @Override
@@ -455,14 +271,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * <p>
      * Applique la réinitialisation du mot de passe.
-     * </p>
-     *
-     * <p>
      * Le token est validé avant la mise à jour du mot de passe.
-     * </p>
-     *
      * @param userUuid identifiant utilisateur
      * @param token token de réinitialisation
      * @param password nouveau mot de passe
@@ -509,7 +319,6 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Récupère la liste des utilisateurs support technique de MediLabo.
-     *
      * @return Liste des utilisateurs support technique.
      */
     @Override
@@ -544,11 +353,9 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    // USER PATIENT MANAGEMENT
-
     /**
+     * USER PATIENT MANAGEMENT
      * Vérifie si un utilisateur existe dans la base de données à partir de son UUID.
-     *
      * @param userUuid UUID de l'utilisateur.
      * @return true si l'utilisateur existe, false sinon.
      */

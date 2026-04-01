@@ -68,7 +68,7 @@ class UserResourceControllerTest {
         userRequest.setUsername("John");
         userRequest.setPassword("password123");
 
-        mockMvc.perform(post("/user/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isCreated())
@@ -80,7 +80,7 @@ class UserResourceControllerTest {
     @Test
     @DisplayName("GET /verify/account - Succès")
     void verifyAccount_ShouldReturnOk() throws Exception {
-        mockMvc.perform(get("/user/verify/account")
+        mockMvc.perform(get("/api/users/verify/account")
                         .param("token", "valid-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value(containsString("Compte vérifié")));
@@ -100,7 +100,7 @@ class UserResourceControllerTest {
 
         when(userService.enableMfa(anyString())).thenReturn(mockUserEntity);
 
-        mockMvc.perform(patch("/user/mfa/enable")
+        mockMvc.perform(patch("/api/users/mfa/enable")
                         .principal(new UsernamePasswordAuthenticationToken("123e4567-e89b-12d3-a456-426614174000", null))
                         .with(csrf()))
                 .andExpect(status().isOk());
@@ -120,7 +120,7 @@ class UserResourceControllerTest {
         when(userService.disableMfa(eq(uuid))).thenReturn(mockUserEntity);
 
         // 3. Exécution et vérification
-        mockMvc.perform(patch("/user/mfa/disable")
+        mockMvc.perform(patch("/api/users/mfa/disable")
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null))
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -149,7 +149,7 @@ class UserResourceControllerTest {
         when(userService.getUserByUuid(uuid)).thenReturn(mockUser);
         when(userService.getDevices(uuid)).thenReturn(mockDevices);
 
-        mockMvc.perform(get("/user/profile")
+        mockMvc.perform(get("/api/users/profile")
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -170,7 +170,7 @@ class UserResourceControllerTest {
         // On mocke l'appel au service avec l'UUID passé en paramètre
         when(userService.getUserByUuid(uuid)).thenReturn(mockUser);
 
-        mockMvc.perform(get("/user/{userUuid}", uuid) // On passe l'UUID dans l'URL
+        mockMvc.perform(get("/api/users/{userUuid}", uuid) // On passe l'UUID dans l'URL
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Profil récupéré"))
@@ -190,7 +190,7 @@ class UserResourceControllerTest {
         // Le service doit retourner l'utilisateur assigné au patient
         when(userService.getAssignee(patientUuid)).thenReturn(assignee);
 
-        mockMvc.perform(get("/user/assignee/{patientUuid}", patientUuid)
+        mockMvc.perform(get("/api/users/assignee/{patientUuid}", patientUuid)
                         .principal(new UsernamePasswordAuthenticationToken(userUuid, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Profil récupéré"))
@@ -206,7 +206,7 @@ class UserResourceControllerTest {
 
         when(userService.getPatientUser(patientUuid)).thenReturn(mockUser);
 
-        mockMvc.perform(get("/user/patient/{patientUuid}", patientUuid)
+        mockMvc.perform(get("/api/users/patient/{patientUuid}", patientUuid)
                         .principal(new UsernamePasswordAuthenticationToken("me", null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.user.email").value("patient@test.com"));
@@ -223,7 +223,7 @@ class UserResourceControllerTest {
         // On mocke le retour d'une liste
         when(userService.getMediLaboSupports()).thenReturn(List.of(support1, support2));
 
-        mockMvc.perform(get("/user/medilabosupports")
+        mockMvc.perform(get("/api/users/medilabosupports")
                         .principal(new UsernamePasswordAuthenticationToken("me", null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Profil récupéré"))
@@ -234,7 +234,7 @@ class UserResourceControllerTest {
     }
 
     @Test
-    @DisplayName("GET /user/{email} - Succès")
+    @DisplayName("GET /users/{email} - Succès")
     void getUserByEmail_ShouldReturnUser() throws Exception {
         String email = "kara@example.com";
         User mockUser = new User();
@@ -242,7 +242,7 @@ class UserResourceControllerTest {
 
         when(userService.getUserByEmail(email)).thenReturn(mockUser);
 
-        mockMvc.perform(get("/user/user/{email}", email)
+        mockMvc.perform(get("/api/users/user/{email}", email)
                         .principal(new UsernamePasswordAuthenticationToken("me", null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.user.email").value(email));
@@ -256,7 +256,7 @@ class UserResourceControllerTest {
 
         when(userService.getCredential(uuid)).thenReturn(mockCred);
 
-        mockMvc.perform(get("/user/credential/{userUuid}", uuid)
+        mockMvc.perform(get("/api/users/credential/{userUuid}", uuid)
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.credential").exists());
@@ -290,7 +290,7 @@ class UserResourceControllerTest {
         )).thenReturn(updatedUser);
 
         // 3. Exécution
-        mockMvc.perform(patch("/user/update")
+        mockMvc.perform(patch("/api/users/update")
                         .with(csrf())
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -311,7 +311,7 @@ class UserResourceControllerTest {
 
         when(userService.updateRole(eq(uuid), eq("MANAGER"))).thenReturn(updatedUser);
 
-        mockMvc.perform(patch("/user/updaterole")
+        mockMvc.perform(patch("/api/users/updaterole")
                         .with(csrf())
                         // On simule un utilisateur avec l'autorité ADMIN
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null, List.of(new SimpleGrantedAuthority("ADMIN"))))
@@ -328,7 +328,7 @@ class UserResourceControllerTest {
 
         when(userService.toggleAccountExpired(uuid)).thenReturn(mockUser);
 
-        mockMvc.perform(patch("/user/toggleaccountexpired")
+        mockMvc.perform(patch("/api/users/toggleaccountexpired")
                         .with(csrf())
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null, List.of(new SimpleGrantedAuthority("ADMIN")))))
                 .andExpect(status().isOk())
@@ -344,7 +344,7 @@ class UserResourceControllerTest {
 
         when(userService.toggleAccountLocked(uuid)).thenReturn(mockUser);
 
-        mockMvc.perform(patch("/user/toggleaccountlocked")
+        mockMvc.perform(patch("/api/users/toggleaccountlocked")
                         .with(csrf())
                         // On simule un rôle autorisé
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null,
@@ -362,7 +362,7 @@ class UserResourceControllerTest {
 
         when(userService.toggleAccountEnabled(uuid)).thenReturn(mockUser);
 
-        mockMvc.perform(patch("/user/toggleaccountenabled")
+        mockMvc.perform(patch("/api/users/toggleaccountenabled")
                         .with(csrf())
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null,
                                 List.of(new SimpleGrantedAuthority("ADMIN")))))
@@ -382,7 +382,7 @@ class UserResourceControllerTest {
         // La méthode est void, donc on utilise doNothing()
         doNothing().when(userService).updatePassword(eq(uuid), anyString(), anyString(), anyString());
 
-        mockMvc.perform(patch("/user/updatepassword")
+        mockMvc.perform(patch("/api/users/updatepassword")
                         .with(csrf())
                         .principal(new UsernamePasswordAuthenticationToken(uuid, null))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -398,7 +398,7 @@ class UserResourceControllerTest {
 
         doNothing().when(userService).resetPassword(email);
 
-        mockMvc.perform(post("/user/resetpassword")
+        mockMvc.perform(post("/api/users/resetpassword")
                         .with(csrf())
                         .param("email", email) // Utilisation de .param() pour @RequestParam
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED))
@@ -415,7 +415,7 @@ class UserResourceControllerTest {
 
         when(userService.verifyPasswordToken(token)).thenReturn(mockUser);
 
-        mockMvc.perform(get("/user/verify/password")
+        mockMvc.perform(get("/api/users/verify/password")
                         .param("token", token)) // @RequestParam
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Saisissez votre nouveau mot de passe"))
@@ -433,7 +433,7 @@ class UserResourceControllerTest {
 
         doNothing().when(userService).doResetPassword(anyString(), anyString(), anyString(), anyString());
 
-        mockMvc.perform(post("/user/resetpassword/reset")
+        mockMvc.perform(post("/api/users/resetpassword/reset")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(req)))
@@ -446,7 +446,7 @@ class UserResourceControllerTest {
     void getUsers_ShouldReturnListForAdmin() throws Exception {
         when(userService.getUsers()).thenReturn(List.of(new User(), new User()));
 
-        mockMvc.perform(get("/user/list")
+        mockMvc.perform(get("/api/users/list")
                         .principal(new UsernamePasswordAuthenticationToken("admin", null,
                                 List.of(new SimpleGrantedAuthority("ADMIN")))))
                 .andExpect(status().isOk())
@@ -465,7 +465,7 @@ class UserResourceControllerTest {
 
         when(userService.uploadPhoto(eq(uuid), any(MultipartFile.class))).thenReturn(mockUser);
 
-        mockMvc.perform(multipart("/user/photo")
+        mockMvc.perform(multipart("/api/users/photo")
                         .file(file)
                         .with(csrf())
                         .with(request -> { request.setMethod("PATCH"); return request; }) // Transforme POST en PATCH
@@ -485,13 +485,145 @@ class UserResourceControllerTest {
         Files.write(filePath, mockImageContent);
 
         try {
-            mockMvc.perform(get("/user/image/{filename}", filename))
+            mockMvc.perform(get("/api/users/image/{filename}", filename))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.IMAGE_PNG_VALUE))
                     .andExpect(content().bytes(mockImageContent));
         } finally {
             Files.deleteIfExists(filePath);
         }
+    }
+
+    @Test
+    @DisplayName("PATCH /update/{userUuid} - Succès avec ADMIN")
+    void updateUserByUuid_ShouldReturnUpdatedUser() throws Exception {
+        String targetUuid = "target-uuid-123";
+        UserRequest request = new UserRequest();
+        request.setFirstName("Updated");
+        request.setEmail("updated@test.com");
+
+        User updatedUser = new User();
+        updatedUser.setUserUuid(targetUuid);
+        updatedUser.setFirstName("Updated");
+
+        when(userService.updateUser(eq(targetUuid), anyString(), nullable(String.class),
+                anyString(), nullable(String.class), nullable(String.class), nullable(String.class)))
+                .thenReturn(updatedUser);
+
+        mockMvc.perform(patch("/api/users/update/{userUuid}", targetUuid)
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken("admin-uuid", null,
+                                List.of(new SimpleGrantedAuthority("ADMIN"))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Utilisateur mis à jour avec succès"))
+                .andExpect(jsonPath("$.data.user.firstName").value("Updated"));
+    }
+
+    @Test
+    @DisplayName("PATCH /{userUuid}/updaterole - Succès avec SUPER_ADMIN")
+    void updateRoleByUuid_ShouldReturnOk() throws Exception {
+        String targetUuid = "target-uuid-123";
+        RoleRequest roleReq = new RoleRequest();
+        roleReq.setRole("PRACTITIONER");
+
+        User updatedUser = new User();
+        updatedUser.setUserUuid(targetUuid);
+
+        when(userService.updateRole(targetUuid, "PRACTITIONER")).thenReturn(updatedUser);
+
+        mockMvc.perform(patch("/api/users/{userUuid}/updaterole", targetUuid)
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken("admin", null,
+                                List.of(new SimpleGrantedAuthority("SUPER_ADMIN"))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(roleReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Rôle mis à jour avec succès"));
+    }
+
+    @Test
+    @DisplayName("PATCH /{userUuid}/toggleaccountlocked - Succès")
+    void toggleAccountLockedByUuid_ShouldReturnOk() throws Exception {
+        String targetUuid = "target-uuid-123";
+        User mockUser = new User();
+        mockUser.setAccountNonLocked(false);
+
+        when(userService.toggleAccountLocked(targetUuid)).thenReturn(mockUser);
+
+        mockMvc.perform(patch("/api/users/{userUuid}/toggleaccountlocked", targetUuid)
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken("admin", null,
+                                List.of(new SimpleGrantedAuthority("ADMIN")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Statut verrouillage mis à jour"));
+    }
+
+    @Test
+    @DisplayName("PATCH /{userUuid}/toggleaccountexpired - Succès")
+    void toggleAccountExpiredByUuid_ShouldReturnOk() throws Exception {
+        String targetUuid = "target-uuid-123";
+        User mockUser = new User();
+
+        when(userService.toggleAccountExpired(targetUuid)).thenReturn(mockUser);
+
+        mockMvc.perform(patch("/api/users/{userUuid}/toggleaccountexpired", targetUuid)
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken("admin", null,
+                                List.of(new SimpleGrantedAuthority("ADMIN")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Statut expiration mis à jour"));
+    }
+
+    @Test
+    @DisplayName("PATCH /{userUuid}/toggleaccountenabled - Succès")
+    void toggleAccountEnabledByUuid_ShouldReturnOk() throws Exception {
+        String targetUuid = "target-uuid-123";
+        User mockUser = new User();
+
+        when(userService.toggleAccountEnabled(targetUuid)).thenReturn(mockUser);
+
+        mockMvc.perform(patch("/api/users/{userUuid}/toggleaccountenabled", targetUuid)
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken("admin", null,
+                                List.of(new SimpleGrantedAuthority("SUPER_ADMIN")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Statut activation mis à jour"));
+    }
+
+    @Test
+    @DisplayName("PATCH /{userUuid}/mfa/enable - Succès admin")
+    void enableMfaByUuid_ShouldReturnOk() throws Exception {
+        String targetUuid = "target-uuid-123";
+        User mockUser = new User();
+        mockUser.setMfa(true);
+
+        when(userService.enableMfa(targetUuid)).thenReturn(mockUser);
+
+        mockMvc.perform(patch("/api/users/{userUuid}/mfa/enable", targetUuid)
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken("admin", null,
+                                List.of(new SimpleGrantedAuthority("ADMIN")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("2FA activée"));
+    }
+
+    @Test
+    @DisplayName("PATCH /{userUuid}/mfa/disable - Succès admin")
+    void disableMfaByUuid_ShouldReturnOk() throws Exception {
+        String targetUuid = "target-uuid-123";
+        User mockUser = new User();
+        mockUser.setMfa(false);
+
+        when(userService.disableMfa(targetUuid)).thenReturn(mockUser);
+
+        mockMvc.perform(patch("/api/users/{userUuid}/mfa/disable", targetUuid)
+                        .with(csrf())
+                        .principal(new UsernamePasswordAuthenticationToken("admin", null,
+                                List.of(new SimpleGrantedAuthority("SUPER_ADMIN")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("2FA désactivée"));
     }
 
 }

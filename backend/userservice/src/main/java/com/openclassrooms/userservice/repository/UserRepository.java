@@ -6,22 +6,14 @@ import java.util.List;
 
 /**
  * Repository pour les opérations utilisateur (authentification)
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
 public interface UserRepository {
-    // USER MANAGEMENT TOKEN REPOSITORY
     //User getUserByUuid(String userId);
     User getUserByEmail(String email);
-    void resetLoginAttempts(String userUuid);
-    void updateLoginAttempts(String email);
-    void setLastLogin(Long userId);
-    void addLoginDevice(Long userId, String device, String client, String ipAddress);
-
-    // USER MANAGEMENT REPOSITORY
     User getUserByUuid(String userUuid);
     User getUserById(Long userId);
     User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address);
@@ -39,7 +31,7 @@ public interface UserRepository {
     void resetPassword(String email);
     void doResetPassword(String userUuid, String token, String password, String confirmPassword);
     List<User> getUsers();
-    User getAssignee(String ticketUuid);
+    User getAssignee(String patientUuid);
     Credential getCredential(String userUuid);
     List<Device> getDevices(String userUuid);
     void deleteAccountToken(String token);
@@ -52,5 +44,5 @@ public interface UserRepository {
     String getPassword(String userUuid);
     String createPasswordToken(Long userId);
     List<User> getMediLaboSupports();
-    User getPatientUser(String ticketUuid);
+    User getPatientUser(String patientUuid);
 }

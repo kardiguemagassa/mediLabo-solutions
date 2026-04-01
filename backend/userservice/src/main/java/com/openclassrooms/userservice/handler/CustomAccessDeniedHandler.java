@@ -13,49 +13,30 @@ import java.io.IOException;
 import static com.openclassrooms.userservice.util.RequestUtils.handleErrorResponse;
 
 /**
- * <p>
  * Gestionnaire personnalisé des accès refusés (Access Denied) pour Spring Security.
  * Cette classe est déclenchée lorsqu'un utilisateur authentifié tente d'accéder
  * à une ressource pour laquelle il n'a pas les autorisations nécessaires.
- * </p>
- *
- * <p>
  * Fonctionnalités principales :
- * </p>
- * <ul>
- *     <li>Intercepte les exceptions de type {@link AccessDeniedException}</li>
- *     <li>Utilise la méthode {@link RequestUtils#handleErrorResponse(HttpServletRequest, HttpServletResponse, Exception)}
- *         pour générer une réponse structurée adaptée (JSON ou page d'erreur)</li>
- *     <li>Permet une personnalisation centralisée des messages d'erreur pour les accès interdits</li>
- * </ul>
- *
- * <p>
+ *  Intercepte les exceptions de type {@link AccessDeniedException}
+ * Utilise la méthode {@link RequestUtils#handleErrorResponse(HttpServletRequest, HttpServletResponse, Exception)}
+ *         pour générer une réponse structurée adaptée (JSON ou page d'erreur)
+ * Permet une personnalisation centralisée des messages d'erreur pour les accès interdits
  * Exemple d’utilisation : intégré automatiquement dans la configuration Spring Security
  * via l’appel à {@code http.exceptionHandling().accessDeniedHandler(customAccessDeniedHandler);}
- * </p>
  *
- * <p>
- * Auteur : FirstName LastName<br>
- * Version : 1.0<br>
- * Email : magassa***REMOVED_USER***@gmail.com<br>
- * Since : 2026-05-01
- * </p>
+ * @author : Kardigué MAGASSA
+ * @version 1.0
+ * @Since : 2026-05-01
  */
 
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     /**
-     * <p>
      * Méthode appelée lorsqu'un utilisateur tente d'accéder à une ressource protégée
      * sans disposer des autorisations nécessaires.
-     * </p>
-     *
-     * <p>
      * Cette méthode délègue le traitement à {@link RequestUtils#handleErrorResponse(HttpServletRequest, HttpServletResponse, Exception)},
      * afin de renvoyer une réponse cohérente à l'utilisateur.
-     * </p>
-     *
      * @param request   la requête HTTP
      * @param response  la réponse HTTP
      * @param exception l'exception AccessDeniedException déclenchée

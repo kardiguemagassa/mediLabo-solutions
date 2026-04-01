@@ -10,7 +10,7 @@ import com.openclassrooms.userservice.model.PasswordToken;
 import com.openclassrooms.userservice.repository.UserRepository;
 import com.openclassrooms.userservice.enumeration.EventType;
 import com.openclassrooms.userservice.service.impl.UserServiceImpl;
-import com.openclassrooms.userservice.util.UserUtils;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -174,105 +174,6 @@ class UserServiceImplTest {
 
         // THEN
         verify(userRepository).toggleAccountEnabled(uuid);
-    }
-
-    @Test
-    @DisplayName("resetLoginAttempts doit appeler le repository avec le bon userId")
-    void resetLoginAttempts_ShouldInvokeRepository() {
-        // GIVEN
-        String userId = "user-id-456";
-        // Pas de return à mocker car la méthode est void
-
-        // WHEN
-        userService.resetLoginAttempts(userId);
-
-        // THEN
-        verify(userRepository, times(1)).resetLoginAttempts(userId);
-    }
-
-    @Test
-    @DisplayName("updateLoginAttempts doit appeler le repository avec l'email")
-    void updateLoginAttempts_ShouldInvokeRepository() {
-        String email = "kara@example.com";
-        userService.updateLoginAttempts(email);
-        verify(userRepository).updateLoginAttempts(email);
-    }
-
-    @Test
-    @DisplayName("setLastLogin doit appeler le repository avec l'id")
-    void setLastLogin_ShouldInvokeRepository() {
-        Long userId = 1L;
-        userService.setLastLogin(userId);
-        verify(userRepository).setLastLogin(userId);
-    }
-
-    @Test
-    @DisplayName("addLoginDevice doit transmettre les informations de l'appareil au repository")
-    void addLoginDevice_ShouldInvokeRepositoryWithAllParameters() {
-        // GIVEN
-        Long userId = 1L;
-        String deviceName = "MacBook Pro";
-        String client = "Chrome";
-        String ipAddress = "192.168.1.1";
-
-        // WHEN
-        userService.addLoginDevice(userId, deviceName, client, ipAddress);
-
-        // THEN
-        verify(userRepository, times(1)).addLoginDevice(userId, deviceName, client, ipAddress);
-    }
-    @Test
-    @DisplayName("verifyQrCode doit retourner true quand le code est valide")
-    void verifyQrCode_ShouldReturnTrue_WhenCodeIsValid() {
-        try (MockedStatic<UserUtils> userUtilsMock =
-                     mockStatic(UserUtils.class)) {
-
-            // GIVEN
-            String userId = "uuid-123";
-            String code = "123456";
-            String secret = "SECRET_123";
-
-            User mockUser = new User();
-            mockUser.setQrCodeSecret(secret);
-
-            when(userRepository.getUserByUuid(userId)).thenReturn(mockUser);
-            // On mock l'utilitaire statique pour qu'il réponde 'true'
-            userUtilsMock.when(() -> UserUtils.verifyCode(secret, code))
-                    .thenReturn(true);
-
-            // WHEN
-            boolean result = userService.verifyQrCode(userId, code);
-
-            // THEN
-            assertThat(result).isTrue();
-            verify(userRepository).getUserByUuid(userId);
-        }
-    }
-
-    @Test
-    @DisplayName("verifyQrCode doit retourner false quand le code est invalide")
-    void verifyQrCode_ShouldReturnFalse_WhenCodeIsInvalid() {
-        try (MockedStatic<UserUtils> userUtilsMock =
-                     mockStatic(UserUtils.class)) {
-
-            // GIVEN
-            String userId = "uuid-123";
-            String code = "000000";
-            String secret = "SECRET_123";
-
-            User mockUser = new User();
-            mockUser.setQrCodeSecret(secret);
-
-            when(userRepository.getUserByUuid(userId)).thenReturn(mockUser);
-            userUtilsMock.when(() -> UserUtils.verifyCode(secret, code))
-                    .thenReturn(false);
-
-            // WHEN
-            boolean result = userService.verifyQrCode(userId, code);
-
-            // THEN
-            assertThat(result).isFalse();
-        }
     }
 
     @Test

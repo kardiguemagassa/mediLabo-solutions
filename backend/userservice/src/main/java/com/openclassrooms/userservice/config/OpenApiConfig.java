@@ -25,7 +25,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
-                        // 1. Définition du schéma de sécurité pour tester les routes protégées (ex: /user/me)
+                        // Définition du schéma de sécurité pour tester les routes protégées (ex: /user/me)
                         .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
                                         .name(securitySchemeName)
@@ -34,7 +34,7 @@ public class OpenApiConfig {
                                         .bearerFormat("JWT")
                                         .description("Entrez le token JWT généré par ce serveur pour tester les endpoints sécurisés"))
 
-                        // 2. Réponses d'erreurs standardisées pour l'ensemble du serveur d'auth
+                        // Réponses d'erreurs standardisées pour l'ensemble du serveur d'auth
                         .addResponses("Unauthorized", new ApiResponse().description("Authentification requise ou jeton invalide"))
                         .addResponses("Forbidden", new ApiResponse().description("Droits insuffisants (Scope/Role) pour accéder à cette ressource"))
                         .addResponses("BadRequest", new ApiResponse().description("Requête mal formée ou paramètres manquants"))

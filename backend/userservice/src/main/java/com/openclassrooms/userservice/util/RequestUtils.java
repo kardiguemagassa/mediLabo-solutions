@@ -28,10 +28,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * Utilitaires pour gérer les requêtes HTTP et formater les réponses API.
  * Permet de générer des messages d'erreur, d'écrire les réponses JSON et de centraliser la gestion des exceptions.
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
- * @email magassa***REMOVED_USER***@gmail.com
  */
 
 public class RequestUtils {
@@ -61,20 +60,16 @@ public class RequestUtils {
 
     /**
      * Lambda pour écrire un objet {@link Response} dans la réponse HTTP au format JSON.
-     *
      * Cette fonction prend en entrée :
-     *  - un {@link HttpServletResponse} qui représente la réponse HTTP envoyée au client,
-     *  - un objet {@link Response} qui contient les données à retourner.
-     *
+     * un {@link HttpServletResponse} qui représente la réponse HTTP envoyée au client,
+     * un objet {@link Response} qui contient les données à retourner.
      * Fonctionnement :
-     *  1. Récupère le flux de sortie (`OutputStream`) de la réponse HTTP.
-     *  2. Sérialise l'objet {@link Response} en JSON via Jackson ({@link ObjectMapper}).
-     *  3. Écrit le JSON dans le flux de sortie.
-     *  4. Vide le flux (`flush`) pour s'assurer que les données sont envoyées immédiatement.
-     *
+     * Récupère le flux de sortie (`OutputStream`) de la réponse HTTP.
+     * Sérialise l'objet {@link Response} en JSON via Jackson ({@link ObjectMapper}).
+     * Écrit le JSON dans le flux de sortie.
+     * Vide le flux (`flush`) pour s'assurer que les données sont envoyées immédiatement.
      * Gestion des erreurs :
-     *  - Si une exception se produit lors de la sérialisation ou de l'écriture, elle est convertie en {@link ApiException}.
-     *
+     * Si une exception se produit lors de la sérialisation ou de l'écriture, elle est convertie en {@link ApiException}.
      * Cette lambda permet de centraliser l'écriture JSON pour toutes les réponses d'erreur et d'éviter de répéter le code dans chaque exception handler.
      */
     private static final BiConsumer<HttpServletResponse, Response> writeResponse = (servletResponse, response) -> {
@@ -148,23 +143,19 @@ public class RequestUtils {
     }
 
     /**
-     * Lambda pour déterminer la raison d'une erreur à renvoyer à l'utilisateur final.
-     *
+     * Lambda pour déterminer la raison d'une erreur à renvoyer à l'utilisateur final
      * Cette fonction prend en entrée :
-     *  - une exception qui s'est produite,
-     *  - un statut HTTP associé à la réponse.
-     *
+     * une exception qui s'est produite,
+     * un statut HTTP associé à la réponse.
      * Elle retourne une chaîne de caractères compréhensible par l'utilisateur, en fonction :
-     *  - du type de l'exception (ex: {@link DisabledException}, {@link LockedException}, {@link ApiException}),
-     *  - ou du code HTTP (403, 401, 5xx, etc.).
-     *
+     * du type de l'exception (ex: {@link DisabledException}, {@link LockedException}, {@link ApiException}),
+     * ou du code HTTP (403, 401, 5xx, etc.).
      * Cas traités :
-     *  - 403 FORBIDDEN : "Vous n'avez pas suffisamment d'autorisation"
-     *  - 401 UNAUTHORIZED : si le message contient "Jwt expired at" → "Votre session a expiré", sinon → "Vous n'êtes pas connecté."
-     *  - Exceptions spécifiques comme DisabledException, LockedException, BadCredentialsException, CredentialsExpiredException, ApiException → renvoie le message de l'exception
-     *  - Erreurs serveur 5xx → "Une erreur s'est produite. Veuillez réessayer."
-     *  - Autres cas → chaîne vide.
-     *
+     *  403 FORBIDDEN : "Vous n'avez pas suffisamment d'autorisation"
+     *  401 UNAUTHORIZED : si le message contient "Jwt expired at" → "Votre session a expiré", sinon → "Vous n'êtes pas connecté."
+     *  Exceptions spécifiques comme DisabledException, LockedException, BadCredentialsException, CredentialsExpiredException, ApiException → renvoie le message de l'exception
+     *  Erreurs serveur 5xx → "Une erreur s'est produite. Veuillez réessayer."
+     *  Autres cas → chaîne vide.
      * Cela permet de standardiser les messages d'erreur côté frontend tout en masquant les détails techniques inutiles.
      */
     private static final BiFunction<Exception, HttpStatus, String> errorReason = (exception, httpStatus) -> {

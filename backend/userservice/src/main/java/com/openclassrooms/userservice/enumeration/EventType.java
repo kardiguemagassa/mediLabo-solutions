@@ -1,9 +1,8 @@
 package com.openclassrooms.userservice.enumeration;
 
 /**
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 public enum EventType {

@@ -10,22 +10,13 @@ import java.util.List;
 
 /**
  * Service pour l'authentification des utilisateurs
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
 public interface UserService {
-    // USER MANAGEMENT TOKEN SERVICE
     User getUserByEmail(String email);
-    void resetLoginAttempts(String userUuid);
-    void updateLoginAttempts(String email);
-    boolean verifyQrCode(String userId, String code);
-    void setLastLogin(Long userId);
-    void addLoginDevice(Long userId, String deviceName, String client, String ipAddress);
-
-    // USER MANAGEMENT SERVICE
     User getUserByUuid(String userUuid);
     User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address);
     void createUser(String firstName, String lastName, String email, String username, String password);
@@ -43,7 +34,7 @@ public interface UserService {
     void resetPassword(String email);
     void doResetPassword(String userUuid, String token, String password, String confirmPassword);
     List<User> getUsers();
-    User getAssignee(String ticketUuid);
+    User getAssignee(String patientUuid);
     Credential getCredential(String userUuid);
     List<Device> getDevices(String userUuid);
     List<User> getMediLaboSupports();

@@ -146,45 +146,45 @@ class UserRepositoryImplTest {
         assertTrue(result, "La méthode devrait retourner true pour le moment");
     }
 
-    @Test
-    void resetLoginAttempts_GenericException_ShouldThrowApiException() {
-        // GIVEN : On prépare le mock pour la chaîne fluide
-        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
-
-        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
-        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
-
-        // On force l'échec sur l'appel final .update() avec une exception générique
-        when(statementSpec.update()).thenThrow(new RuntimeException("Database timeout"));
-
-        // WHEN & THEN
-        ApiException exception = assertThrows(ApiException.class,
-                () -> userRepository.resetLoginAttempts("some-uuid"));
-
-        // On vérifie que le message est celui du second catch
-        assertEquals("Une erreur s'est produite. Veuillez réessayer.", exception.getMessage());
-    }
-
-    @Test
-    void addLoginDevice_UserNotFound_ShouldThrowApiException() {
-        // GIVEN
-        Long userId = 1L;
-        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
-
-        // On simule l'enchaînement fluide : sql -> params
-        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
-        when(statementSpec.params(anyMap())).thenReturn(statementSpec);
-
-        // On force l'exception spécifique sur l'appel final .update()
-        when(statementSpec.update()).thenThrow(new EmptyResultDataAccessException(1));
-
-        // WHEN & THEN
-        ApiException exception = assertThrows(ApiException.class,
-                () -> userRepository.addLoginDevice(userId, "Phone", "Chrome", "127.0.0.1"));
-
-        // Vérification du message formatté
-        assertTrue(exception.getMessage().contains("Aucun utilisateur trouvé avec l'ID " + userId));
-    }
+//    @Test
+//    void resetLoginAttempts_GenericException_ShouldThrowApiException() {
+//        // GIVEN : On prépare le mock pour la chaîne fluide
+//        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
+//
+//        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
+//        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
+//
+//        // On force l'échec sur l'appel final .update() avec une exception générique
+//        when(statementSpec.update()).thenThrow(new RuntimeException("Database timeout"));
+//
+//        // WHEN & THEN
+//        ApiException exception = assertThrows(ApiException.class,
+//                () -> userRepository.resetLoginAttempts("some-uuid"));
+//
+//        // On vérifie que le message est celui du second catch
+//        assertEquals("Une erreur s'est produite. Veuillez réessayer.", exception.getMessage());
+//    }
+//
+//    @Test
+//    void addLoginDevice_UserNotFound_ShouldThrowApiException() {
+//        // GIVEN
+//        Long userId = 1L;
+//        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
+//
+//        // On simule l'enchaînement fluide : sql -> params
+//        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
+//        when(statementSpec.params(anyMap())).thenReturn(statementSpec);
+//
+//        // On force l'exception spécifique sur l'appel final .update()
+//        when(statementSpec.update()).thenThrow(new EmptyResultDataAccessException(1));
+//
+//        // WHEN & THEN
+//        ApiException exception = assertThrows(ApiException.class,
+//                () -> userRepository.addLoginDevice(userId, "Phone", "Chrome", "127.0.0.1"));
+//
+//        // Vérification du message formatté
+//        assertTrue(exception.getMessage().contains("Aucun utilisateur trouvé avec l'ID " + userId));
+//    }
 
     @Test
     void getAccountToken_GenericException_ShouldThrowApiException() {
@@ -1409,47 +1409,47 @@ class UserRepositoryImplTest {
         assertEquals("Aucun utilisateur trouvé avec l'ID 99", exception.getMessage());
     }
 
-    @Test
-    void resetLoginAttempts_Success() {
-        String uuid = "test-uuid";
-        when(jdbcClient.sql(anyString()).param(anyString(), anyString()).update()).thenReturn(1);
-
-        assertDoesNotThrow(() -> userRepository.resetLoginAttempts(uuid));
-    }
-
-    @Test
-    void resetLoginAttempts_NotFound() {
-        String uuid = "unknown";
-        when(jdbcClient.sql(anyString()).param(anyString(), anyString()).update())
-                .thenThrow(new EmptyResultDataAccessException(1));
-
-        ApiException ex = assertThrows(ApiException.class, () -> userRepository.resetLoginAttempts(uuid));
-        assertTrue(ex.getMessage().contains("Aucun utilisateur trouvé"));
-    }
-
-    @Test
-    void setLastLogin_Success() {
-        Long id = 1L;
-        when(jdbcClient.sql(anyString()).param(anyString(), anyLong()).update()).thenReturn(1);
-
-        assertDoesNotThrow(() -> userRepository.setLastLogin(id));
-    }
-
-    @Test
-    void addLoginDevice_Success() {
-        Long userId = 1L;
-        when(jdbcClient.sql(anyString()).params(anyMap()).update()).thenReturn(1);
-
-        assertDoesNotThrow(() -> userRepository.addLoginDevice(userId, "PC", "Chrome", "127.0.0.1"));
-    }
-
-    @Test
-    void addLoginDevice_GenericException() {
-        when(jdbcClient.sql(anyString()).params(anyMap()).update())
-                .thenThrow(new RuntimeException("DB Error"));
-
-        assertThrows(ApiException.class, () -> userRepository.addLoginDevice(1L, "PC", "Chrome", "127.0.0.1"));
-    }
+//    @Test
+//    void resetLoginAttempts_Success() {
+//        String uuid = "test-uuid";
+//        when(jdbcClient.sql(anyString()).param(anyString(), anyString()).update()).thenReturn(1);
+//
+//        assertDoesNotThrow(() -> userRepository.resetLoginAttempts(uuid));
+//    }
+//
+//    @Test
+//    void resetLoginAttempts_NotFound() {
+//        String uuid = "unknown";
+//        when(jdbcClient.sql(anyString()).param(anyString(), anyString()).update())
+//                .thenThrow(new EmptyResultDataAccessException(1));
+//
+//        ApiException ex = assertThrows(ApiException.class, () -> userRepository.resetLoginAttempts(uuid));
+//        assertTrue(ex.getMessage().contains("Aucun utilisateur trouvé"));
+//    }
+//
+//    @Test
+//    void setLastLogin_Success() {
+//        Long id = 1L;
+//        when(jdbcClient.sql(anyString()).param(anyString(), anyLong()).update()).thenReturn(1);
+//
+//        assertDoesNotThrow(() -> userRepository.setLastLogin(id));
+//    }
+//
+//    @Test
+//    void addLoginDevice_Success() {
+//        Long userId = 1L;
+//        when(jdbcClient.sql(anyString()).params(anyMap()).update()).thenReturn(1);
+//
+//        assertDoesNotThrow(() -> userRepository.addLoginDevice(userId, "PC", "Chrome", "127.0.0.1"));
+//    }
+//
+//    @Test
+//    void addLoginDevice_GenericException() {
+//        when(jdbcClient.sql(anyString()).params(anyMap()).update())
+//                .thenThrow(new RuntimeException("DB Error"));
+//
+//        assertThrows(ApiException.class, () -> userRepository.addLoginDevice(1L, "PC", "Chrome", "127.0.0.1"));
+//    }
 
     @Test
     void updateUser_Exception_ShouldThrowApiException() {
@@ -1557,102 +1557,102 @@ class UserRepositoryImplTest {
         assertEquals("Une erreur s'est produite. Veuillez réessayer.", ex.getMessage());
     }
 
-    @Test
-    void updateLoginAttempts_Success() {
-        // GIVEN
-        String email = "test@example.com";
-
-        // On prépare les mocks intermédiaires pour éviter les NullPointerException
-        // et gérer l'enchaînement fluide
-        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
-
-        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
-        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
-        when(statementSpec.update()).thenReturn(1);
-
-        // WHEN
-        userRepository.updateLoginAttempts(email);
-
-        // THEN
-        // Au lieu de verify(jdbcClient).sql(...), on vérifie que update() a bien été appelé
-        // Cela prouve que tout l'enchaînement a eu lieu sans erreur
-        verify(statementSpec, times(1)).update();
-    }
-
-    @Test
-    void updateLoginAttempts_NotFound_ShouldThrowApiException() {
-        // 1. On crée le mock pour le StatementSpec (l'étape intermédiaire)
-        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
-
-        // 2. On définit l'enchaînement :
-        // sql(...) retourne le statementSpec
-        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
-
-        // param(...) doit AUSSI retourner le statementSpec (pour éviter le null)
-        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
-
-        // 3. C'est ici qu'on force l'exception sur l'appel final .update()
-        when(statementSpec.update()).thenThrow(new EmptyResultDataAccessException(1));
-
-        // WHEN & THEN
-        ApiException exception = assertThrows(ApiException.class,
-                () -> userRepository.updateLoginAttempts("unknown@test.com"));
-
-        assertTrue(exception.getMessage().contains("Aucun utilisateur trouvé"));
-    }
-
-    @Test
-    void updateLoginAttempts_GenericError_ShouldThrowApiException() {
-        // GIVEN : On simule une erreur SQL ou réseau imprévue (RuntimeException)
-        when(jdbcClient.sql(anyString())
-                .param(anyString(), any())
-                .update())
-                .thenThrow(new RuntimeException("Database is down"));
-
-        // WHEN & THEN
-        ApiException exception = assertThrows(ApiException.class,
-                () -> userRepository.updateLoginAttempts("email@test.com"));
-
-        // Vérifie que le message correspond à celui du second catch
-        assertEquals("Une erreur s'est produite. Veuillez réessayer.", exception.getMessage());
-    }
-
-    @Test
-    void setLastLogin_UserNotFound_ShouldThrowApiException() {
-        // GIVEN
-        Long userId = 1L;
-        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
-
-        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
-        when(statementSpec.param(eq("userId"), eq(userId))).thenReturn(statementSpec);
-
-        // On simule que l'update ne trouve rien
-        when(statementSpec.update()).thenThrow(new EmptyResultDataAccessException(1));
-
-        // WHEN & THEN
-        ApiException exception = assertThrows(ApiException.class,
-                () -> userRepository.setLastLogin(userId));
-
-        assertTrue(exception.getMessage().contains("Aucun utilisateur trouvé avec l'ID"));
-    }
-
-    @Test
-    void setLastLogin_GenericError_ShouldThrowApiException() {
-        // GIVEN
-        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
-
-        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
-        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
-
-        // On simule une erreur de base de données (connexion perdue, etc.)
-        when(statementSpec.update()).thenThrow(new RuntimeException("DB Error"));
-
-        // WHEN & THEN
-        ApiException exception = assertThrows(ApiException.class,
-                () -> userRepository.setLastLogin(99L));
-
-        assertEquals("Une erreur s'est produite. Veuillez réessayer.", exception.getMessage());
-    }
+//    @Test
+//    void updateLoginAttempts_Success() {
+//        // GIVEN
+//        String email = "test@example.com";
+//
+//        // On prépare les mocks intermédiaires pour éviter les NullPointerException
+//        // et gérer l'enchaînement fluide
+//        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
+//
+//        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
+//        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
+//        when(statementSpec.update()).thenReturn(1);
+//
+//        // WHEN
+//        userRepository.updateLoginAttempts(email);
+//
+//        // THEN
+//        // Au lieu de verify(jdbcClient).sql(...), on vérifie que update() a bien été appelé
+//        // Cela prouve que tout l'enchaînement a eu lieu sans erreur
+//        verify(statementSpec, times(1)).update();
+//    }
+//
+//    @Test
+//    void updateLoginAttempts_NotFound_ShouldThrowApiException() {
+//        // 1. On crée le mock pour le StatementSpec (l'étape intermédiaire)
+//        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
+//
+//        // 2. On définit l'enchaînement :
+//        // sql(...) retourne le statementSpec
+//        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
+//
+//        // param(...) doit AUSSI retourner le statementSpec (pour éviter le null)
+//        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
+//
+//        // 3. C'est ici qu'on force l'exception sur l'appel final .update()
+//        when(statementSpec.update()).thenThrow(new EmptyResultDataAccessException(1));
+//
+//        // WHEN & THEN
+//        ApiException exception = assertThrows(ApiException.class,
+//                () -> userRepository.updateLoginAttempts("unknown@test.com"));
+//
+//        assertTrue(exception.getMessage().contains("Aucun utilisateur trouvé"));
+//    }
+//
+//    @Test
+//    void updateLoginAttempts_GenericError_ShouldThrowApiException() {
+//        // GIVEN : On simule une erreur SQL ou réseau imprévue (RuntimeException)
+//        when(jdbcClient.sql(anyString())
+//                .param(anyString(), any())
+//                .update())
+//                .thenThrow(new RuntimeException("Database is down"));
+//
+//        // WHEN & THEN
+//        ApiException exception = assertThrows(ApiException.class,
+//                () -> userRepository.updateLoginAttempts("email@test.com"));
+//
+//        // Vérifie que le message correspond à celui du second catch
+//        assertEquals("Une erreur s'est produite. Veuillez réessayer.", exception.getMessage());
+//    }
+//
+//    @Test
+//    void setLastLogin_UserNotFound_ShouldThrowApiException() {
+//        // GIVEN
+//        Long userId = 1L;
+//        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
+//
+//        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
+//        when(statementSpec.param(eq("userId"), eq(userId))).thenReturn(statementSpec);
+//
+//        // On simule que l'update ne trouve rien
+//        when(statementSpec.update()).thenThrow(new EmptyResultDataAccessException(1));
+//
+//        // WHEN & THEN
+//        ApiException exception = assertThrows(ApiException.class,
+//                () -> userRepository.setLastLogin(userId));
+//
+//        assertTrue(exception.getMessage().contains("Aucun utilisateur trouvé avec l'ID"));
+//    }
+//
+//    @Test
+//    void setLastLogin_GenericError_ShouldThrowApiException() {
+//        // GIVEN
+//        JdbcClient.StatementSpec statementSpec = mock(JdbcClient.StatementSpec.class);
+//
+//        when(jdbcClient.sql(anyString())).thenReturn(statementSpec);
+//        when(statementSpec.param(anyString(), any())).thenReturn(statementSpec);
+//
+//        // On simule une erreur de base de données (connexion perdue, etc.)
+//        when(statementSpec.update()).thenThrow(new RuntimeException("DB Error"));
+//
+//        // WHEN & THEN
+//        ApiException exception = assertThrows(ApiException.class,
+//                () -> userRepository.setLastLogin(99L));
+//
+//        assertEquals("Une erreur s'est produite. Veuillez réessayer.", exception.getMessage());
+//    }
 
     @Test
     void createUser_GenericException_ShouldThrowApiException() {
