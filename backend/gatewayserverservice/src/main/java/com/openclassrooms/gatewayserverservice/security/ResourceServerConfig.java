@@ -23,6 +23,7 @@ import static org.springframework.http.HttpMethod.*;
 /**
  * Configuration de sécurité pour le Gateway - Version REACTIVE.
  * Gère l'authentification OAuth2/JWT et les règles d'autorisation.
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01

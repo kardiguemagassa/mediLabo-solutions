@@ -11,39 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
  * @since 2026-02-07
  */
 public interface FileStorageService {
-
-    /**
-     * Stocke un fichier pour une note donnée.
-     *
-     * @param noteUuid UUID de la note
-     * @param file     Fichier à stocker
-     * @return Informations sur le fichier stocké
-     */
     StoredFileInfo storeFile(String noteUuid, MultipartFile file);
-
-    /**
-     * Charge un fichier comme Resource.
-     *
-     * @param noteUuid  UUID de la note
-     * @param fileUuid  UUID du fichier
-     * @param extension Extension du fichier
-     * @return Resource du fichier
-     */
     Resource loadFileAsResource(String noteUuid, String fileUuid, String extension);
-
-    /**
-     * Supprime un fichier.
-     *
-     * @param noteUuid  UUID de la note
-     * @param fileUuid  UUID du fichier
-     * @param extension Extension du fichier
-     * @return true si supprimé avec succès
-     */
     boolean deleteFile(String noteUuid, String fileUuid, String extension);
 
-    /**
-     * Information sur un fichier stocké.
-     */
     @lombok.Data
     @lombok.Builder
     class StoredFileInfo {

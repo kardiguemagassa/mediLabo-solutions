@@ -2,7 +2,7 @@ package com.openclassrooms.notesservice.constant;
 
 /**
  * Constantes de rôles pour les autorisations @PreAuthorize.
- *
+
  * SUPER_ADMIN a accès à tout.
  *
  * @author Kardigué MAGASSA

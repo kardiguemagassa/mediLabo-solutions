@@ -18,13 +18,11 @@ import java.util.stream.Stream;
 
 /**
  * Convertisseur JWT pour extraire les authorities depuis les claims.
- *
  * Supporte plusieurs formats de claims :
- * - "authorities": "ADMIN,PRACTITIONER" (comma-separated string)
- * - "authorities": ["ADMIN", "PRACTITIONER"] (array)
- * - "roles": ["ROLE_ADMIN", "ROLE_USER"] (array avec préfixe)
- * - "scope": "read write" (space-separated, préfixé avec SCOPE_)
- *
+ * authorities: ADMIN,PRACTITIONER (comma-separated string)
+ * authorities: ["ADMIN", "PRACTITIONER"] (array)
+ * roles: ["ROLE_ADMIN", "ROLE_USER"] (array avec préfixe)
+ * scope: read write (space-separated, préfixé avec SCOPE_)
  * Le principal (subject) est le user_uuid.
  *
  * @author Kardigué MAGASSA
@@ -51,19 +49,17 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         return new JwtAuthenticationToken(jwt, authorities, principal);
     }
 
-    /**
-     * Extrait toutes les authorities depuis différents claims du JWT.
-     */
+    /** Extrait toutes les authorities depuis différents claims du JWT.*/
     private Collection<GrantedAuthority> extractAllAuthorities(Jwt jwt) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        // 1. Extraire depuis "authorities"
+        // Extraire depuis "authorities"
         authorities.addAll(extractFromAuthoritiesClaim(jwt));
 
-        // 2. Extraire depuis "roles"
+        // Extraire depuis "roles"
         authorities.addAll(extractFromRolesClaim(jwt));
 
-        // 3. Extraire depuis "scope"
+        // Extraire depuis "scope"
         authorities.addAll(extractFromScopeClaim(jwt));
 
         if (authorities.isEmpty()) {
@@ -73,9 +69,7 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         return authorities;
     }
 
-    /**
-     * Extrait depuis "authorities" (string ou array).
-     */
+    /**Extrait depuis "authorities" (string ou array).*/
     @SuppressWarnings("unchecked")
     private Collection<GrantedAuthority> extractFromAuthoritiesClaim(Jwt jwt) {
         Object claim = jwt.getClaim(AUTHORITIES_CLAIM);
@@ -95,9 +89,7 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         return List.of();
     }
 
-    /**
-     * Extrait depuis "roles" (array, supprime préfixe ROLE_ si présent).
-     */
+    /**Extrait depuis "roles" (array, supprime préfixe ROLE_ si présent)*/
     @SuppressWarnings("unchecked")
     private Collection<GrantedAuthority> extractFromRolesClaim(Jwt jwt) {
         Object claim = jwt.getClaim(ROLES_CLAIM);
@@ -113,9 +105,7 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         return List.of();
     }
 
-    /**
-     * Extrait depuis "scope" (space-separated, ajoute préfixe SCOPE_).
-     */
+    /**Extrait depuis "scope" (space-separated, ajoute préfixe SCOPE_)*/
     private Collection<GrantedAuthority> extractFromScopeClaim(Jwt jwt) {
         Object claim = jwt.getClaim(SCOPE_CLAIM);
 

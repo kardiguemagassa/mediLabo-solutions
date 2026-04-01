@@ -10,7 +10,8 @@ import reactor.core.publisher.Mono;
 import static com.openclassrooms.gatewayserverservice.utils.RequestUtils.handleErrorResponse;
 
 /**
- * Point d'entrée pour les erreurs d'authentification (401 Unauthorized) - Version REACTIVE.
+ * Point d'entrée pour les erreurs d'authentification (401 Unauthorized) - Version REACTIVE
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01

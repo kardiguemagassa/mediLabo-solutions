@@ -43,7 +43,7 @@ public class UserServiceClientImpl implements UserServiceClient {
         log.debug("Fetching user by UUID: {}", userUuid);
 
         return authServerWebClient.get()
-                .uri("/user/{userUuid}", userUuid)
+                .uri("/api/users/{userUuid}", userUuid)
                 .retrieve()
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND),
                         response -> {log.warn("User not found: {}", userUuid);return Mono.error(new ApiException("Utilisateur non trouvé: " + userUuid));})
@@ -65,7 +65,7 @@ public class UserServiceClientImpl implements UserServiceClient {
         log.debug("Fetching user by email: {}", email);
 
         return authServerWebClient.get()
-                .uri("/user/user/{email}", email)
+                .uri("/api/users/user/{email}", email)
                 .retrieve()
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> {log.debug("User not found for email: {}", email);return Mono.empty();})
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))
@@ -85,7 +85,7 @@ public class UserServiceClientImpl implements UserServiceClient {
         log.debug("Fetching assignee for patient: {}", patientUuid);
 
         return authServerWebClient.get()
-                .uri("/user/assignee/{patientUuid}", patientUuid)
+                .uri("/api/users/assignee/{patientUuid}", patientUuid)
                 .retrieve()
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> {log.warn("Assignee not found for patient: {}", patientUuid);
                     return Mono.error(new ApiException("Assigné non trouvé pour le patient: " + patientUuid));})
@@ -116,7 +116,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                     body.put("address", address != null ? address : (existingUser.getAddress() != null ? existingUser.getAddress() : ""));
 
                     return authServerWebClient.patch()
-                            .uri("/user/update/{userUuid}", userUuid)
+                            .uri("/api/users/update/{userUuid}", userUuid)
                             .bodyValue(body)
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError,

@@ -21,7 +21,6 @@ public class ApiEventListener {
 
     /**
      * Écoute les événements et les publie sur Kafka.
-     *
      * @param event L'événement à publier
      */
     @Async

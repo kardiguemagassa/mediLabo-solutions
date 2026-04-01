@@ -3,7 +3,7 @@ package com.openclassrooms.patientservice.exception;
 /**
  * Exception générique API
  *
- * @author FirstName LastName
+ * @author  Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09
  */

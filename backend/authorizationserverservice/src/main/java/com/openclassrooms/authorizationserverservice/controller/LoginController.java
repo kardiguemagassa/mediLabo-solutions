@@ -34,51 +34,28 @@ import static com.openclassrooms.authorizationserverservice.util.UserUtils.getUs
 
 /**
  * Contrôleur pour la gestion de l'authentification utilisateur.
- *
- * <p>
+
  * Cette classe gère plusieurs aspects de la sécurité et de l'expérience utilisateur lors
  * de la connexion :
- * <ul>
- *     <li>Affichage de la page de login standard (/login)</li>
- *     <li>Multi-Factor Authentication (MFA) avec validation du code (/mfa)</li>
- *     <li>Gestion des erreurs liées à l'authentification (/error)</li>
- *     <li>Page de logout (/logout)</li>
- * </ul>
- * </p>
- *
- * <p>
+
+ * Affichage de la page de login standard (/login)
+ * Multi-Factor Authentication (MFA) avec validation du code (/mfa)
+ * Gestion des erreurs liées à l'authentification (/error)
+ * Page de logout (/logout)
  * Fonctionnalités principales :
- * <ul>
- *     <li>Utilisation de {@link SecurityContextRepository} pour gérer le contexte de sécurité dans la session HTTP.</li>
- *     <li>Handlers personnalisés pour le succès et l'échec d'authentification MFA :</li>
- *     <ul>
- *         <li>{@link AuthenticationSuccessHandler} : authentification réussie</li>
- *         <li>{@link AuthenticationFailureHandler} : gestion des erreurs MFA</li>
- *     </ul>
- *     <li>Validation du code MFA via le {@link UserService} qui encapsule la logique métier.</li>
- *     <li>Remplacement temporaire de l'authentification MFA par l'authentification principale pour finaliser la session.</li>
- * </ul>
- * </p>
- *
- * <p>
+ * Utilisation de {@link SecurityContextRepository} pour gérer le contexte de sécurité dans la session HTTP
+ * Handlers personnalisés pour le succès et l'échec d'authentification MFA
+
+ * {@link AuthenticationSuccessHandler} : authentification réussie
+ *  {@link AuthenticationFailureHandler} : gestion des erreurs MFA
+ * Validation du code MFA via le {@link UserService} qui encapsule la logique métier
+ * Remplacement temporaire de l'authentification MFA par l'authentification principale pour finaliser la session
+
  * Gestion des erreurs :
- * <ul>
- *     <li>Redirection vers la page login si l'erreur provient d'une authentification invalide (ex: {@link ApiException}, {@link BadCredentialsException})</li>
- *     <li>Affichage d'une page d'erreur générique pour les autres exceptions</li>
- * </ul>
- * </p>
- *
- * <p>
- * Notes pédagogiques :
- * <ul>
- *     <li>L’usage de {@link @CurrentSecurityContext} permet d’accéder facilement à l’authentification courante.</li>
- *     <li>La MFA est gérée de façon sécurisée sans exposer le code principal de l’utilisateur.</li>
- *     <li>La séparation login/MFA/logout suit les bonnes pratiques MVC avec Thymeleaf ou tout moteur de template.</li>
- *     <li>Les logs via {@link lombok.extern.slf4j.Slf4j} permettent de tracer les tentatives et succès d’authentification pour audit.</li>
- * </ul>
- * </p>
- *
- * Auteur : FirstName LastName
+ * Redirection vers la page login si l'erreur provient d'une authentification invalide (ex: {@link ApiException}, {@link BadCredentialsException})
+ *Affichage d'une page d'erreur générique pour les autres exceptions
+
+ * Auteur : Kardigué MAGASSA
  * Version : 1.0
  * Date : 2026-05-01
  */
@@ -87,49 +64,23 @@ import static com.openclassrooms.authorizationserverservice.util.UserUtils.getUs
 @RequiredArgsConstructor
 @Slf4j
 public class LoginController {
-    /**
-     * Gère la sauvegarde et récupération du contexte de sécurité dans la session HTTP
-     */
+
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
-    /**
-     * Handler pour les échecs d'authentification MFA
-     */
     private final AuthenticationFailureHandler authenticatorFailureHandler = new SimpleUrlAuthenticationFailureHandler("/mfa?error");
-    /**
-     * Handler pour les succès d'authentification
-     */
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
-    /**
-     * Service métier pour les utilisateurs (vérification QR Code, gestion MFA)
-     */
     private final UserService userService;
 
-    /**
-     * GET /login
-     * Retourne la page de login standard
-     */
     @GetMapping("/login")
     public String login() {
         return "login";
     }
 
-    /**
-     * GET /mfa
-     * Affiche la page de saisie du code MFA
-     * Ajoute l'email de l'utilisateur authentifié dans le modèle pour l'affichage
-     */
     @GetMapping("/mfa")
     public String mfa(Model model, @CurrentSecurityContext SecurityContext context) {
         model.addAttribute("email", getAuthenticatedUser(context.getAuthentication()));
         return "mfa";
     }
 
-    /**
-     * POST /mfa
-     * Valide le code MFA saisi par l'utilisateur
-     * - Si le code est correct, l'utilisateur est pleinement authentifié
-     * - Sinon, renvoie un échec d'authentification
-     */
     @PostMapping("/mfa")
     public void validateCode(@RequestParam("code") String code, HttpServletResponse response, HttpServletRequest request, @CurrentSecurityContext SecurityContext context) throws ServletException, IOException {
         var user = getUser(context.getAuthentication());
@@ -140,10 +91,6 @@ public class LoginController {
         this.authenticatorFailureHandler.onAuthenticationFailure(request, response, new BadCredentialsException("Le code est invalide. Veuillez réessayer."));
     }
 
-    /**
-     * Permet de remplacer temporairement l'authentification MFA par
-     * l'authentification principale dans le SecurityContext
-     */
     private Authentication getAuthentication(HttpServletRequest request, HttpServletResponse response) {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         MfaAuthentication mfaAuthentication = (MfaAuthentication) securityContext.getAuthentication();
@@ -155,12 +102,6 @@ public class LoginController {
         return mfaAuthentication.getPrimaryAuthentication();
     }
 
-    /**
-     * GET /error
-     * Gestion globale des erreurs
-     * - Redirige vers la page login si c'est une erreur d'authentification
-     * - Sinon, affiche une page générique d'erreur
-     */
     @GetMapping("/error")
     public String handleError(HttpServletRequest request, HttpServletResponse response, Model model, Exception exception) {
         var errorException = (Exception)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
@@ -172,18 +113,11 @@ public class LoginController {
         return "error";
     }
 
-    /**
-     * GET /logout
-     * Retourne la page de logout
-     */
     @GetMapping("/logout")
     public String logout() {
         return "logout";
     }
 
-    /**
-     * Récupère l'email de l'utilisateur actuellement authentifié
-     */
     private String getAuthenticatedUser(Authentication authentication) {
         return ((User) authentication.getPrincipal()).getEmail();
     }

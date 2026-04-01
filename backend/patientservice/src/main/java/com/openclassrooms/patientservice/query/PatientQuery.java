@@ -3,11 +3,10 @@ package com.openclassrooms.patientservice.query;
 /**
  * Requêtes SQL natives pour Patient.
  * Toutes les requêtes sont centralisées ici pour faciliter la maintenance.
- *
  * Conventions :
- * - Pas de SELECT *
- * - Colonnes explicites
- * - Nommage : ACTION_ENTITY_BY_FIELD_QUERY
+ * Pas de SELECT *
+ * Colonnes explicites
+ * Nommage : ACTION_ENTITY_BY_FIELD_QUERY
  *
  * @author Kardigué MAGASSA
  * @version 2.0

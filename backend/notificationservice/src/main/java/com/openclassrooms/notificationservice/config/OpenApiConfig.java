@@ -13,7 +13,8 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuration OpenAPI pour le service de Notification.
- * Permet de documenter les APIs de messagerie et de gérer l'authentification JWT dans Swagger UI.
+ * Permet de documenter les APIs de messagerie et de gérer l'authentification JWT dans Swagger UI
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-02-09

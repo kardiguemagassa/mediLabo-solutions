@@ -36,8 +36,8 @@ import static org.springframework.http.HttpStatus.*;
  * Controller REST réactif pour la gestion des fichiers et commentaires des notes.
  *
  * ARCHITECTURE RÉACTIVE:
- * - Toutes les méthodes retournent Mono<ResponseEntity<...>>
- * - Les Flux sont collectés en List via .collectList()
+ * Toutes les méthodes retournent Mono<ResponseEntity<...>>
+ * Les Flux sont collectés en List via .collectList()
  *
  * @author Kardigué MAGASSA
  * @version 2.0

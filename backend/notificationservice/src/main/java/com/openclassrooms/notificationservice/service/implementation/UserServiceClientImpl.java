@@ -33,7 +33,7 @@ public class UserServiceClientImpl implements UserServiceClient {
         log.debug("Fetching user by UUID: {}", userUuid);
 
         return authServerWebClient.get()
-                .uri("/user/{uuid}", userUuid)
+                .uri("/api/users/{uuid}", userUuid)
                 .retrieve()
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))
@@ -55,7 +55,7 @@ public class UserServiceClientImpl implements UserServiceClient {
         log.debug("Fetching user by email: {}", email);
 
         return authServerWebClient.get()
-                .uri("/user/user/{email}", email)
+                .uri("/api/users/user/{email}", email)
                 .retrieve()
                 .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))

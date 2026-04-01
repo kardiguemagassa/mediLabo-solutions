@@ -2,11 +2,10 @@ package com.openclassrooms.patientservice.constant;
 
 /**
  * Constantes pour les rôles utilisateur.
- *
  * Centralise tous les rôles pour :
- * - Éviter les fautes de frappe
- * - Faciliter la maintenance
- * - Cohérence dans tout le code
+ * Éviter les fautes de frappe
+ * Faciliter la maintenance
+ * Cohérence dans tout le code
  *
  * @author Kardigué MAGASSA
  * @version 1.0
@@ -14,9 +13,7 @@ package com.openclassrooms.patientservice.constant;
  */
 public final class Role {
 
-    private Role() {
-        // Utility class - prevent instantiation
-    }
+    private Role() {}
 
     public static final String USER = "USER";
     public static final String ADMIN = "ADMIN";

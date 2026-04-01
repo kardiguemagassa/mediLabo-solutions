@@ -33,8 +33,8 @@ import static org.springframework.http.HttpStatus.*;
  * Controller REST réactif pour la gestion des notes médicales.
  *
  * ARCHITECTURE RÉACTIVE:
- * - Toutes les méthodes retournent Mono<ResponseEntity<Response>>
- * - Les Flux sont collectés en List via .collectList()
+ * Toutes les méthodes retournent Mono<ResponseEntity<Response>>
+ * Les Flux sont collectés en List via .collectList()
  *
  * @author Kardigué MAGASSA
  * @version 2.0

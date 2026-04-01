@@ -26,7 +26,7 @@ import java.util.Map;
 import static com.openclassrooms.patientservice.enumeration.EventType.*;
 
 /**
- * Implémentation du service Patient (Full Réactif).
+ * Implémentation du service Patient (Full Réactif)
  *
  * @author Kardigué MAGASSA
  * @version 2.1

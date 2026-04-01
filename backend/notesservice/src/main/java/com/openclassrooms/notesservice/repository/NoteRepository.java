@@ -9,6 +9,7 @@ import java.util.Optional;
 
 /**
  * Repository MongoDB pour les notes
+ *
  *  @author Kardigué MAGASSA
  *  @version 1.0
  *  @since 2026-02-02

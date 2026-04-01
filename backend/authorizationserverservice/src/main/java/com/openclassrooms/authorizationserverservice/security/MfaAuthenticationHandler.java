@@ -17,34 +17,20 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import java.io.IOException;
 
 /**
- * Gestionnaire de succès d’authentification intégrant la logique de
- * Multi-Factor Authentication (MFA).
- *
- * <p>
+ * Gestionnaire de succès d’authentification intégrant la logique de Multi-Factor Authentication (MFA).
  * Cette classe intercepte une authentification réussie (login + mot de passe)
  * afin de déterminer si l’utilisateur doit passer par une étape MFA
  * avant d’être totalement authentifié.
- * </p>
- *
- * <h2>Fonctionnement</h2>
- * <ul>
- *   <li>Si l’utilisateur n’a pas activé le MFA → connexion normale</li>
- *   <li>Si le MFA est activé → l’utilisateur est placé dans un état
- *       {@link MfaAuthentication}</li>
- * </ul>
- *
- * <p>
+ * Fonctionnement
+ * Si l’utilisateur n’a pas activé le MFA → connexion normale
+ * Si le MFA est activé → l’utilisateur est placé dans un état {@link MfaAuthentication}
  * Cet état temporaire empêche l’accès aux ressources protégées tant que
  * le second facteur (TOTP, SMS, etc.) n’a pas été validé.
- * </p>
- *
- * <h2>Sécurité</h2>
- * <p>
+ * Sécurité
  * La session HTTP contient une authentification partielle, garantissant
- * qu’un mot de passe seul ne suffit jamais lorsque le MFA est activé.
- * </p>
+ * qu'un mot de passe seul ne suffit jamais lorsque le MFA est activé.
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -57,11 +43,8 @@ public class MfaAuthenticationHandler implements AuthenticationSuccessHandler {
 
     /**
      * Crée un gestionnaire MFA.
-     *
-     * @param successUrl l’URL vers laquelle l’utilisateur est redirigé
-     *                   pour effectuer la validation MFA
-     * @param authority le rôle temporaire accordé pendant la phase MFA
-     *                  (ex: ROLE_MFA_REQUIRED)
+     * @param successUrl l’URL vers laquelle l’utilisateur est redirigé pour effectuer la validation MFA
+     * @param authority le rôle temporaire accordé pendant la phase MFA (ex: ROLE_MFA_REQUIRED)
      */
     public MfaAuthenticationHandler(String successUrl, String authority) {
         SimpleUrlAuthenticationSuccessHandler authenticationSuccessHandler = new SimpleUrlAuthenticationSuccessHandler(successUrl);
@@ -72,17 +55,11 @@ public class MfaAuthenticationHandler implements AuthenticationSuccessHandler {
 
     /**
      * Intercepte une authentification réussie afin d'appliquer la logique MFA.
-     *
-     * <p>
-     * Si l’utilisateur n'a pas activé le MFA, la connexion est finalisée
+     * Si l'utilisateur n'a pas activé le MFA, la connexion est finalisée
      * immédiatement.
-     * </p>
-     *
-     * <p>
-     * Si le MFA est activé, l’authentification est remplacée par une
+     * Si le MFA est activé, l'authentification est remplacée par une
      * {@link MfaAuthentication} et stockée dans la session afin de forcer
      * l'étape de validation du second facteur.
-     * </p>
      *
      * @param request la requête HTTP
      * @param response la réponse HTTP
@@ -97,25 +74,18 @@ public class MfaAuthenticationHandler implements AuthenticationSuccessHandler {
                 return;
             }
         }
-        /**
-         * Cet utilisateur existe, mais il n'est pas encore digne de confiance
-         */
+        /**Cet utilisateur existe, mais il n'est pas encore digne de confiance*/
         saveAuthentication(request, response, new MfaAuthentication(authentication, authority));
         authenticationSuccessHandler.onAuthenticationSuccess(request, response, authentication);
     }
 
     /**
-     * Enregistre une authentification MFA dans le contexte de sécurité
-     * et dans la session HTTP.
-     *
-     * <p>
-     * Cela permet de conserver l’état MFA entre les requêtes jusqu’à
-     * validation du second facteur.
-     * </p>
+     * Enregistre une authentification MFA dans le contexte de sécurité et dans la session HTTP.
+     * Cela permet de conserver l’état MFA entre les requêtes jusqu'à validation du second facteur.
      *
      * @param request la requête HTTP
      * @param response la réponse HTTP
-     * @param authentication l’authentification MFA temporaire
+     * @param authentication l'authentification MFA temporaire
      */
     private void saveAuthentication(HttpServletRequest request, HttpServletResponse response, MfaAuthentication authentication) {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();

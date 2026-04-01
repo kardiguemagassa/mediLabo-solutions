@@ -12,9 +12,8 @@ import org.springframework.stereotype.Service;
 import static com.openclassrooms.discoveryserverservice.query.UserQuery.SELECT_USER_BY_USERNAME_QUERY;
 
 /**
- * @author FirstName LastName
+ *  @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 

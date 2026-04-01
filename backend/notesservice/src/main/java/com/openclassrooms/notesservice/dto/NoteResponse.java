@@ -11,6 +11,7 @@ import java.util.List;
 
 /**
  * DTO de réponse pour une note
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-02-02

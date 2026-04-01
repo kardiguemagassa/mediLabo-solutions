@@ -20,7 +20,7 @@ export class UserService {
 
   register$ = (user: any) => <Observable<IResponse>>
     this.http.post<IResponse>
-      (`${server}/user/register`, user)
+      (`${server}/api/users/register`, user)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -28,7 +28,7 @@ export class UserService {
 
   profile$ = () => <Observable<IResponse>>
     this.http.get<IResponse>
-      (`${server}/user/profile`)
+      (`${server}/api/users/profile`)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -36,7 +36,7 @@ export class UserService {
 
   update$ = (user: IUser) => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/update`, user)
+      (`${server}/api/users/update`, user)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -44,7 +44,7 @@ export class UserService {
 
   updatePassword$ = (form: UpdatePassword) => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/updatepassword`, form)
+      (`${server}/api/users/updatepassword`, form)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -52,7 +52,7 @@ export class UserService {
 
   verifyAccountToken$ = (token: string) => <Observable<IResponse>>
     this.http.get<IResponse>
-      (`${server}/user/verify/account?token=${token}`)
+      (`${server}/api/users/verify/account?token=${token}`)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -60,7 +60,7 @@ export class UserService {
 
   verifyPasswordToken$ = (token: string) => <Observable<IResponse>>
     this.http.get<IResponse>
-      (`${server}/user/verify/password?token=${token}`)
+      (`${server}/api/users/verify/password?token=${token}`)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -68,7 +68,7 @@ export class UserService {
 
   resetPassword$ = (form: FormData) => <Observable<IResponse>>
     this.http.post<IResponse>
-      (`${server}/user/resetpassword`, form)
+      (`${server}/api/users/resetpassword`, form)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -76,7 +76,7 @@ export class UserService {
 
   createNewPassword$ = (request: { userUuid: string, token: string, password: string, confirmPassword: string }) => <Observable<IResponse>>
     this.http.post<IResponse>
-      (`${server}/user/resetpassword/reset`, request)
+      (`${server}/api/users/resetpassword/reset`, request)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -98,7 +98,7 @@ export class UserService {
 
   updateImage$ = (form: FormData) => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/photo`, form)
+      (`${server}/api/users/photo`, form)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -106,7 +106,7 @@ export class UserService {
 
   toggleAccountLocked$ = () => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/toggleaccountlocked`, {})
+      (`${server}/api/users/toggleaccountlocked`, {})
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -114,7 +114,7 @@ export class UserService {
 
   toggleAccountExpired$ = () => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/toggleaccountexpired`, {})
+      (`${server}/api/users/toggleaccountexpired`, {})
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -122,7 +122,7 @@ export class UserService {
 
   toggleAccountEnabled$ = () => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/toggleaccountenabled`, {})
+      (`${server}/api/users/toggleaccountenabled`, {})
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -130,7 +130,7 @@ export class UserService {
 
   enableMfa$ = () => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/mfa/enable`, {})
+      (`${server}/api/users/mfa/enable`, {})
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -138,7 +138,7 @@ export class UserService {
 
   disableMfa$ = () => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/mfa/disable`, {})
+      (`${server}/api/users/mfa/disable`, {})
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -146,7 +146,7 @@ export class UserService {
 
   updateRole$ = (role: string) => <Observable<IResponse>>
     this.http.patch<IResponse>
-      (`${server}/user/updaterole`, { role })
+      (`${server}/api/users/updaterole`, { role })
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -154,7 +154,7 @@ export class UserService {
 
   users$ = () => <Observable<IResponse>>
     this.http.get<IResponse>
-      (`${server}/user/list`)
+      (`${server}/api/users/list`)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -162,7 +162,7 @@ export class UserService {
 
   user$ = (userUuid: string) => <Observable<IResponse>>
     this.http.get<IResponse>
-      (`${server}/user/${userUuid}`)
+      (`${server}/api/users/${userUuid}`)
       .pipe(
         tap(console.log),
         catchError(this.handleError)
@@ -171,32 +171,32 @@ export class UserService {
   /** Admin operations on other users */
   updateRoleByUuid$ = (userUuid: string, role: string) =>
     <Observable<IResponse>>this.http
-        .patch<IResponse>(`${server}/user/${userUuid}/updaterole`, { role })
+        .patch<IResponse>(`${server}/api/users/${userUuid}/updaterole`, { role })
         .pipe(tap(console.log), catchError(this.handleError));
 
   toggleAccountLockedByUuid$ = (userUuid: string) =>
     <Observable<IResponse>>this.http
-        .patch<IResponse>(`${server}/user/${userUuid}/toggleaccountlocked`, {})
+        .patch<IResponse>(`${server}/api/users/${userUuid}/toggleaccountlocked`, {})
         .pipe(tap(console.log), catchError(this.handleError));
 
   toggleAccountExpiredByUuid$ = (userUuid: string) =>
     <Observable<IResponse>>this.http
-        .patch<IResponse>(`${server}/user/${userUuid}/toggleaccountexpired`, {})
+        .patch<IResponse>(`${server}/api/users/${userUuid}/toggleaccountexpired`, {})
         .pipe(tap(console.log), catchError(this.handleError));
 
   toggleAccountEnabledByUuid$ = (userUuid: string) =>
     <Observable<IResponse>>this.http
-        .patch<IResponse>(`${server}/user/${userUuid}/toggleaccountenabled`, {})
+        .patch<IResponse>(`${server}/api/users/${userUuid}/toggleaccountenabled`, {})
         .pipe(tap(console.log), catchError(this.handleError));
 
   enableMfaByUuid$ = (userUuid: string) =>
     <Observable<IResponse>>this.http
-        .patch<IResponse>(`${server}/user/${userUuid}/mfa/enable`, {})
+        .patch<IResponse>(`${server}/api/users/${userUuid}/mfa/enable`, {})
         .pipe(tap(console.log), catchError(this.handleError));
 
   disableMfaByUuid$ = (userUuid: string) =>
     <Observable<IResponse>>this.http
-        .patch<IResponse>(`${server}/user/${userUuid}/mfa/disable`, {})
+        .patch<IResponse>(`${server}/api/users/${userUuid}/mfa/disable`, {})
         .pipe(tap(console.log), catchError(this.handleError));
 
   refreshToken$ = (form: FormData) => <Observable<IAuthentication>>

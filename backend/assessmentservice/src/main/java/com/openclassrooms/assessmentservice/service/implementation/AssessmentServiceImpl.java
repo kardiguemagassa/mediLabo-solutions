@@ -26,7 +26,6 @@ import com.openclassrooms.assessmentservice.event.Event;
 import java.util.HashMap;
 import java.util.Map;
 
-
 /**
  * Implémentation réactive du service d'évaluation du risque de diabète.
  * ARCHITECTURE RÉACTIVE:

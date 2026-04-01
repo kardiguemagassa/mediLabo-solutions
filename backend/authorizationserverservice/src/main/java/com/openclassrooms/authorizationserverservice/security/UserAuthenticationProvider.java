@@ -22,31 +22,20 @@ import static org.springframework.security.core.authority.AuthorityUtils.commaSe
 /**
  * Implémentation personnalisée de {@link AuthenticationProvider} chargée
  * de l’authentification des utilisateurs via email et mot de passe.
- *
- * <p>
+
  * Cette classe constitue le cœur du processus d’authentification utilisateur
  * dans l’Authorization Server. Elle valide :
- * </p>
- * <ul>
- *     <li>l’existence de l’utilisateur</li>
- *     <li>l’état du compte (verrouillé, expiré, désactivé)</li>
- *     <li>la correspondance du mot de passe</li>
- *     <li>les droits et rôles de l’utilisateur</li>
- * </ul>
- *
- * <p>
+ * l'existence de l’utilisateur
+ * l'état du compte (verrouillé, expiré, désactivé)
+ * la correspondance du mot de passe
+ * les droits et rôles de l’utilisateur
  * En cas de succès, elle produit un {@link UsernamePasswordAuthenticationToken}
- * authentifié, utilisé ensuite par Spring Security et OAuth2 pour générer
- * les tokens JWT.
- * </p>
- *
- * <p>
+ * authentifié, utilisé ensuite par Spring Security et OAuth2 pour générer les tokens JWT
  * En cas d’échec, elle déclenche des exceptions spécifiques
  * ({@link BadCredentialsException}, {@link LockedException}, {@link DisabledException})
  * permettant à l’UI de comprendre précisément la cause du refus.
- * </p>
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -61,16 +50,11 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
 
     /**
      * Authentifie un utilisateur à partir de son email et de son mot de passe.
-     *
-     * <p>
      * Le processus est le suivant :
-     * </p>
-     * <ol>
-     *     <li>Recherche de l’utilisateur via {@link UserService}</li>
-     *     <li>Vérification de l’état du compte (verrouillé, expiré, désactivé)</li>
-     *     <li>Vérification du mot de passe avec {@link PasswordEncoder}</li>
-     *     <li>Construction d’un {@link UsernamePasswordAuthenticationToken} authentifié</li>
-     * </ol>
+     * Recherche de l’utilisateur via {@link UserService}
+     * Vérification de l’état du compte (verrouillé, expiré, désactivé)
+     * Vérification du mot de passe avec {@link PasswordEncoder}
+     * Construction d’un {@link UsernamePasswordAuthenticationToken} authentifié
      *
      * @param authentication contient l’email (principal) et le mot de passe (credentials)
      * @return une authentification valide si les informations sont correctes
@@ -98,29 +82,15 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
     }
 
     /**
-     * Indique à Spring Security quels types d’objets {@link Authentication}
-     * ce provider est capable de traiter.
-     *
-     * <p>
-     * Cette méthode permet au moteur d’authentification de Spring Security
-     * de savoir si ce {@link AuthenticationProvider} peut gérer un type
-     * spécifique d’authentification.
-     * </p>
-     *
-     * <p>
+     * Indique à Spring Security quels types d’objets {@link Authentication} ce provider est capable de traiter.
+     * Cette méthode permet au moteur d'authentification de Spring Security
+     * de savoir si ce {@link AuthenticationProvider} peut gérer un type spécifique d'authentification.
      * Ici, on indique que ce provider gère les authentifications de type
-     * {@link UsernamePasswordAuthenticationToken}, c’est-à-dire les connexions
-     * basées sur un email (ou username) et un mot de passe.
-     * </p>
-     *
-     * <p>
-     * Si cette méthode retourne {@code false}, Spring Security ignore ce provider
-     * et passe au provider suivant dans la chaîne.
-     * </p>
+     * {@link UsernamePasswordAuthenticationToken}, c’est-à-dire les connexions basées sur un email (ou username) et un mot de passe
+     * Si cette méthode retourne {@code false}, Spring Security ignore ce provider et passe au provider suivant dans la chaîne.
      *
      * @param authenticationType la classe du token d’authentification à tester
-     * @return {@code true} si ce provider peut traiter ce type d’authentification,
-     *         {@code false} sinon
+     * @return {@code true} si ce provider peut traiter ce type d’authentification,{@code false} sinon
      */
     @Override
     public boolean supports(Class<?> authenticationType) {
@@ -128,20 +98,13 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
     }
 
     /**
-     * Valide l’état de sécurité du compte utilisateur avant toute vérification du mot de passe.
-     *
-     * <p>
+     * Valide l'état de sécurité du compte utilisateur avant toute vérification du mot de passe.
      * Vérifie que :
-     * </p>
-     * <ul>
-     *     <li>le compte n’est pas verrouillé</li>
-     *     <li>le nombre de tentatives de connexion n’a pas dépassé la limite</li>
-     *     <li>le compte est activé</li>
-     *     <li>le compte n’a pas expiré</li>
-     * </ul>
+     * le compte n'est pas verrouillé
+     * le nombre de tentatives de connexion n’a pas dépassé la limite
+     * le compte est activé
+     * le compte n’a pas expiré
      *
-     * @throws LockedException si le compte est verrouillé
-     * @throws DisabledException si le compte est désactivé ou expiré
      */
     private final Consumer<User> validateUser = user -> {
         if (!user.isAccountNonLocked() || user.getLoginAttempts() >= 5) {

@@ -7,33 +7,21 @@ import org.springframework.security.core.Authentication;
 import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
 
 /**
- * Représente une authentification temporaire utilisée pendant un processus de
- * Multi-Factor Authentication (MFA).
- *
- * <p>
+ * Représente une authentification temporaire utilisée pendant un processus de Multi-Factor Authentication (MFA).
  * Cette classe encapsule une authentification primaire déjà validée
  * (login + mot de passe, OAuth2, etc.) mais qui n’a pas encore terminé le
  * processus MFA (TOTP, SMS, Email, etc.).
- * </p>
- *
- * <h2>Objectif</h2>
- * <p>
+ * Objectif
  * Elle permet au système de sécurité Spring de :
- * </p>
- * <ul>
- *   <li>Reconnaître un utilisateur partiellement authentifié</li>
- *   <li>Limiter ses accès tant que le second facteur n’est pas validé</li>
- *   <li>Autoriser uniquement les endpoints MFA (ex: /mfa/verify)</li>
- * </ul>
- *
- * <h2>Stratégie de sécurité</h2>
- * <p>
+ * Reconnaître un utilisateur partiellement authentifié
+ * Limiter ses accès tant que le second facteur n’est pas validé
+ * Autoriser uniquement les endpoints MFA (ex: /mfa/verify)
+ * Stratégie de sécurité
  * L’utilisateur est techniquement connecté, mais son niveau de confiance est
  * limité. Il n’obtient pas encore les rôles réels de l’utilisateur
- * (USER, ADMIN, etc.), seulement un rôle temporaire MFA.
- * </p>
+ * (USER, ADMIN, etc.), seulement un rôle temporaire MFA
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -42,20 +30,12 @@ import static org.springframework.security.core.authority.AuthorityUtils.createA
 public class MfaAuthentication extends AnonymousAuthenticationToken {
     private final Authentication primaryAuthentication;
 
-    // AUTHENTIFICATION TEMPORAIRE
-
     /**
      * Crée une authentification MFA temporaire à partir d’une authentification primaire.
-     *
-     * <p>
-     * L’authentification primaire (login/password, OAuth2…) est stockée mais
-     * n’est pas encore considérée comme totalement validée.
-     * </p>
-     *
-     * <p>
+     * L'authentification primaire (login/password, OAuth2…) est stockée mais
+     * n'est pas encore considérée comme totalement validée.
      * Un rôle temporaire (ex: {@code ROLE_MFA_REQUIRED}) est ajouté afin de contrôler
      * précisément les endpoints accessibles pendant la phase MFA.
-     * </p>
      *
      * @param authentication l'authentification primaire déjà validée
      * @param authority le rôle temporaire accordé pendant le processus MFA
@@ -67,11 +47,8 @@ public class MfaAuthentication extends AnonymousAuthenticationToken {
 
     /**
      * Retourne le principal réel issu de l’authentification primaire.
-     *
-     * <p>
      * Cela permet à Spring Security de conserver l’identité de l’utilisateur
      * (username, userId, etc.) même pendant la phase MFA.
-     * </p>
      *
      * @return le principal authentifié (souvent un UserDetails ou JWT subject)
      */

@@ -7,7 +7,7 @@ import lombok.*;
  * DTO pour les informations utilisateur
  * Reçu depuis Authorization Server
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09
  */
@@ -19,7 +19,6 @@ import lombok.*;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserRequest {
-
     private String userUuid;
     private String firstName;
     private String lastName;

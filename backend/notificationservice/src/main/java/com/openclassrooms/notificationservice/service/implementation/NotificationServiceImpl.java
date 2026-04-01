@@ -20,13 +20,13 @@ import static com.openclassrooms.notificationservice.utils.NotificationUtils.ran
 
 /**
  * Implémentation réactive du service de notification.
- * - Mono<T> : Représente 0 ou 1 élément (équivalent à Optional réactif)
- * - Flux<T> : Représente 0 à N éléments (équivalent à Stream réactif)
- * - Schedulers.boundedElastic() : Thread-pool pour opérations bloquantes (JDBC)
- * - Mono.fromCallable() : Encapsule les appels JDBC synchrones dans un contexte réactif
- * - subscribeOn() : Déplace l'exécution vers un thread-pool dédié
- * - flatMap() : Chaîne les opérations asynchrones séquentiellement
- * - flatMapMany() : Convertit un Mono<List> en Flux<Element>
+ * Mono<T> : Représente 0 ou 1 élément (équivalent à Optional réactif)
+ * Flux<T> : Représente 0 à N éléments (équivalent à Stream réactif)
+ * Schedulers.boundedElastic() : Thread-pool pour opérations bloquantes (JDBC)
+ * Mono.fromCallable() : Encapsule les appels JDBC synchrones dans un contexte réactif
+ * subscribeOn() : Déplace l'exécution vers un thread-pool dédié
+ * flatMap() : Chaîne les opérations asynchrones séquentiellement
+ * flatMapMany() : Convertit un Mono<List> en Flux<Element>
  *
  * @author Kardigué MAGASSA
  * @version 2.1
@@ -43,11 +43,11 @@ public class NotificationServiceImpl implements NotificationService {
 
     /**
      * Envoie un message de manière réactive.
-     * 1. Appel réactif à Auth Server pour récupérer le destinataire (UserService)
-     * 2. Si destinataire introuvable → erreur
-     * 3. Vérification/création de conversation (JDBC sur boundedElastic)
-     * 4. Mapping et sauvegarde du message (JDBC sur boundedElastic)
-     * 5. Retour du MessageResponse
+     * Appel réactif à Auth Server pour récupérer le destinataire (UserService)
+     * Si destinataire introuvable → erreur
+     * Vérification/création de conversation (JDBC sur boundedElastic)
+     * Mapping et sauvegarde du message (JDBC sur boundedElastic)
+     * Retour du MessageResponse
      *
      * @param request Les données du message (sujet, contenu, email destinataire)
      * @param sender L'expéditeur (extrait du JWT dans le controller)
@@ -80,9 +80,9 @@ public class NotificationServiceImpl implements NotificationService {
 
     /**
      * Récupère tous les messages d'un utilisateur (Inbox).
-     * 1. Appel JDBC pour récupérer la liste des messages
-     * 2. Conversion List<Message> → Flux<Message>
-     * 3. Mapping de chaque message vers MessageResponse
+     * Appel JDBC pour récupérer la liste des messages
+     * Conversion List<Message> → Flux<Message>
+     * Mapping de chaque message vers MessageResponse
      *
      * @param userUuid L'UUID de l'utilisateur
      * @return Flux<MessageResponse> Stream réactif des messages
@@ -98,9 +98,9 @@ public class NotificationServiceImpl implements NotificationService {
 
     /**
      * Récupère les messages d'une conversation et marque les non-lus comme lus.
-     * 1. Appel JDBC pour récupérer les messages de la conversation
-     * 2. Pour chaque message UNREAD → mise à jour du statut en READ
-     * 3. Mapping vers MessageResponse
+     * Appel JDBC pour récupérer les messages de la conversation
+     * Pour chaque message UNREAD → mise à jour du statut en READ
+     * Mapping vers MessageResponse
      * @param userUuid L'UUID de l'utilisateur
      * @param conversationId L'ID de la conversation
      * @return Flux<MessageResponse> Stream réactif des messages de la conversation

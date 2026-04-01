@@ -11,6 +11,7 @@ import static com.openclassrooms.notesservice.util.RequestUtils.handleErrorRespo
 
 /**
  * Gestionnaire personnalisé pour les erreurs 403 Forbidden
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-02-02

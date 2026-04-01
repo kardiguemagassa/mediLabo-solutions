@@ -28,7 +28,7 @@ public class Patient {
     private Long patientId;
     private String patientUuid;
     private String userUuid;
-    // Données démographiques & médicales
+    /** Données démographiques & médicales*/
     private LocalDate dateOfBirth;
     private String gender;
     private String bloodType;
@@ -37,7 +37,7 @@ public class Patient {
     private String allergies;
     private String chronicConditions;
     private String currentMedications;
-    // Contact d'urgence
+    /**Contact d'urgence */
     private String emergencyContactName;
     private String emergencyContactPhone;
     private String emergencyContactRelationship;
@@ -46,12 +46,12 @@ public class Patient {
     private String insuranceNumber;
     private String insuranceProvider;
     private String insurancePolicyNumber;
-    // Métadonnées
+    /** Métadonnées */
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    //MÉTHODES MÉTIER
+    /** MÉTHODES MÉTIER */
 
     public int getAge() {
         if (dateOfBirth == null) return 0;

@@ -28,9 +28,9 @@ import java.util.UUID;
 /**
  * Implémentation réactive du service de gestion des commentaires.
  * ARCHITECTURE RÉACTIVE:
- * - Mono.fromCallable() : Encapsule les appels MongoDB bloquants
- * - subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
- * - Publication d'événements Kafka de manière réactive
+ * Mono.fromCallable() : Encapsule les appels MongoDB bloquants
+ * subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
+ * Publication d'événements Kafka de manière réactive
  *
  * @author Kardigué MAGASSA
  * @version 2.0
@@ -48,11 +48,11 @@ public class NoteCommentServiceImpl implements NoteCommentService {
 
     /**
      * Ajoute un commentaire à une note.
-     * 1. Récupération de la note
-     * 2. Construction du commentaire
-     * 3. Ajout à la note et sauvegarde
-     * 4. Publication de l'événement Kafka (async)
-     * 5. Retour du CommentResponse
+     * Récupération de la note
+     * Construction du commentaire
+     * Ajout à la note et sauvegarde
+     * Publication de l'événement Kafka (async)
+     * Retour du CommentResponse
      */
     @Override
     public Mono<CommentResponse> addComment(String noteUuid, CommentRequest request, Jwt jwt) {
@@ -60,7 +60,6 @@ public class NoteCommentServiceImpl implements NoteCommentService {
 
         return findNoteByUuid(noteUuid)
                 .flatMap(note -> {
-                    /** Construction du commentaire */
                     Comment comment = Comment.builder()
                             .commentUuid(UUID.randomUUID().toString())
                             .content(request.getContent())
@@ -73,17 +72,16 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                             .updatedAt(LocalDateTime.now())
                             .build();
 
-                    /** Ajout à la note */
                     note.addComment(comment);
 
-                    /** Sauvegarde MongoDB */
+                    // Sauvegarde MongoDB
                     return Mono.fromCallable(() -> {
                                 noteRepository.save(note);
                                 log.info("Commentaire ajouté à la note: {} par: {}", noteUuid, comment.getAuthorName());
                                 return comment;
                             })
                             .subscribeOn(Schedulers.boundedElastic())
-                            /** Publier l'événement de manière réactive (fire and forget) */
+                            //Publier l'événement de manière réactive (fire and forget)
                             .doOnSuccess(savedComment -> publishCommentCreatedEvent(note, savedComment))
                             .map(this::mapToCommentResponse);
                 });
@@ -97,18 +95,18 @@ public class NoteCommentServiceImpl implements NoteCommentService {
         log.debug("Getting comments for note: {}", noteUuid);
 
         return findNoteByUuid(noteUuid)
-                /** Convertir la liste de commentaires en Flux */
+                //Convertir la liste de commentaires en Flux
                 .flatMapMany(note -> Flux.fromIterable(note.getComments()))
-                /** Mapper chaque Comment vers CommentResponse */
+                // Mapper chaque Comment vers CommentResponse
                 .map(this::mapToCommentResponse);
     }
 
     /**
      * Met à jour un commentaire.
-     * 1. Récupération de la note
-     * 2. Recherche du commentaire
-     * 3. Vérification des droits (auteur uniquement)
-     * 4. Mise à jour et sauvegarde
+     * Récupération de la note
+     * Recherche du commentaire
+     * Vérification des droits (auteur uniquement)
+     * Mise à jour et sauvegarde
      */
     @Override
     public Mono<CommentResponse> updateComment(String noteUuid, String commentUuid, CommentRequest request, Jwt jwt) {
@@ -116,13 +114,13 @@ public class NoteCommentServiceImpl implements NoteCommentService {
 
         return findNoteByUuid(noteUuid)
                 .flatMap(note -> {
-                    /** Recherche du commentaire */
+                    //Recherche du commentaire
                     Comment comment = note.findComment(commentUuid);
                     if (comment == null) {
                         return Mono.error(new ApiException("Commentaire non trouvé: " + commentUuid));
                     }
 
-                    /** Vérification des droits */
+                    //Vérification des droits
                     if (!comment.getAuthorUuid().equals(jwt.getSubject())) {
                         return Mono.error(new ApiException("Non autorisé à modifier ce commentaire"));
                     }
@@ -132,7 +130,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                     comment.setEdited(true);
                     comment.setUpdatedAt(LocalDateTime.now());
 
-                    /** Sauvegarde */
+                    //Sauvegarde
                     return Mono.fromCallable(() -> {
                                 noteRepository.save(note);
                                 log.info("Commentaire modifié: {} sur la note: {}", commentUuid, noteUuid);
@@ -143,14 +141,12 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                 });
     }
 
-
-
     /**
      * Supprime un commentaire.
-     * 1. Récupération de la note
-     * 2. Recherche du commentaire
-     * 3. Vérification des droits (auteur ou praticien de la note)
-     * 4. Suppression et sauvegarde
+     * Récupération de la note
+     * Recherche du commentaire
+     * Vérification des droits (auteur ou praticien de la note)
+     * Suppression et sauvegarde
      */
     @Override
     public Mono<Void> deleteComment(String noteUuid, String commentUuid, Jwt jwt) {
@@ -164,7 +160,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                         return Mono.error(new ApiException("Commentaire non trouvé: " + commentUuid));
                     }
 
-                    /** Vérification des droits */
+                    //Vérification des droits
                     String userUuid = jwt.getSubject();
                     if (!comment.getAuthorUuid().equals(userUuid)
                             && !note.getPractitionerUuid().equals(userUuid)) {
@@ -217,9 +213,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                 );
     }
 
-    /**
-     * Construit les données de l'événement.
-     */
+    /**Construit les données de l'événement*/
     private Map<String, Object> buildEventData(Note note, Comment comment, PatientInfo patient) {
         Map<String, Object> data = new HashMap<>();
         data.put("name", patient != null ? patient.getFullName() : null);
@@ -276,9 +270,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
         return data;
     }
 
-    /**
-     * Mappe un Comment vers CommentResponse.
-     */
+    /**Mappe un Comment vers CommentResponse.*/
     private CommentResponse mapToCommentResponse(Comment comment) {
         return CommentResponse.builder()
                 .commentUuid(comment.getCommentUuid())
@@ -293,9 +285,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                 .build();
     }
 
-    /**
-     * Extrait le nom de l'utilisateur depuis le JWT.
-     */
+    /**Extrait le nom de l'utilisateur depuis le JWT.*/
     private String extractName(Jwt jwt) {
         String firstName = jwt.getClaimAsString("firstName");
         String lastName = jwt.getClaimAsString("lastName");
@@ -306,9 +296,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
         return name != null ? name : "Unknown";
     }
 
-    /**
-     * Extrait le rôle principal du JWT.
-     */
+    /**Extrait le rôle principal du JWT*/
     private String extractRole(Jwt jwt) {
         var authorities = jwt.getClaimAsStringList("authorities");
         if (authorities != null && !authorities.isEmpty()) {
@@ -321,9 +309,6 @@ public class NoteCommentServiceImpl implements NoteCommentService {
         return "USER";
     }
 
-    /**
-     * Tronque le contenu pour l'aperçu.
-     */
     private String truncateContent(String content, int maxLength) {
         if (content == null) return "";
         if (content.length() <= maxLength) return content;

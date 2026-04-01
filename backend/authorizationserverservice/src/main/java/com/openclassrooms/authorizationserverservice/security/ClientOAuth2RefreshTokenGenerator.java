@@ -12,42 +12,23 @@ import java.time.Instant;
 import java.util.Base64;
 
 /**
- * Générateur personnalisé de refresh tokens OAuth2 pour les clients.
- * <p>
+ * Générateur personnalisé de refresh tokens OAuth2 pour les clients
  * Cette classe implémente {@link OAuth2TokenGenerator} pour produire des instances
  * de {@link OAuth2RefreshToken} lorsque le serveur OAuth2 émet des tokens de rafraîchissement.
- * Elle utilise un générateur de chaînes encodées en Base64 pour assurer des tokens sécurisés
- * et uniques.
- * </p>
- * <p>
+ * Elle utilise un générateur de chaînes encodées en Base64 pour assurer des tokens sécurisés et uniques.
  * Le token généré respecte la durée de vie configurée dans {@link org.springframework.security.oauth2.server.authorization.settings.TokenSettings}
  * du client enregistré.
- * </p>
- *
- * <strong>Exemple d'utilisation :</strong>
- * <pre>
- * OAuth2RefreshToken refreshToken = clientOAuth2RefreshTokenGenerator.generate(context);
- * </pre>
- *
- * <p>
  * Cette classe est utilisée par le serveur d'autorisation pour générer des refresh tokens
  * lors du flux OAuth2 (Authorization Code / Refresh Token).
- * </p>
  *
- * <strong>Sécurité :</strong> Les tokens générés sont aléatoires, encodés en Base64 URL-safe
- * et suffisamment longs (96 caractères) pour réduire les risques de collisions ou de prédiction.
- * </p>
- *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
 @Component
 public class ClientOAuth2RefreshTokenGenerator implements OAuth2TokenGenerator<OAuth2RefreshToken> {
-    /** Générateur de clés aléatoires encodées en Base64 pour les refresh tokens.
-     * */
+    /** Générateur de clés aléatoires encodées en Base64 pour les refresh tokens*/
     private final StringKeyGenerator refreshTokenGenerator = new Base64StringKeyGenerator(Base64.getUrlEncoder().withoutPadding(), 96);
 
     public ClientOAuth2RefreshTokenGenerator() {}

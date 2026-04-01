@@ -11,9 +11,8 @@ import java.util.UUID;
 
 /**
  * Mapper pour les conversions Patient Entity ↔ DTOs.
- *
  * Centralise toute la logique de transformation pour :
- * - Garantir la cohérence des transformations
+ * Garantir la cohérence des transformations
  *
  * @author Kardigué MAGASSA
  * @version 1.0

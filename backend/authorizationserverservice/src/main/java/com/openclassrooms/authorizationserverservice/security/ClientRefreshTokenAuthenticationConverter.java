@@ -10,35 +10,22 @@ import org.springframework.util.StringUtils;
 
 /**
  * Convertisseur d’authentification pour les clients OAuth2 utilisant un **refresh token**.
- * <p>
  * Cette classe implémente {@link AuthenticationConverter} et est responsable de la conversion
  * d’une requête HTTP entrante en un objet {@link ClientRefreshTokenAuthentication} lorsque
  * le client tente de rafraîchir son token d’accès.
- * </p>
- *
- * <p>
  * Fonctionnement :
- * <ul>
- *     <li>Vérifie que le paramètre `grant_type` de la requête est bien `refresh_token`.</li>
- *     <li>Récupère le `client_id` depuis les paramètres de la requête.</li>
- *     <li>Si toutes les conditions sont satisfaites, retourne un {@link ClientRefreshTokenAuthentication}.</li>
- *     <li>Sinon, retourne `null` pour indiquer que cette conversion ne s’applique pas.</li>
- * </ul>
- * </p>
- *
- * <p>
+ * Vérifie que le paramètre `grant_type` de la requête est bien `refresh_token`
+ * Récupère le `client_id` depuis les paramètres de la requête
+ * Si toutes les conditions sont satisfaites, retourne un {@link ClientRefreshTokenAuthentication}
+ * Sinon, retourne `null` pour indiquer que cette conversion ne s’applique pas
  * Utilisation typique : intégré dans le {@link ClientAuthenticationProvider} pour authentifier
- * un client lors de la génération d’un nouveau access token à partir d’un refresh token.
- * </p>
- *
- * <p>
+ * un client lors de la génération d'un nouveau access token à partir d’un refresh token
  * Cette classe est annotée {@link Component} pour être automatiquement détectée par Spring
  * et injectée dans la configuration de l’Authorization Server.
- * </p>
- *
  * @see ClientRefreshTokenAuthentication
  * @see AuthenticationConverter
- * @author FirstName LastName
+ *
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -48,16 +35,11 @@ public final class ClientRefreshTokenAuthenticationConverter implements Authenti
 
     /**
      * Convertit une requête HTTP entrante en une authentification OAuth2 pour refresh token.
-     *
-     * <p>
      * Fonctionnement :
-     * <ul>
-     *     <li>Vérifie si le paramètre `grant_type` est égal à {@link AuthorizationGrantType#REFRESH_TOKEN}.</li>
-     *     <li>Récupère le paramètre `client_id` de la requête.</li>
-     *     <li>Si `grant_type` n’est pas `refresh_token` ou si `client_id` est absent ou vide, retourne {@code null}.</li>
-     *     <li>Sinon, crée et retourne un objet {@link ClientRefreshTokenAuthentication} avec le `client_id`.</li>
-     * </ul>
-     * </p>
+     * Vérifie si le paramètre `grant_type` est égal à {@link AuthorizationGrantType#REFRESH_TOKEN}
+     * Récupère le paramètre `client_id` de la requête
+     * Si `grant_type` n’est pas `refresh_token` ou si `client_id` est absent ou vide, retourne {@code null}
+     * Sinon, crée et retourne un objet {@link ClientRefreshTokenAuthentication} avec le `client_id`
      *
      * @param request la requête HTTP contenant les paramètres d’authentification OAuth2
      * @return un {@link ClientRefreshTokenAuthentication} si la conversion est possible,

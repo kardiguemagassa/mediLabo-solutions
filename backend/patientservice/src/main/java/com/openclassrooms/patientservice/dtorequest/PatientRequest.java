@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 /**
  * DTO pour créer un patient
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09
  */
