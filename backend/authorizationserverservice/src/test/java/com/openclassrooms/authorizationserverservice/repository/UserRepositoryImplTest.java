@@ -17,7 +17,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.openclassrooms.authorizationserverservice.query.UserQuery.CREATE_USER_STORED_PROCEDURE;
+//import static com.openclassrooms.authorizationserverservice.query.UserQuery.CREATE_USER_STORED_PROCEDURE;
 import static java.sql.Types.VARCHAR;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;

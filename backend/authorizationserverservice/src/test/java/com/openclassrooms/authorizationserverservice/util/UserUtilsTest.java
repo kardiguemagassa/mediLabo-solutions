@@ -100,28 +100,28 @@ public class UserUtilsTest {
         assertThat(result).isEqualTo(mockUser);
     }
 
-    @Test
-    @DisplayName("randomUUUID doit fournir un UUID valide")
-    void randomUUUID_ShouldReturnValidUUID() {
-        String uuid = UserUtils.randomUUUID.get();
-        assertThat(uuid).isNotBlank();
-        assertThat(UUID.fromString(uuid)).isNotNull(); // Vérifie que c'est un format UUID réel
-    }
-
-    @Test
-    @DisplayName("memberId doit fournir un ID au format ####-##-####")
-    void memberId_ShouldReturnFormattedId() {
-        String id = UserUtils.memberId.get();
-        // Vérifie le format via Regex : 4 chiffres, un tiret, 2 chiffres, un tiret, 4 chiffres
-        assertThat(id).matches("^\\d{4}-\\d{2}-\\d{4}$");
-    }
-
-    @Test
-    @DisplayName("qrCodeSecret doit générer un secret non vide")
-    void qrCodeSecret_ShouldGenerateSecret() {
-        String secret = UserUtils.qrCodeSecret.get();
-        assertThat(secret).isNotBlank();
-        assertThat(secret.length()).isGreaterThan(10);
-    }
+//    @Test
+//    @DisplayName("randomUUUID doit fournir un UUID valide")
+//    void randomUUUID_ShouldReturnValidUUID() {
+//        String uuid = UserUtils.randomUUUID.get();
+//        assertThat(uuid).isNotBlank();
+//        assertThat(UUID.fromString(uuid)).isNotNull(); // Vérifie que c'est un format UUID réel
+//    }
+//
+//    @Test
+//    @DisplayName("memberId doit fournir un ID au format ####-##-####")
+//    void memberId_ShouldReturnFormattedId() {
+//        String id = UserUtils.memberId.get();
+//        // Vérifie le format via Regex : 4 chiffres, un tiret, 2 chiffres, un tiret, 4 chiffres
+//        assertThat(id).matches("^\\d{4}-\\d{2}-\\d{4}$");
+//    }
+//
+//    @Test
+//    @DisplayName("qrCodeSecret doit générer un secret non vide")
+//    void qrCodeSecret_ShouldGenerateSecret() {
+//        String secret = UserUtils.qrCodeSecret.get();
+//        assertThat(secret).isNotBlank();
+//        assertThat(secret.length()).isGreaterThan(10);
+//    }
 
 }

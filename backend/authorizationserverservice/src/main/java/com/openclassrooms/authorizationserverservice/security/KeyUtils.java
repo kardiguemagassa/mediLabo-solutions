@@ -19,48 +19,23 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.UUID;
 
 /**
- * Gestionnaire des clés cryptographiques RSA utilisées pour la signature des JWT.
- * <p>
+ * Gestionnaire des clés cryptographiques RSA utilisées pour la signature des JWT
  * Cette classe est responsable de :
- * <ul>
- *   <li>La génération de paires de clés RSA (publique + privée)</li>
- *   <li>Le chargement des clés depuis le système de fichiers</li>
- *   <li>La fourniture d'un {@link RSAKey} compatible avec OAuth2 / JOSE</li>
- * </ul>
- *
- * <h2>Rôle dans l’architecture OAuth2</h2>
- * <p>
+ * La génération de paires de clés RSA (publique + privée)
+ * Le chargement des clés depuis le système de fichiers
+ * La fourniture d'un {@link RSAKey} compatible avec OAuth2 / JOSE
+ * Rôle dans l'architecture OAuth2</h2>
  * Ces clés sont utilisées par :
- * </p>
- * <ul>
- *   <li>Le serveur d'autorisation pour <b>signer</b> les JWT</li>
- *   <li>Les Resource Servers pour <b>vérifier</b> les JWT</li>
- * </ul>
- *
- * <p>
+ * Le serveur d'autorisation pour signer les JWT
+ * Les Resource Servers pour vérifier les JWT
  * La clé privée signe le token, la clé publique permet de le vérifier.
- * </p>
+ * Stratégie par environnement
+ * En dev: les clés sont générées automatiquement si absentes
+ * En prod: les clés doivent déjà exister (sécurité renforcée)
+ * Les clés sont stockées dans le dossier : src/main/resources/keys  et sont injectées via : keys.public keys.private
+
  *
- * <h2>Stratégie par environnement</h2>
- * <ul>
- *   <li>En <b>dev</b> : les clés sont générées automatiquement si absentes</li>
- *   <li>En <b>prod</b> : les clés doivent déjà exister (sécurité renforcée)</li>
- * </ul>
- *
- * <p>
- * Les clés sont stockées dans le dossier :
- * </p>
- * <pre>
- * src/main/resources/keys
- * </pre>
- *
- * et sont injectées via :
- * <pre>
- * keys.public
- * keys.private
- * </pre>
- *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -80,39 +55,24 @@ public class KeyUtils {
 
     /**
      * Retourne la paire de clés RSA utilisée pour la signature et la validation des JWT.
-     *
-     * <p>
      * Cette méthode :
-     * <ul>
-     *   <li>Charge les clés depuis le disque si elles existent</li>
-     *   <li>Les génère si elles n’existent pas (en environnement non-prod)</li>
-     * </ul>
-     *
+     * Charge les clés depuis le disque si elles existent
+     * Les génère si elles n’existent pas (en environnement non-prod)
      * @return {@link RSAKey} contenant la clé publique, privée et un keyId (kid)
      */
     public RSAKey getRSAKeyPair() {
         return generateRSAKeyPair(privateKey, publicKey);
     }
 
-    // GENERATE KEY IN LOCAL ENVIRONMENT NOT PROD ENVIRONMENT
-
     /**
      * Charge ou génère une paire de clés RSA selon l’environnement.
-     *
-     * <p>
      * Fonctionnement :
-     * </p>
-     * <ol>
-     *   <li>Vérifie si les fichiers de clés existent</li>
-     *   <li>Si oui → charge les clés depuis le disque</li>
-     *   <li>Sinon → génère une nouvelle paire RSA (si pas en prod)</li>
-     *   <li>Stocke les clés dans le dossier {@code resources/keys}</li>
-     * </ol>
-     *
-     * <p>
-     * En environnement <b>prod</b>, une erreur est levée si les clés n'existent pas,
-     * afin d'éviter toute rotation accidentelle des clés (sécurité).
-     * </p>
+     * Vérifie si les fichiers de clés existent
+     * Si oui → charge les clés depuis le disque
+     * Sinon → génère une nouvelle paire RSA (si pas en prod)
+     * Stocke les clés dans le dossier {@code resources/keys}
+     * En environnement prod, une erreur est levée si les clés n'existent pas,
+     * afin d'éviter toute rotation accidentelle des clés (sécurité)
      *
      * @param privateKeyName nom du fichier de la clé privée
      * @param publicKeyName nom du fichier de la clé publique
@@ -171,11 +131,8 @@ public class KeyUtils {
 
     /**
      * Vérifie l'existence du dossier de stockage des clés RSA.
-     *
-     * <p>
      * Si le dossier n'existe pas, il est créé automatiquement.
-     * </p>
-     *
+
      * @param keysDirectory chemin du dossier de clés
      */
     private static void verifyKeysDirectory(Path keysDirectory) {

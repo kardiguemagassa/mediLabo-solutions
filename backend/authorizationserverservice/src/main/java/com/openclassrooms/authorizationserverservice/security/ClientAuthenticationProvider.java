@@ -1,6 +1,5 @@
 package com.openclassrooms.authorizationserverservice.security;
 
-
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -15,18 +14,14 @@ import org.springframework.stereotype.Component;
 /**
  * AuthenticationProvider personnalisé pour l'authentification des clients OAuth2
  * utilisant la méthode {@link ClientAuthenticationMethod#NONE}.
- * <p>
  * Cette classe est responsable de :
- * <ul>
- *     <li>Vérifier si un client existe dans le {@link RegisteredClientRepository}.</li>
- *     <li>Valider que la méthode d'authentification utilisée est bien enregistrée pour ce client.</li>
- *     <li>Lancer les exceptions OAuth2 standards en cas d'erreurs d'authentification.</li>
- * </ul>
- * <p>
+ * Vérifier si un client existe dans le {@link RegisteredClientRepository}
+ * Valider que la méthode d'authentification utilisée est bien enregistrée pour ce client
+ * Lancer les exceptions OAuth2 standards en cas d'erreurs d'authentification
  * Cette implémentation est principalement utilisée pour les clients OAuth2 qui
  * n'utilisent pas de secret (refresh token flow, clients publics, etc.).
  *
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
  */
@@ -34,8 +29,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClientAuthenticationProvider implements AuthenticationProvider {
 
-    /** Repository contenant les clients OAuth2 enregistrés.
-     */
+    /** Repository contenant les clients OAuth2 enregistrés. */
     private final RegisteredClientRepository registeredClientRepository;
 
     /**
@@ -49,7 +43,6 @@ public class ClientAuthenticationProvider implements AuthenticationProvider {
 
     /**
      * Authentifie un client OAuth2.
-     * <p>
      * Vérifie si le client existe et si sa méthode d'authentification
      * correspond à celle attendue. Lève une {@link OAuth2AuthenticationException}
      * avec le code standard {@link OAuth2ErrorCodes#INVALID_CLIENT} en cas d'erreur.
