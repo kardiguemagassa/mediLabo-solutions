@@ -14,24 +14,8 @@ import reactor.core.publisher.Mono;
  * @since 2026-02-25
  */
 public interface NoteCommentService {
-
-    /**
-     * Ajoute un commentaire à une note.
-     */
     Mono<CommentResponse> addComment(String noteUuid, CommentRequest request, Jwt jwt);
-
-    /**
-     * Liste tous les commentaires d'une note.
-     */
     Flux<CommentResponse> getComments(String noteUuid);
-
-    /**
-     * Met à jour un commentaire.
-     */
     Mono<CommentResponse> updateComment(String noteUuid, String commentUuid, CommentRequest request, Jwt jwt);
-
-    /**
-     * Supprime un commentaire.
-     */
     Mono<Void> deleteComment(String noteUuid, String commentUuid, Jwt jwt);
 }

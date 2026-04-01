@@ -10,6 +10,7 @@ import static com.openclassrooms.notesservice.util.RequestUtils.handleErrorRespo
 
 /**
  * Gestionnaire personnalisé pour les erreurs 401 Unauthorized
+ *
  * @author Kardigué MAGASSA
  *  @version 1.0
  * @since 2026-02-02

@@ -15,30 +15,11 @@ import reactor.core.publisher.Mono;
  * @since 2026-02-25
  */
 public interface NoteFileService {
-
-    /**
-     * Upload un fichier et l'attache à une note.
-     */
     Mono<FileResponse> uploadFile(String noteUuid, MultipartFile file, Jwt jwt);
-
-    /**
-     * Liste tous les fichiers d'une note.
-     */
     Flux<FileResponse> getFiles(String noteUuid);
-
-    /**
-     * Télécharge un fichier.
-     */
     Mono<FileDownload> downloadFile(String noteUuid, String fileUuid);
-
-    /**
-     * Supprime un fichier d'une note.
-     */
     Mono<Void> deleteFile(String noteUuid, String fileUuid, Jwt jwt);
 
-    /**
-     * Wrapper pour le téléchargement de fichier.
-     */
     @lombok.Data
     @lombok.Builder
     class FileDownload {

@@ -9,10 +9,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Set;
 
 /**
- * Utilitaire pour la gestion des permissions utilisateur.
- *
- * Vérifie les rôles depuis le SecurityContext.
- *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09
@@ -22,11 +18,11 @@ public final class UserUtils {
 
     private UserUtils() {}
 
-    // Rôles avec permissions élevées
+    // Rôles avec permissions
     private static final Set<String> ELEVATED_ROLES = Set.of(Role.SUPER_ADMIN, Role.ADMIN, Role.ORGANIZER, Role.PRACTITIONER);
 
     /**
-     * Vérifie si l'utilisateur courant a des permissions élevées.
+     * Vérifie si l'utilisateur courant a des permissions
      * @return true si ADMIN, PRACTITIONER, ORGANIZER ou SUPER_ADMIN
      */
     public static boolean hasElevatedPermissions() {

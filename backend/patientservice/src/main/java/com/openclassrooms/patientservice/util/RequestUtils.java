@@ -26,25 +26,15 @@ import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
- * Utilitaire centralisant la création et l'écriture des réponses HTTP
- * standardisées de l'API (succès et erreurs).
- *
  * @author Kardigué MAGASSA
  * @version 2.0
  * @since 2026-01-09
  */
 public final class RequestUtils {
 
-    // ObjectMapper singleton configuré (thread-safe)
     private static final ObjectMapper MAPPER = createObjectMapper();
+    private RequestUtils() {}
 
-    private RequestUtils() {
-        // Utility class - prevent instantiation
-    }
-
-    /**
-     * Crée et configure l'ObjectMapper avec support Java 8 Time.
-     */
     private static ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -52,9 +42,7 @@ public final class RequestUtils {
         return mapper;
     }
 
-    /**
-     * Écrit un objet {@link Response} dans la sortie HTTP au format JSON.
-     */
+    /** Écrit un objet {@link Response} dans la sortie HTTP au format JSON.*/
     private static final BiConsumer<HttpServletResponse, Response> writeResponse = (servletResponse, response) -> {
         try {
             var outputStream = servletResponse.getOutputStream();
@@ -65,18 +53,14 @@ public final class RequestUtils {
         }
     };
 
-    /**
-     * Gère les exceptions et envoie une réponse JSON adaptée au client.
-     */
+    /** Gère les exceptions et envoie une réponse JSON adaptée au client*/
     public static void handleErrorResponse(HttpServletRequest request, HttpServletResponse response, Exception exception) {
         HttpStatus status = mapExceptionToStatus(exception);
         Response apiResponse = getErrorResponse(request, response, exception, status);
         writeResponse.accept(response, apiResponse);
     }
 
-    /**
-     * Mappe une exception vers le code HTTP approprié.
-     */
+    /**Mappe une exception vers le code HTTP approprié*/
     private static HttpStatus mapExceptionToStatus(Exception exception) {
         return switch (exception) {
             case AccessDeniedException ignored -> FORBIDDEN;
@@ -92,16 +76,12 @@ public final class RequestUtils {
         };
     }
 
-    /**
-     * Construit une réponse API standard pour un traitement réussi.
-     */
+    /**Construit une réponse API standard pour un traitement réussi.*/
     public static Response getResponse(HttpServletRequest request, Map<?, ?> data, String message, HttpStatus status) {
         return new Response(now().toString(), status.value(), request.getRequestURI(), status, message, EMPTY, data);
     }
 
-    /**
-     * Détermine le message utilisateur en fonction du type d'erreur.
-     */
+    /**Détermine le message utilisateur en fonction du type d'erreur.*/
     public static final BiFunction<Exception, HttpStatus, String> errorReason = (exception, httpStatus) -> {
         if (httpStatus.isSameCodeAs(FORBIDDEN)) {
             return "Vous n'avez pas suffisamment d'autorisations";
@@ -126,16 +106,12 @@ public final class RequestUtils {
         return "Une erreur s'est produite. Veuillez réessayer.";
     };
 
-    /**
-     * Convertit une donnée de la Response vers un objet typé.
-     */
+    /**Convertit une donnée de la Response vers un objet typé.*/
     public static <T> T convertResponse(Response response, Class<T> type, String keyName) {
         return MAPPER.convertValue(response.data().get(keyName), type);
     }
 
-    /**
-     * Convertit une liste d'éléments de la Response vers une liste typée.
-     */
+    /**Convertit une liste d'éléments de la Response vers une liste typée.*/
     public static <T> List<T> convertResponseList(Response response, Class<T> type, String keyName) {
         return MAPPER.convertValue(
                 response.data().get(keyName),
@@ -143,9 +119,7 @@ public final class RequestUtils {
         );
     }
 
-    /**
-     * Construit une réponse d'erreur standardisée.
-     */
+    /**Construit une réponse d'erreur standardisée.*/
     private static Response getErrorResponse(HttpServletRequest request, HttpServletResponse response,
                                              Exception exception, HttpStatus status) {
         response.setContentType(APPLICATION_JSON_VALUE);

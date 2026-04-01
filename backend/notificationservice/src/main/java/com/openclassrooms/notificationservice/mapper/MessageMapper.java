@@ -21,9 +21,7 @@ import java.util.UUID;
 @Component
 public class MessageMapper {
 
-    /**
-     * Convertit une requête en Entité Message.
-     */
+    /**Convertit une requête en Entité Message*/
     public Message toEntity(MessageRequest request, UserRequest sender, UserRequest receiver) {
         if (ObjectUtils.anyNull(request, sender, receiver)) {
             return null;
@@ -50,9 +48,7 @@ public class MessageMapper {
                 .build();
     }
 
-    /**
-     * Convertit l'entité Message vers la réponse API (version simple).
-     */
+    /**Convertit l'entité Message vers la réponse API */
     public MessageResponse toResponse(Message message) {
         if (message == null) return null;
 
@@ -99,9 +95,7 @@ public class MessageMapper {
                 .build();
     }
 
-    /**
-     * Convertit une liste d'entités en liste de DTOs avec UserInfo.
-     */
+    /**Convertit une liste d'entités en liste de DTOs avec UserInfo*/
     public List<MessageResponse> toResponseList(List<Message> messages) {
         if (messages == null) return List.of();
         return messages.stream()
@@ -109,9 +103,7 @@ public class MessageMapper {
                 .toList();
     }
 
-    /**
-     * Met à jour le statut du message.
-     */
+    /** Met à jour le statut du message */
     public Message updateStatus(Message existing, String newStatus) {
         if (existing != null) {
             existing.setStatus(newStatus);

@@ -54,23 +54,12 @@ public class Note {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    /**
-     * Liste des fichiers attachés à cette note.
-     * Stockage embedded pour des performances optimales.
-     */
     @Builder.Default
     private List<FileAttachment> files = new ArrayList<>();
 
-    /**
-     * Liste des commentaires sur cette note.
-     * Stockage embedded pour des performances optimales.
-     */
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
-    /**
-     * Ajoute un fichier à la note.
-     */
     public void addFile(FileAttachment file) {
         if (this.files == null) {
             this.files = new ArrayList<>();
@@ -79,9 +68,6 @@ public class Note {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Supprime un fichier de la note par son UUID.
-     */
     public boolean removeFile(String fileUuid) {
         if (this.files == null) return false;
         boolean removed = this.files.removeIf(f -> f.getFileUuid().equals(fileUuid));
@@ -91,9 +77,6 @@ public class Note {
         return removed;
     }
 
-    /**
-     * Trouve un fichier par son UUID.
-     */
     public FileAttachment findFile(String fileUuid) {
         if (this.files == null) return null;
         return this.files.stream()
@@ -102,16 +85,10 @@ public class Note {
                 .orElse(null);
     }
 
-    /**
-     * Nombre de fichiers attachés.
-     */
     public int getFileCount() {
         return this.files == null ? 0 : this.files.size();
     }
 
-    /**
-     * Ajoute un commentaire à la note.
-     */
     public void addComment(Comment comment) {
         if (this.comments == null) {
             this.comments = new ArrayList<>();
@@ -120,9 +97,6 @@ public class Note {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Supprime un commentaire de la note par son UUID.
-     */
     public boolean removeComment(String commentUuid) {
         if (this.comments == null) return false;
         boolean removed = this.comments.removeIf(c -> c.getCommentUuid().equals(commentUuid));
@@ -132,9 +106,6 @@ public class Note {
         return removed;
     }
 
-    /**
-     * Trouve un commentaire par son UUID.
-     */
     public Comment findComment(String commentUuid) {
         if (this.comments == null) return null;
         return this.comments.stream()
@@ -143,9 +114,6 @@ public class Note {
                 .orElse(null);
     }
 
-    /**
-     * Nombre de commentaires.
-     */
     public int getCommentCount() {
         return this.comments == null ? 0 : this.comments.size();
     }

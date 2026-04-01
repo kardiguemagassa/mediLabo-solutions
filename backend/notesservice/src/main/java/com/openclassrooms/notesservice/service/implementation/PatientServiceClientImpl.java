@@ -20,11 +20,10 @@ import java.time.Duration;
 
 /**
  * Implémentation réactive du client PatientService.
- *
  * ARCHITECTURE RÉACTIVE:
- * - Toutes les méthodes retournent Mono<PatientInfo>
- * - Utilise Resilience4j pour Circuit Breaker et Retry
- * - Timeout configuré à 5 secondes
+ * Toutes les méthodes retournent Mono<PatientInfo>
+ * Utilise Resilience4j pour Circuit Breaker et Retry
+ * Timeout configuré à 5 secondes
  *
  * @author Kardigué MAGASSA
  * @version 2.0
@@ -43,12 +42,11 @@ public class PatientServiceClientImpl implements PatientServiceClient {
 
     /**
      * Récupère les informations d'un patient par son UUID.
-     *
      * FLUX:
-     * 1. Appel HTTP vers PatientService
-     * 2. Gestion des erreurs (404, 4xx, 5xx)
-     * 3. Conversion de la réponse en PatientInfo
-     * 4. Timeout et Circuit Breaker
+     * Appel HTTP vers PatientService
+     * Gestion des erreurs (404, 4xx, 5xx)
+     * Conversion de la réponse en PatientInfo
+     * Timeout et Circuit Breaker
      */
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
@@ -131,17 +129,13 @@ public class PatientServiceClientImpl implements PatientServiceClient {
         return Mono.empty();
     }
 
-    /**
-     * Fallback pour getPatientContactInfo.
-     */
+    /**Fallback pour getPatientContactInfo.*/
     public Mono<PatientInfo> getPatientContactInfoFallback(String patientUuid, Throwable throwable) {
         log.error("Fallback getPatientContactInfo - UUID: {}, Cause: {}", patientUuid, throwable.getMessage());
         return Mono.empty();
     }
 
-    /**
-     * Extrait PatientInfo depuis la réponse ExternalResponse.
-     */
+    /**Extrait PatientInfo depuis la réponse ExternalResponse.*/
     private PatientInfo extractPatientInfo(ExternalResponse response) {
         try {
             PatientInfo patient = objectMapper.convertValue(

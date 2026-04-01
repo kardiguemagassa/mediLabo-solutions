@@ -44,9 +44,7 @@ public class NotificationListener {
         }
     }
 
-    /**
-     * Traite la notification selon son type.
-     */
+    /**raite la notification selon son type*/
     private void processNotification(Notification notification, Data data) {
         switch (notification.getPayload().getEventType()) {
 

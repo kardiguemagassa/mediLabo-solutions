@@ -90,23 +90,17 @@ public class PatientController {
         log.debug("Fetching patient: {}", patientUuid);
 
         return patientService.getPatientByUuid(patientUuid)
-                .map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
-                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
+                .map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer un patient via l'UUID utilisateur")
     @GetMapping("/user/{userUuid}")
     @PreAuthorize(ALL_STAFF)
     public Mono<ResponseEntity<Response>> getPatientByUserUuid(@Parameter(description = "UUID de l'utilisateur") @PathVariable String userUuid, HttpServletRequest request) {
-
         log.debug("Fetching patient for user: {}", userUuid);
-
-        return patientService.getPatientByUserUuid(userUuid).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
-                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
+        return patientService.getPatientByUserUuid(userUuid).map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer un patient par email",
@@ -119,10 +113,8 @@ public class PatientController {
         log.debug("Fetching patient by email: {}", email);
 
         return patientService.getPatientByEmail(email)
-                .map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
-                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
+                .map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer son propre dossier patient",
@@ -135,10 +127,8 @@ public class PatientController {
         log.debug("Fetching own patient record for user: {}", userUuid);
 
         return patientService.getPatientByUserUuid(userUuid)
-                .map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
-                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
+                .map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Récupérer un patient par numéro de dossier médical")
@@ -150,17 +140,14 @@ public class PatientController {
         log.debug("Fetching patient by medical record: {}", medicalRecordNumber);
 
         return patientService.getPatientByMedicalRecordNumber(medicalRecordNumber)
-                .map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
-                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
+                .map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient récupéré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Rechercher des patients par groupe sanguin")
     @GetMapping("/blood-type/{bloodType}")
     @PreAuthorize(ALL_STAFF)
-    public Mono<ResponseEntity<Response>> getPatientsByBloodType(@Parameter(description = "Groupe sanguin", example = "O+")
-                                                                     @PathVariable String bloodType, HttpServletRequest request) {
+    public Mono<ResponseEntity<Response>> getPatientsByBloodType(@Parameter(description = "Groupe sanguin", example = "O+") @PathVariable String bloodType, HttpServletRequest request) {
 
         log.debug("Fetching patients by blood type: {}", bloodType);
 
@@ -180,10 +167,8 @@ public class PatientController {
 
         log.info("Updating patient: {}", patientUuid);
 
-        return patientService.updatePatient(patientUuid, patientRequest).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient mis à jour avec succès", OK)))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
-                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
+        return patientService.updatePatient(patientUuid, patientRequest).map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient mis à jour avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Supprimer un patient (soft delete)")
@@ -193,8 +178,7 @@ public class PatientController {
 
         log.info("Deleting patient: {}", patientUuid);
 
-        return patientService.deletePatient(patientUuid).then(Mono.just(ResponseEntity.ok(
-                        getResponse(request, Map.of(), "Patient supprimé avec succès", OK))));
+        return patientService.deletePatient(patientUuid).then(Mono.just(ResponseEntity.ok(getResponse(request, Map.of(), "Patient supprimé avec succès", OK))));
     }
 
     @Operation(summary = "Restaurer un patient supprimé")
@@ -204,18 +188,15 @@ public class PatientController {
 
         log.info("Restoring patient: {}", patientUuid);
 
-        return patientService.restorePatient(patientUuid).map(patient -> ResponseEntity.ok(
-                        getResponse(request, Map.of("patient", patient), "Patient restauré avec succès", OK)))
-                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND)
-                        .body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
+        return patientService.restorePatient(patientUuid).map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient restauré avec succès", OK)))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 
     @Operation(summary = "Obtenir le nombre total de patients actifs")
     @GetMapping("/stats/count")
     @PreAuthorize(ADMIN_ONLY)
     public Mono<ResponseEntity<Response>> getPatientCount(HttpServletRequest request) {
-        return patientService.countActivePatients().map(count -> ResponseEntity.ok(
-                        getResponse(request, Map.of("totalPatients", count), "Statistiques récupérées", OK)));
+        return patientService.countActivePatients().map(count -> ResponseEntity.ok(getResponse(request, Map.of("totalPatients", count), "Statistiques récupérées", OK)));
     }
 
     @Operation(summary = "Vérifier si un utilisateur a un dossier patient")

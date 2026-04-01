@@ -4,7 +4,6 @@ import com.openclassrooms.notificationservice.domain.Response;
 import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
 import com.openclassrooms.notificationservice.dtorequest.UserRequest;
 import com.openclassrooms.notificationservice.service.NotificationService;
-import com.openclassrooms.notificationservice.service.UserServiceClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,11 +29,11 @@ import static org.springframework.http.HttpStatus.OK;
 
 /**
  * Controller REST réactif pour la gestion des messages.
- *
+
  * ARCHITECTURE RÉACTIVE:
- * - Toutes les méthodes retournent Mono<ResponseEntity<Response>>
- * - Les Flux sont collectés en List via .collectList() pour la réponse JSON
- * - Le JWT est extrait automatiquement via @AuthenticationPrincipal
+ * Toutes les méthodes retournent Mono<ResponseEntity<Response>>
+ * Les Flux sont collectés en List via .collectList() pour la réponse JSON
+ * Le JWT est extrait automatiquement via @AuthenticationPrincipal
  *
  * @author Kardigué MAGASSA
  * @version 2.1
@@ -98,12 +97,6 @@ public class NotificationResource {
         });
     }
 
-    /**
-     * Récupère une conversation par son ID.
-     *
-     * NOTE: Les messages UNREAD sont automatiquement marqués comme READ
-     * par le service lors de la récupération.
-     */
     @Operation(summary = "Récupérer une conversation par ID")
     @GetMapping("/messages/{conversationId}")
     public Mono<ResponseEntity<Response>> getConversation(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Parameter(description = "UUID de la conversation") @PathVariable String conversationId) {
@@ -115,9 +108,6 @@ public class NotificationResource {
                 .map(messages -> ResponseEntity.ok(getResponse(request, of("conversation", messages, "count", messages.size()), "Conversation récupérée avec succès", OK)));
     }
 
-    /**
-     * Récupère le nombre de messages non lus.
-     */
     @Operation(summary = "Récupérer le nombre de messages non lus")
     @GetMapping("/messages/unread/count")
     public Mono<ResponseEntity<Response>> getUnreadCount(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request) {
@@ -166,9 +156,7 @@ public class NotificationResource {
         return uuid;
     }
 
-    /**
-     * Extrait le prénom du JWT.
-     */
+    /**Extrait le prénom du JWT*/
     private String extractFirstName(Jwt jwt) {
         String firstName = jwt.getClaim("first_name");
         if (firstName != null) return firstName;
@@ -182,9 +170,7 @@ public class NotificationResource {
         return name;
     }
 
-    /**
-     * Extrait le nom de famille du JWT.
-     */
+    /**Extrait le nom de famille du JWT*/
     private String extractLastName(Jwt jwt) {
         String lastName = jwt.getClaim("last_name");
         if (lastName != null) return lastName;
@@ -199,9 +185,7 @@ public class NotificationResource {
         return "";
     }
 
-    /**
-     * Extrait le rôle utilisateur du JWT.
-     */
+    /**Extrait le rôle utilisateur du JWT*/
     private String extractUserRole(Jwt jwt) {
         String role = jwt.getClaim("role");
         if (role != null) return role;

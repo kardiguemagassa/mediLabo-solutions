@@ -28,12 +28,11 @@ import java.util.*;
 
 /**
  * Implémentation réactive du service de gestion des notes.
- *
  * ARCHITECTURE RÉACTIVE:
- * - Mono<T> : Représente 0 ou 1 élément
- * - Flux<T> : Représente 0 à N éléments
- * - Mono.fromCallable() : Encapsule les appels MongoDB bloquants
- * - subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
+ * Mono<T> : Représente 0 ou 1 élément
+ * Flux<T> : Représente 0 à N éléments
+ * Mono.fromCallable() : Encapsule les appels MongoDB bloquants
+ * subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
  *
  * @author Kardigué MAGASSA
  * @version 2.0
@@ -65,9 +64,9 @@ public class NoteServiceImpl implements NoteService {
 
     /**
      * Crée une nouvelle note pour un patient.
-     * 1. Construction de l'entité Note
-     * 2. Sauvegarde en MongoDB (sur boundedElastic)
-     * 3. Conversion en NoteResponse
+     * Construction de l'entité Note
+     * Sauvegarde en MongoDB (sur boundedElastic)
+     * Conversion en NoteResponse
      */
 
     @Override
@@ -96,9 +95,7 @@ public class NoteServiceImpl implements NoteService {
                 .map(this::toResponse);
     }
 
-    /**
-     * Récupère une note par son UUID.
-     */
+    /** Récupère une note par son UUID*/
     @Override
     public Mono<NoteResponse> getNoteByUuid(String noteUuid) {
         log.debug("Fetching note: {}", noteUuid);
@@ -110,9 +107,7 @@ public class NoteServiceImpl implements NoteService {
                         .orElseGet(() -> Mono.error(new ApiException("Note non trouvée: " + noteUuid))));
     }
 
-    /**
-     * Récupère toutes les notes d'un patient.
-     */
+    /**Récupère toutes les notes d'un patient*/
     @Override
     public Flux<NoteResponse> getNotesByPatientUuid(String patientUuid) {
         log.debug("Fetching notes for patient: {}", patientUuid);
@@ -123,9 +118,7 @@ public class NoteServiceImpl implements NoteService {
                 .map(this::toResponse);
     }
 
-    /**
-     * Récupère toutes les notes créées par un praticien.
-     */
+    /**Récupère toutes les notes créées par un praticien*/
     @Override
     public Flux<NoteResponse> getNotesByPractitionerUuid(String practitionerUuid) {
         log.debug("Fetching notes by practitioner: {}", practitionerUuid);
@@ -138,10 +131,10 @@ public class NoteServiceImpl implements NoteService {
 
     /**
      * Met à jour une note existante.
-     * 1. Récupération de la note existante
-     * 2. Vérification des droits (praticien = auteur)
-     * 3. Mise à jour du contenu
-     * 4. Sauvegarde
+     * Récupération de la note existante
+     * Vérification des droits (praticien = auteur)
+     * Mise à jour du contenu
+     * Sauvegarde
      */
     @Override
     public Mono<NoteResponse> updateNote(String noteUuid, NoteRequest request, String practitionerUuid) {
@@ -174,9 +167,7 @@ public class NoteServiceImpl implements NoteService {
                 });
     }
 
-    /**
-     * Supprime une note (soft delete).
-     */
+    /**Supprime une note (soft delete)*/
     @Override
     public Mono<Void> deleteNote(String noteUuid) {
         log.info("Soft deleting note: {}", noteUuid);
@@ -202,9 +193,7 @@ public class NoteServiceImpl implements NoteService {
                 .then();
     }
 
-    /**
-     * Compte le nombre de notes pour un patient.
-     */
+    /** Compte le nombre de notes pour un patient */
     @Override
     public Mono<Long> countNotesByPatientUuid(String patientUuid) {
         log.debug("Counting notes for patient: {}", patientUuid);
@@ -213,7 +202,7 @@ public class NoteServiceImpl implements NoteService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    /**  EVENT PUBLISHING */
+    /** EVENT PUBLISHING */
 
     private void publishNoteCreatedEvent(Note note, String practitionerName) {
         patientServiceClient.getPatientContactInfo(note.getPatientUuid())

@@ -11,7 +11,6 @@ import java.util.Map;
 /**
  * Événement émis par le NotesService.
  * Envoyé via Kafka au NotificationService.
- *
  * Structure alignée avec NotificationService.
  *
  * @author Kardigué MAGASSA

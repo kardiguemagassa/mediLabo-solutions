@@ -12,7 +12,6 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 /**
  * Intercepteur WebClient pour la propagation automatique du token JWT.
- *
  * Récupère le token depuis le SecurityContext et l'ajoute
  * à toutes les requêtes sortantes vers les autres microservices.
  *
@@ -24,9 +23,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Component
 public class WebClientInterceptor {
 
-    /**
-     * Filter pour propager automatiquement le token JWT.
-     */
+    /** Filter pour propager automatiquement le token JWT */
     public static ExchangeFilterFunction jwtAuthorizationFilter() {
         return ExchangeFilterFunction.ofRequestProcessor(request -> {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -47,9 +44,7 @@ public class WebClientInterceptor {
         });
     }
 
-    /**
-     * Filter pour logger les requêtes sortantes.
-     */
+    /** Filter pour logger les requêtes sortantes*/
     public static ExchangeFilterFunction logRequest() {
         return ExchangeFilterFunction.ofRequestProcessor(request -> {
             log.debug(">>> {} {}", request.method(), request.url());
@@ -57,9 +52,7 @@ public class WebClientInterceptor {
         });
     }
 
-    /**
-     * Filter pour logger les réponses.
-     */
+    /** Filter pour logger les réponses */
     public static ExchangeFilterFunction logResponse() {
         return ExchangeFilterFunction.ofResponseProcessor(response -> {
             log.debug("<<< Status: {}", response.statusCode());
@@ -67,9 +60,7 @@ public class WebClientInterceptor {
         });
     }
 
-    /**
-     * Filter pour logger les erreurs.
-     */
+    /** Filter pour logger les erreurs*/
     public static ExchangeFilterFunction handleError() {
         return ExchangeFilterFunction.ofResponseProcessor(response -> {
             if (response.statusCode().isError()) {

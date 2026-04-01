@@ -29,11 +29,10 @@ import java.util.Map;
 
 /**
  * Implémentation réactive du service de gestion des fichiers attachés aux notes.
- *
  * ARCHITECTURE RÉACTIVE:
- * - Mono.fromCallable() : Encapsule les appels bloquants (MongoDB, FileSystem)
- * - subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
- * - Publication d'événements Kafka de manière réactive
+ * Mono.fromCallable() : Encapsule les appels bloquants (MongoDB, FileSystem)
+ * subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
+ * Publication d'événements Kafka de manière réactive
  *
  * @author Kardigué MAGASSA
  * @version 2.0
@@ -65,10 +64,10 @@ public class NoteFileServiceImpl implements NoteFileService {
 
         return findNoteByUuid(noteUuid)
                 .flatMap(note -> Mono.fromCallable(() -> {
-                            /** Stocker le fichier physiquement */
+                            // Stocker le fichier physiquement
                             FileStorageService.StoredFileInfo storedInfo = fileStorageService.storeFile(noteUuid, file);
 
-                            /** Créer l'attachment */
+                            // Créer l'attachment
                             FileAttachment attachment = FileAttachment.builder()
                                     .fileUuid(storedInfo.getFileUuid())
                                     .originalName(storedInfo.getOriginalName())
@@ -84,17 +83,17 @@ public class NoteFileServiceImpl implements NoteFileService {
                                     .uploadedAt(LocalDateTime.now())
                                     .build();
 
-                            /** Ajouter à la note */
+                            // Ajouter à la note
                             note.addFile(attachment);
                             noteRepository.save(note);
 
                             log.info("Fichier uploadé: {} pour la note: {}", storedInfo.getOriginalName(), noteUuid);
 
-                            /** Retourner un tuple (note, attachment) pour l'événement */
+                            //Retourner un tuple (note, attachment) pour l'événement
                             return new NoteFileContext(note, attachment);
                         })
                         .subscribeOn(Schedulers.boundedElastic())
-                        /** Publier l'événement de manière réactive (fire and forget) */
+                        //Publier l'événement de manière réactive (fire and forget)
                         .doOnSuccess(context -> publishFileUploadedEvent(context.note(), context.attachment()))
                         .map(context -> mapToFileResponse(context.attachment(), noteUuid)));
     }
@@ -125,7 +124,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                         return Mono.error(new ApiException("Fichier non trouvé: " + fileUuid));
                     }
 
-                    /** Charger le fichier depuis le filesystem */
+                    // Charger le fichier depuis le filesystem
                     return Mono.fromCallable(() -> {
                                 Resource resource = fileStorageService.loadFileAsResource(
                                         noteUuid,
@@ -145,13 +144,12 @@ public class NoteFileServiceImpl implements NoteFileService {
 
     /**
      * Supprime un fichier d'une note.
-     *
      * FLUX:
-     * 1. Récupération de la note
-     * 2. Recherche du fichier
-     * 3. Vérification des droits (propriétaire ou praticien)
-     * 4. Suppression physique
-     * 5. Retrait de la note et sauvegarde
+     * Récupération de la note
+     * Recherche du fichier
+     * Vérification des droits (propriétaire ou praticien)
+     * Suppression physique
+     * Retrait de la note et sauvegarde
      */
     @Override
     public Mono<Void> deleteFile(String noteUuid, String fileUuid, Jwt jwt) {
@@ -164,7 +162,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                         return Mono.error(new ApiException("Fichier non trouvé: " + fileUuid));
                     }
 
-                    /** Vérifier les droits */
+                    // Vérifier les droits
                     String userUuid = jwt.getSubject();
                     if (!attachment.getUploadedByUuid().equals(userUuid)
                             && !note.getPractitionerUuid().equals(userUuid)) {
@@ -172,7 +170,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                     }
 
                     return Mono.fromCallable(() -> {
-                                /** Supprimer le fichier physique */
+                                // Supprimer le fichier physique
                                 fileStorageService.deleteFile(noteUuid, fileUuid, attachment.getExtension());
 
                                 // Retirer de la note

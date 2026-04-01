@@ -57,11 +57,11 @@ public class FileStorageServiceImpl implements FileStorageService {
         String storedFilename = fileUuid + "." + extension;
 
         try {
-            /** Créer le sous-répertoire pour la note */
+            //Créer le sous-répertoire pour la note
             Path noteDir = this.rootLocation.resolve("notes").resolve(noteUuid);
             Files.createDirectories(noteDir);
 
-            /** Stocker le fichier */
+            //Stocker le fichier
             Path targetLocation = noteDir.resolve(storedFilename);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
@@ -126,9 +126,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
-    /**
-     * Valide un fichier avant stockage.
-     */
+    /**Valide un fichier avant stockage*/
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ApiException("Le fichier est vide");
@@ -140,27 +138,25 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new ApiException("Nom de fichier invalide: " + filename);
         }
 
-        /** Vérifier la taille */
+        //Vérifier la taille
         if (file.getSize() > config.getMaxFileSize()) {
             throw new ApiException("Fichier trop volumineux. Taille max: " + formatFileSize(config.getMaxFileSize()));
         }
 
-        /** Vérifier l'extension */
+        //Vérifier l'extension
         String extension = getExtension(filename).toLowerCase();
         if (!config.getAllowedExtensions().contains(extension)) {
             throw new ApiException("Extension non autorisée: " + extension + ". Extensions autorisées: " + config.getAllowedExtensions());
         }
 
-        /** Vérifier le type MIME */
+        //Vérifier le type MIME
         String contentType = file.getContentType();
         if (contentType != null && !config.getAllowedContentTypes().contains(contentType)) {
             throw new ApiException("Type de fichier non autorisé: " + contentType);
         }
     }
 
-    /**
-     * Extrait l'extension d'un nom de fichier.
-     */
+    /**Extrait l'extension d'un nom de fichier.*/
     private String getExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "";
@@ -168,9 +164,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return filename.substring(filename.lastIndexOf(".") + 1);
     }
 
-    /**
-     * Formate la taille d'un fichier en format lisible.
-     */
+    /**Formate la taille d'un fichier en format lisible*/
     public static String formatFileSize(long size) {
         if (size <= 0) return "0 B";
 

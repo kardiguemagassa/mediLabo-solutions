@@ -10,7 +10,6 @@ import java.io.IOException;
 
 import static com.openclassrooms.assessmentservice.util.RequestUtils.handleErrorResponse;
 
-
 /**
  * Gestionnaire personnalisé pour les erreurs 403 Forbidden
  * @author Kardigué MAGASSA

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * DTO pour la création/modification d'une note
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-02-02

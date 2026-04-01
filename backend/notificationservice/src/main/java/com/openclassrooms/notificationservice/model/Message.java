@@ -4,7 +4,7 @@ import lombok.*;
 
 /**
  * Model représentant un message entre utilisateurs.
- *
+
  * ARCHITECTURE: Données dénormalisées
  * Les infos sender/receiver sont stockées directement
  *

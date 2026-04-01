@@ -14,16 +14,14 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Configuration OAuth2 Resource Server.
- *
  * Ce service valide les JWT émis par Authorization Server.
  * La validation se fait via l'issuer-uri configuré dans application.yml.
- *
  * Flow:
- * 1. Requête arrive avec Bearer token
- * 2. Spring récupère les clés publiques depuis AuthServer (/oauth2/jwks)
- * 3. Valide la signature du JWT
- * 4. JwtConverter extrait les authorities
- * 5. @PreAuthorize vérifie les permissions
+ * Requête arrive avec Bearer token
+ * Spring récupère les clés publiques depuis AuthServer (/oauth2/jwks)
+ * Valide la signature du JWT
+ * JwtConverter extrait les authorities
+ * @PreAuthorize vérifie les permissions
  *
  * @author Kardigué MAGASSA
  * @version 2.0

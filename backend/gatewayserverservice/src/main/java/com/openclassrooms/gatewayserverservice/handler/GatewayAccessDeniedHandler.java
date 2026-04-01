@@ -8,12 +8,11 @@ import org.springframework.security.web.server.authorization.ServerAccessDeniedH
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-
 /**
  * Gestionnaire des erreurs d'accès refusé (403 Forbidden) - Version REACTIVE.
- * @author FirstName LastName
+ *
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 

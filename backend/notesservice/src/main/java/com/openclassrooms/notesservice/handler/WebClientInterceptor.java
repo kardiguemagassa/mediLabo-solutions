@@ -11,10 +11,9 @@ import reactor.core.publisher.Mono;
 
 /**
  * Intercepteurs pour WebClient.
- *
- * - Propagation automatique du JWT
- * - Logging des requêtes/réponses
- * - Gestion des erreurs
+ * Propagation automatique du JWT
+ * Logging des requêtes/réponses
+ * Gestion des erreurs
  *
  * @author Kardigué MAGASSA
  * @version 2.0
@@ -47,9 +46,7 @@ public class WebClientInterceptor {
         });
     }
 
-    /**
-     * Log les requêtes sortantes.
-     */
+    /**Log les requêtes sortantes*/
     public static ExchangeFilterFunction logRequest() {
         return ExchangeFilterFunction.ofRequestProcessor(request -> {
             log.debug(">>> {} {}", request.method(), request.url());
@@ -57,9 +54,7 @@ public class WebClientInterceptor {
         });
     }
 
-    /**
-     * Log les réponses reçues.
-     */
+    /**Log les réponses reçues*/
     public static ExchangeFilterFunction logResponse() {
         return ExchangeFilterFunction.ofResponseProcessor(response -> {
             log.debug("<<< Status: {}", response.statusCode());

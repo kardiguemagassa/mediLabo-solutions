@@ -19,12 +19,11 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Configuration WebClient pour la communication inter-services.
- *
  * Standard microservices :
- * - Non-bloquant (reactive)
- * - Propagation JWT automatique
- * - Timeouts configurables
- * - Logging des requêtes/réponses
+ * Non-bloquant (reactive)
+ * Propagation JWT automatique
+ * Timeouts configurables
+ * Logging des requêtes/réponses
  *
  * @author Kardigué MAGASSA
  * @version 1.0
@@ -40,9 +39,7 @@ public class WebClientConfig {
     @Value("${services.authorization-server.timeout:5000}")
     private int timeout;
 
-    /**
-     * WebClient pour communiquer avec Authorization Server.
-     */
+    /** WebClient pour communiquer avec Authorization Server*/
     @Bean
     public WebClient authServerWebClient(WebClient.Builder builder) {
         log.info("Configuring WebClient for Authorization Server: {}", authorizationServerUrl);
@@ -61,9 +58,7 @@ public class WebClientConfig {
                 .build();
     }
 
-    /**
-     * Configuration HTTP avec timeouts.
-     */
+    /**Configuration HTTP avec timeouts*/
     private HttpClient createHttpClient() {
         return HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout)

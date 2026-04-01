@@ -17,12 +17,10 @@ import java.util.List;
 
 /**
  * Convertit le JWT en Authentication avec les authorities appropriées.
- *
  * Gère les formats suivants :
- * - "authorities" comme String séparée par des virgules (ex: "SUPER_ADMIN,user:read")
- * - "authorities" comme List JSON
- * - "role" / "roles" claims
- *
+ * authorities comme String séparée par des virgules (ex: "SUPER_ADMIN,user:read")
+ * authorities" comme List JSON
+ * role/ roles claims
  * Ajoute automatiquement le préfixe "ROLE_" pour les rôles connus.
  *
  * @author Kardigué MAGASSA
@@ -51,18 +49,14 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
     private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        // ─────────────────────────────────────────────────────────────────────
-        // 1. Extraire depuis le claim "role" (String simple)
-        // ─────────────────────────────────────────────────────────────────────
+        //Extraire depuis le claim role String
         String role = jwt.getClaimAsString("role");
         if (role != null && !role.isEmpty()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
             log.debug("Added role from 'role' claim: ROLE_{}", role.toUpperCase());
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // 2. Extraire depuis le claim "roles" (List)
-        // ─────────────────────────────────────────────────────────────────────
+        //Extraire depuis le claim "roles" List
         List<String> roles = jwt.getClaimAsStringList("roles");
         if (roles != null) {
             roles.forEach(r -> {
@@ -71,20 +65,18 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
             });
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // 3. Extraire depuis le claim "authorities" (String OU List)
-        // ─────────────────────────────────────────────────────────────────────
+        // Extraire depuis le claim authorities (String OU List)
         Object authoritiesClaim = jwt.getClaim("authorities");
 
         if (authoritiesClaim != null) {
             List<String> authList;
 
-            // Cas 1: authorities est une String séparée par des virgules
+            // authorities est une String séparée par des virgules
             if (authoritiesClaim instanceof String authString) {
                 authList = Arrays.asList(authString.split(","));
                 log.debug("Authorities claim is a String, splitting by comma");
             }
-            // Cas 2: authorities est une List
+            // authorities est une List
             else if (authoritiesClaim instanceof List<?>) {
                 authList = ((List<?>) authoritiesClaim).stream()
                         .map(Object::toString)
@@ -114,9 +106,7 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // 4. Extraire les scopes
-        // ─────────────────────────────────────────────────────────────────────
+        // Extraire les scopes
         String scope = jwt.getClaimAsString("scope");
         if (scope != null && !scope.isEmpty()) {
             Arrays.stream(scope.split(" "))

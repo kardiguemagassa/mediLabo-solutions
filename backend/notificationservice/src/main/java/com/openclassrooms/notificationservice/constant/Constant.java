@@ -11,7 +11,6 @@ public class Constant {
 
     private Constant() {}
 
-    // ENCODAGE
     public static final String UTF_8_ENCODING = "UTF-8";
 
     /** SUJETS D'EMAIL */
@@ -23,8 +22,8 @@ public class Constant {
     public static final String SUBJECT_NEW_NOTE = "MediLabo - Nouvelle note médicale";
     public static final String SUBJECT_NOTE_UPDATED = "MediLabo - Votre note médicale a été mise à jour";
     public static final String SUBJECT_NEW_COMMENT = "MediLabo - Nouveau commentaire sur votre dossier";
-    public static final String SUBJECT_COMMENT_UPDATED = "MediLabo - Un commentaire a été modifié";  // Nouveau
-    public static final String SUBJECT_COMMENT_DELETED = "MediLabo - Un commentaire a été supprimé";  // Nouveau
+    public static final String SUBJECT_COMMENT_UPDATED = "MediLabo - Un commentaire a été modifié";
+    public static final String SUBJECT_COMMENT_DELETED = "MediLabo - Un commentaire a été supprimé";
     public static final String SUBJECT_NEW_FILES = "MediLabo - Nouveaux documents disponibles";
     public static final String SUBJECT_FILE_DELETED = "MediLabo - Un fichier a été supprimé";
     public static final String SUBJECT_RESULTS_AVAILABLE = "MediLabo - Vos résultats d'analyses sont disponibles";
@@ -39,17 +38,17 @@ public class Constant {
     public static final String TEMPLATE_ACCOUNT_VERIFICATION = "account-verification";
     public static final String TEMPLATE_PASSWORD_RESET = "password-reset";
     public static final String TEMPLATE_WELCOME_PATIENT = "welcome-patient";
-    public static final String TEMPLATE_PATIENT_UPDATED = "patient-updated";   // Nouveau
+    public static final String TEMPLATE_PATIENT_UPDATED = "patient-updated";
     public static final String TEMPLATE_PATIENT_DELETED = "patient-deleted";
     public static final String TEMPLATE_APPOINTMENT_CONFIRMATION = "appointment-confirmation";
     public static final String TEMPLATE_APPOINTMENT_REMINDER = "appointment-reminder";
     public static final String TEMPLATE_NEW_NOTE = "new-medical-note";
-    public static final String TEMPLATE_NOTE_UPDATED = "note-updated";  // Nouveau
+    public static final String TEMPLATE_NOTE_UPDATED = "note-updated";
     public static final String TEMPLATE_NEW_COMMENT = "new-comment";
-    public static final String TEMPLATE_COMMENT_UPDATED = "comment-updated";  // Nouveau
-    public static final String TEMPLATE_COMMENT_DELETED = "comment-deleted";  // Nouveau
+    public static final String TEMPLATE_COMMENT_UPDATED = "comment-updated";
+    public static final String TEMPLATE_COMMENT_DELETED = "comment-deleted";
     public static final String TEMPLATE_NEW_FILES = "new-files-uploaded";
-    public static final String TEMPLATE_FILE_DELETED = "file-deleted";  // Nouveau
+    public static final String TEMPLATE_FILE_DELETED = "file-deleted";
     public static final String TEMPLATE_RESULTS_AVAILABLE = "results-available";
     public static final String TEMPLATE_RISK_ASSESSMENT = "risk-assessment";
     public static final String TEMPLATE_ASSESSMENT_COMPLETED = "assessment-completed";

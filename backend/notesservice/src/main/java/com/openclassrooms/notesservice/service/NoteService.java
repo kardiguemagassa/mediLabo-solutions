@@ -13,43 +13,13 @@ import reactor.core.publisher.Mono;
  * @since 2026-02-25
  */
 public interface NoteService {
-
     Flux<NoteResponse> getAllActiveNotes();
-
     Flux<NoteResponse> getNotesByUserUuid(String userUuid);
-
-    /**
-     * Crée une nouvelle note pour un patient.
-     */
     Mono<NoteResponse> createNote(NoteRequest request, String practitionerUuid, String practitionerName);
-
-    /**
-     * Récupère une note par son UUID.
-     */
     Mono<NoteResponse> getNoteByUuid(String noteUuid);
-
-    /**
-     * Récupère toutes les notes d'un patient (historique).
-     */
     Flux<NoteResponse> getNotesByPatientUuid(String patientUuid);
-
-    /**
-     * Récupère toutes les notes créées par un praticien.
-     */
     Flux<NoteResponse> getNotesByPractitionerUuid(String practitionerUuid);
-
-    /**
-     * Met à jour une note existante.
-     */
     Mono<NoteResponse> updateNote(String noteUuid, NoteRequest request, String practitionerUuid);
-
-    /**
-     * Supprime une note (soft delete).
-     */
     Mono<Void> deleteNote(String noteUuid);
-
-    /**
-     * Compte le nombre de notes pour un patient.
-     */
     Mono<Long> countNotesByPatientUuid(String patientUuid);
 }

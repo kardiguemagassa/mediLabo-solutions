@@ -29,6 +29,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * Utilitaires pour la construction des réponses
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-02-02

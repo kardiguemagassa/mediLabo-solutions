@@ -27,6 +27,7 @@ import static org.springframework.http.HttpStatus.*;
 
 /**
  * Utilitaires pour gérer les erreurs dans le Gateway (version REACTIVE).
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-05-01
@@ -58,9 +59,7 @@ public class RequestUtils {
         return new Response(now().toString(), status.value(), exchange.getRequest().getPath().value(), status, message, "", data);
     }
 
-    /**
-     * Détermine le code HTTP selon le type d'exception.
-     */
+
     private static HttpStatus determineHttpStatus(Exception exception) {
         if (exception instanceof AccessDeniedException) {
             return FORBIDDEN;
@@ -78,9 +77,7 @@ public class RequestUtils {
         }
     }
 
-    /**
-     * Écrit la réponse de manière réactive.
-     */
+
     private static Mono<Void> writeResponse(ServerWebExchange exchange, Response response, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
@@ -94,9 +91,6 @@ public class RequestUtils {
         }
     }
 
-    /**
-     * Fonction pour déterminer le message d'erreur selon le statut HTTP.
-     */
     private static final BiFunction<Exception, HttpStatus, String> errorReason = (exception, httpStatus) -> {
         if (httpStatus.isSameCodeAs(FORBIDDEN)) {
             return "Vous n'avez pas suffisamment d'autorisation";
@@ -120,9 +114,6 @@ public class RequestUtils {
         }
     };
 
-    /**
-     * Crée un objet Response pour l'erreur.
-     */
     private static Response getErrorResponse(ServerWebExchange exchange, Exception exception, HttpStatus status) {
         return new Response(
                 now().toString(),

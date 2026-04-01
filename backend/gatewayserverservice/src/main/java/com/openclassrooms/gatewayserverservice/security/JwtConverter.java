@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Convertisseur JWT pour extraire les autorités (rôles) - Version REACTIVE.
- * @author FirstName LastName
+ * Convertisseur JWT pour extraire les autorités (rôles) - Version REACTIVE
+ *
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 

@@ -13,11 +13,10 @@ import java.time.LocalDateTime;
 /**
  * DTO de réponse pour Patient.
  * Contient uniquement les données exposées via l'API.
- *
  * Note: Les informations personnelles (nom, prénom, email)
  * sont gérées par Authorization Server et enrichies si nécessaire.
  *
- * @author FirstName LastName
+ * @author  Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09
  */
@@ -50,9 +49,7 @@ public class PatientResponse {
     // User Info  enrich
     private UserInfo userInfo;
 
-    /**
-     * Informations utilisateur depuis Authorization Server
-     */
+    /**Informations utilisateur depuis Authorization Server*/
     @Data
     @Builder
     @NoArgsConstructor

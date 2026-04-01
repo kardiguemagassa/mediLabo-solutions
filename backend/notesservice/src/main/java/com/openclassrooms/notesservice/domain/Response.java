@@ -8,6 +8,7 @@ import java.util.Map;
 
 /**
  * Format de réponse standardisé pour l'API
+ *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-02-02

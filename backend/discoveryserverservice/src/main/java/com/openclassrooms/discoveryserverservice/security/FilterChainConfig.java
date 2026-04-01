@@ -12,9 +12,8 @@ import static com.openclassrooms.discoveryserverservice.constants.Roles.*;
 
 /**
  * OAuth2 Authorization Server configuration
- * @author FirstName LastName
+ * @author Kardigué MAGASSA
  * @version 1.0
- * @email magassa***REMOVED_USER***@gmail.com
  * @since 2026-05-01
  */
 
