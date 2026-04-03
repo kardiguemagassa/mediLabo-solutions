@@ -1,7 +1,7 @@
 package com.openclassrooms.notificationservice.service.implementation;
 
 import com.openclassrooms.notificationservice.domain.Response;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
 import com.openclassrooms.notificationservice.exception.ApiException;
 import com.openclassrooms.notificationservice.service.UserServiceClient;
 import com.openclassrooms.notificationservice.utils.RequestUtils;
@@ -23,13 +23,13 @@ import java.time.Duration;
 public class UserServiceClientImpl implements UserServiceClient {
 
     private final WebClient authServerWebClient;
-    private static final String CIRCUIT_BREAKER_NAME = "authServerService";
+    private static final String CIRCUIT_BREAKER_NAME = "userService";
     private static final Duration TIMEOUT = Duration.ofSeconds(3);
 
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getUserByUuidFallback")
-    public Mono<UserRequest> getUserByUuid(String userUuid) {
+    public Mono<UserRequestDTO> getUserByUuid(String userUuid) {
         log.debug("Fetching user by UUID: {}", userUuid);
 
         return authServerWebClient.get()
@@ -40,7 +40,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
-                .map(response -> RequestUtils.convertResponse(response, UserRequest.class, "user"))
+                .map(response -> RequestUtils.convertResponse(response, UserRequestDTO.class, "user"))
                 .timeout(TIMEOUT)
                 .onErrorResume(e -> {
                     log.error("Erreur lors de la récupération de l'utilisateur {}: {}", userUuid, e.getMessage());
@@ -51,7 +51,7 @@ public class UserServiceClientImpl implements UserServiceClient {
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getUserByEmailFallback")
-    public Mono<UserRequest> getUserByEmail(String email) {
+    public Mono<UserRequestDTO> getUserByEmail(String email) {
         log.debug("Fetching user by email: {}", email);
 
         return authServerWebClient.get()
@@ -62,7 +62,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
-                .map(response -> RequestUtils.convertResponse(response, UserRequest.class, "user"))
+                .map(response -> RequestUtils.convertResponse(response, UserRequestDTO.class, "user"))
                 .timeout(TIMEOUT)
                 .onErrorResume(e -> {
                     log.error("Erreur lors de la récupération de l'email {}: {}", email, e.getMessage());
@@ -70,14 +70,12 @@ public class UserServiceClientImpl implements UserServiceClient {
                 });
     }
 
-    /** FALLBACKS */
-
-    public Mono<UserRequest> getUserByUuidFallback(String userUuid, Throwable t) {
+    public Mono<UserRequestDTO> getUserByUuidFallback(String userUuid, Throwable t) {
         log.error("Fallback getUserByUuid - UUID: {}, Cause: {}", userUuid, t.getMessage());
         return Mono.empty();
     }
 
-    public Mono<UserRequest> getUserByEmailFallback(String email, Throwable t) {
+    public Mono<UserRequestDTO> getUserByEmailFallback(String email, Throwable t) {
         log.error("Fallback getUserByEmail - Email: {}, Cause: {}", email, t.getMessage());
         return Mono.empty();
     }

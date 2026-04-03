@@ -1,476 +1,182 @@
 package com.openclassrooms.notificationservice.mapper;
 
-import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
-import com.openclassrooms.notificationservice.dtoresponse.MessageResponse;
+import com.openclassrooms.notificationservice.dto.MessageRequestDTO;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
+import com.openclassrooms.notificationservice.dto.MessageResponseDTO;
 import com.openclassrooms.notificationservice.model.Message;
+import com.openclassrooms.notificationservice.model.MessageStatus;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mapstruct.factory.Mappers;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
+@DisplayName("MessageMapper Tests (MapStruct)")
 class MessageMapperTest {
 
-    private MessageMapper messageMapper;
+    private MessageMapper mapper;
 
-    private MessageRequest messageRequest;
-    private UserRequest senderRequest;
-    private UserRequest receiverRequest;
+    private UserRequestDTO sender;
+    private UserRequestDTO receiver;
+    private MessageRequestDTO request;
     private Message message;
 
     @BeforeEach
     void setUp() {
-        messageMapper = new MessageMapper();
+        mapper = Mappers.getMapper(MessageMapper.class);
 
-        // Initialisation des requêtes
-        messageRequest = MessageRequest.builder()
-                .conversationId("conv-123")
+        sender = UserRequestDTO.builder()
+                .userUuid("user-111").firstName("John").lastName("Doe")
+                .email("john@test.com").imageUrl("http://test.com/john.jpg").role("DOCTOR")
+                .build();
+
+        receiver = UserRequestDTO.builder()
+                .userUuid("user-222").firstName("Jane").lastName("Smith")
+                .email("jane@test.com").imageUrl("http://test.com/jane.jpg").role("PATIENT")
+                .build();
+
+        request = MessageRequestDTO.builder()
                 .subject("Test Subject")
-                .message("Test Message Content")
+                .message("Test Content")
                 .build();
 
-        senderRequest = UserRequest.builder()
-                .userUuid("user-111")
-                .firstName("John")
-                .lastName("Doe")
-                .email("john.doe@test.com")
-                .imageUrl("http://test.com/john.jpg")
-                .role("USER")
-                .build();
-
-        receiverRequest = UserRequest.builder()
-                .userUuid("user-222")
-                .firstName("Jane")
-                .lastName("Smith")
-                .email("jane.smith@test.com")
-                .imageUrl("http://test.com/jane.jpg")
-                .role("ADMIN")
-                .build();
-
-        // Initialisation d'un message
         message = Message.builder()
-                .messageUuid("msg-123")
-                .conversationId("conv-123")
-                .subject("Test Subject")
-                .message("Test Message Content")
-                .status("UNREAD")
-                .senderUuid("user-111")
-                .senderName("John Doe")
-                .senderEmail("john.doe@test.com")
-                .senderImageUrl("http://test.com/john.jpg")
-                .senderRole("USER")
-                .receiverUuid("user-222")
-                .receiverName("Jane Smith")
-                .receiverEmail("jane.smith@test.com")
-                .receiverImageUrl("http://test.com/jane.jpg")
-                .receiverRole("ADMIN")
-                .createdAt(LocalDateTime.now().toString())
-                .updatedAt(LocalDateTime.now().toString())
+                .messageUuid("msg-123").conversationId("conv-123")
+                .subject("Test Subject").message("Test Content")
+                .senderUuid("user-111").senderName("John Doe").senderEmail("john@test.com")
+                .senderImageUrl("http://test.com/john.jpg").senderRole("DOCTOR")
+                .receiverUuid("user-222").receiverName("Jane Smith").receiverEmail("jane@test.com")
+                .receiverImageUrl("http://test.com/jane.jpg").receiverRole("PATIENT")
+                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
+                .statuses(List.of(
+                        MessageStatus.builder().userUuid("user-111").messageStatus("READ").build(),
+                        MessageStatus.builder().userUuid("user-222").messageStatus("UNREAD").build()
+                ))
                 .build();
     }
 
     @Test
-    void toEntity_ShouldConvertRequestToEntity_WhenAllParametersValid() {
-        // When
-        Message result = messageMapper.toEntity(messageRequest, senderRequest, receiverRequest);
+    @DisplayName("Should convert request + sender + receiver to entity")
+    void toEntity_validParams_returnsEntity() {
+        Message result = mapper.toEntity(request, sender, receiver);
 
-        // Then
-        assertNotNull(result);
-        assertNotNull(result.getMessageUuid());
-        assertTrue(result.getMessageUuid().matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"));
-
-        assertEquals(messageRequest.getConversationId(), result.getConversationId());
-        assertEquals(messageRequest.getSubject(), result.getSubject());
-        assertEquals(messageRequest.getMessage(), result.getMessage());
-        assertEquals("UNREAD", result.getStatus());
-
-        // Vérifier les informations de l'expéditeur
-        assertEquals(senderRequest.getUserUuid(), result.getSenderUuid());
-        assertEquals("John Doe", result.getSenderName());
-        assertEquals(senderRequest.getEmail(), result.getSenderEmail());
-        assertEquals(senderRequest.getImageUrl(), result.getSenderImageUrl());
-        assertEquals(senderRequest.getRole(), result.getSenderRole());
-
-        // Vérifier les informations du destinataire
-        assertEquals(receiverRequest.getUserUuid(), result.getReceiverUuid());
-        assertEquals("Jane Smith", result.getReceiverName());
-        assertEquals(receiverRequest.getEmail(), result.getReceiverEmail());
-        assertEquals(receiverRequest.getImageUrl(), result.getReceiverImageUrl());
-        assertEquals(receiverRequest.getRole(), result.getReceiverRole());
-
-        // Vérifier les timestamps
-        assertNotNull(result.getCreatedAt());
-        assertNotNull(result.getUpdatedAt());
+        assertThat(result).isNotNull();
+        assertThat(result.getMessageUuid()).isNotNull().matches("[0-9a-f-]{36}");
+        assertThat(result.getSubject()).isEqualTo("Test Subject");
+        assertThat(result.getMessage()).isEqualTo("Test Content");
+        assertThat(result.getSenderUuid()).isEqualTo("user-111");
+        assertThat(result.getSenderName()).isEqualTo("John Doe");
+        assertThat(result.getSenderEmail()).isEqualTo("john@test.com");
+        assertThat(result.getReceiverUuid()).isEqualTo("user-222");
+        assertThat(result.getReceiverName()).isEqualTo("Jane Smith");
+        assertThat(result.getReceiverEmail()).isEqualTo("jane@test.com");
     }
 
     @Test
-    void toEntity_ShouldReturnNull_WhenRequestIsNull() {
-        // When
-        Message result = messageMapper.toEntity(null, senderRequest, receiverRequest);
+    @DisplayName("Should handle null names in sender")
+    void toEntity_nullNames_handlesGracefully() {
+        UserRequestDTO senderNoName = UserRequestDTO.builder()
+                .userUuid("user-333").email("test@test.com").build();
 
-        // Then
-        assertNull(result);
+        Message result = mapper.toEntity(request, senderNoName, receiver);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getSenderName()).isEmpty();
     }
 
     @Test
-    void toEntity_ShouldReturnNull_WhenSenderIsNull() {
-        // When
-        Message result = messageMapper.toEntity(messageRequest, null, receiverRequest);
+    @DisplayName("Should convert entity to response with UserInfo")
+    void toResponse_validMessage_returnsResponse() {
+        MessageResponseDTO result = mapper.toResponse(message);
 
-        // Then
-        assertNull(result);
+        assertThat(result).isNotNull();
+        assertThat(result.getMessageUuid()).isEqualTo("msg-123");
+        assertThat(result.getSubject()).isEqualTo("Test Subject");
+        assertThat(result.getSender()).isNotNull();
+        assertThat(result.getSender().getName()).isEqualTo("John Doe");
+        assertThat(result.getReceiver()).isNotNull();
+        assertThat(result.getReceiver().getName()).isEqualTo("Jane Smith");
     }
 
     @Test
-    void toEntity_ShouldReturnNull_WhenReceiverIsNull() {
-        // When
-        Message result = messageMapper.toEntity(messageRequest, senderRequest, null);
-
-        // Then
-        assertNull(result);
+    @DisplayName("Should return null when message is null")
+    void toResponse_nullMessage_returnsNull() {
+        assertThat(mapper.toResponse(null)).isNull();
     }
 
     @Test
-    void toEntity_ShouldReturnNull_WhenAllParametersNull() {
-        // When
-        Message result = messageMapper.toEntity(null, null, null);
+    @DisplayName("Should set correct status for sender (READ)")
+    void toResponseForUser_sender_statusRead() {
+        MessageResponseDTO result = mapper.toResponseForUser(message, "user-111");
 
-        // Then
-        assertNull(result);
+        assertThat(result).isNotNull();
+        assertThat(result.getStatus()).isEqualTo("READ");
     }
 
     @Test
-    void toEntity_ShouldHandleNullFirstAndLastName() {
-        // Given
-        UserRequest senderWithNullNames = UserRequest.builder()
-                .userUuid("user-333")
-                .firstName(null)
-                .lastName(null)
-                .email("test@test.com")
-                .role("USER")
-                .build();
+    @DisplayName("Should set correct status for receiver (UNREAD)")
+    void toResponseForUser_receiver_statusUnread() {
+        MessageResponseDTO result = mapper.toResponseForUser(message, "user-222");
 
-        // When
-        Message result = messageMapper.toEntity(messageRequest, senderWithNullNames, receiverRequest);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("", result.getSenderName()); // (null + " " + null).trim() = ""
+        assertThat(result).isNotNull();
+        assertThat(result.getStatus()).isEqualTo("UNREAD");
     }
 
     @Test
-    void toEntity_ShouldHandleNullFirstName() {
-        // Given
-        UserRequest senderWithNullFirstName = UserRequest.builder()
-                .userUuid("user-333")
-                .firstName(null)
-                .lastName("Doe")
-                .email("test@test.com")
-                .role("USER")
-                .build();
+    @DisplayName("Should convert list with correct statuses")
+    void toResponseListForUser_validList_returnsResponses() {
+        List<MessageResponseDTO> results = mapper.toResponseListForUser(List.of(message), "user-222");
 
-        // When
-        Message result = messageMapper.toEntity(messageRequest, senderWithNullFirstName, receiverRequest);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("Doe", result.getSenderName());
+        assertThat(results).hasSize(1);
+        assertThat(results.getFirst().getStatus()).isEqualTo("UNREAD");
     }
 
     @Test
-    void toEntity_ShouldHandleNullLastName() {
-        // Given
-        UserRequest senderWithNullLastName = UserRequest.builder()
-                .userUuid("user-333")
-                .firstName("John")
-                .lastName(null)
-                .email("test@test.com")
-                .role("USER")
-                .build();
-
-        // When
-        Message result = messageMapper.toEntity(messageRequest, senderWithNullLastName, receiverRequest);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("John", result.getSenderName());
+    @DisplayName("Should return empty list for null input")
+    void toResponseListForUser_nullList_returnsEmpty() {
+        assertThat(mapper.toResponseListForUser(null, "user")).isEmpty();
     }
 
     @Test
-    void toResponse_ShouldConvertEntityToResponse() {
-        // When
-        MessageResponse result = messageMapper.toResponse(message);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(message.getMessageUuid(), result.getMessageUuid());
-        assertEquals(message.getConversationId(), result.getConversationId());
-        assertEquals(message.getSubject(), result.getSubject());
-        assertEquals(message.getMessage(), result.getMessage());
-        assertEquals(message.getStatus(), result.getStatus());
-        assertEquals(message.getCreatedAt(), result.getCreatedAt());
-        assertEquals(message.getUpdatedAt(), result.getUpdatedAt());
-
-        // Vérifier que les UserInfo sont nulls (version simple)
-        assertNull(result.getSender());
-        assertNull(result.getReceiver());
+    @DisplayName("Should return empty list for empty input")
+    void toResponseListForUser_emptyList_returnsEmpty() {
+        assertThat(mapper.toResponseListForUser(List.of(), "user")).isEmpty();
     }
 
     @Test
-    void toResponse_ShouldReturnNull_WhenMessageIsNull() {
-        // When
-        MessageResponse result = messageMapper.toResponse(null);
-
-        // Then
-        assertNull(result);
+    @DisplayName("Should build full name from first + last")
+    void buildFullName_bothNames_returnsCombined() {
+        assertThat(mapper.buildFullName(sender)).isEqualTo("John Doe");
     }
 
     @Test
-    void toResponseWithUserInfo_ShouldConvertEntityToResponseWithUserInfo() {
-        // When
-        MessageResponse result = messageMapper.toResponseWithUserInfo(message);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(message.getMessageUuid(), result.getMessageUuid());
-        assertEquals(message.getConversationId(), result.getConversationId());
-        assertEquals(message.getSubject(), result.getSubject());
-        assertEquals(message.getMessage(), result.getMessage());
-        assertEquals(message.getStatus(), result.getStatus());
-        assertEquals(message.getCreatedAt(), result.getCreatedAt());
-        assertEquals(message.getUpdatedAt(), result.getUpdatedAt());
-
-        // Vérifier les informations de l'expéditeur
-        assertNotNull(result.getSender());
-        assertEquals(message.getSenderUuid(), result.getSender().getUserUuid());
-        assertEquals(message.getSenderName(), result.getSender().getName());
-        assertEquals(message.getSenderEmail(), result.getSender().getEmail());
-        assertEquals(message.getSenderImageUrl(), result.getSender().getImageUrl());
-        assertEquals(message.getSenderRole(), result.getSender().getRole());
-
-        // Vérifier les informations du destinataire
-        assertNotNull(result.getReceiver());
-        assertEquals(message.getReceiverUuid(), result.getReceiver().getUserUuid());
-        assertEquals(message.getReceiverName(), result.getReceiver().getName());
-        assertEquals(message.getReceiverEmail(), result.getReceiver().getEmail());
-        assertEquals(message.getReceiverImageUrl(), result.getReceiver().getImageUrl());
-        assertEquals(message.getReceiverRole(), result.getReceiver().getRole());
+    @DisplayName("Should handle null first name")
+    void buildFullName_nullFirst_returnsLast() {
+        UserRequestDTO user = UserRequestDTO.builder().lastName("Doe").build();
+        assertThat(mapper.buildFullName(user)).isEqualTo("Doe");
     }
 
     @Test
-    void toResponseWithUserInfo_ShouldReturnNull_WhenMessageIsNull() {
-        // When
-        MessageResponse result = messageMapper.toResponseWithUserInfo(null);
-
-        // Then
-        assertNull(result);
+    @DisplayName("Should handle null last name")
+    void buildFullName_nullLast_returnsFirst() {
+        UserRequestDTO user = UserRequestDTO.builder().firstName("John").build();
+        assertThat(mapper.buildFullName(user)).isEqualTo("John");
     }
 
     @Test
-    void toResponseWithUserInfo_ShouldHandleNullUserFields() {
-        // Given
-        Message messageWithNullFields = Message.builder()
-                .messageUuid("msg-456")
-                .conversationId("conv-456")
-                .subject("Test")
-                .message("Content")
-                .status("READ")
-                .senderUuid(null)
-                .senderName(null)
-                .senderEmail(null)
-                .senderImageUrl(null)
-                .senderRole(null)
-                .receiverUuid(null)
-                .receiverName(null)
-                .receiverEmail(null)
-                .receiverImageUrl(null)
-                .receiverRole(null)
-                .createdAt("2026-01-01T00:00:00")
-                .updatedAt("2026-01-01T00:00:00")
-                .build();
-
-        // When
-        MessageResponse result = messageMapper.toResponseWithUserInfo(messageWithNullFields);
-
-        // Then
-        assertNotNull(result);
-        assertNotNull(result.getSender());
-        assertNull(result.getSender().getUserUuid());
-        assertNull(result.getSender().getName());
-        assertNull(result.getSender().getEmail());
-        assertNull(result.getSender().getImageUrl());
-        assertNull(result.getSender().getRole());
-
-        assertNotNull(result.getReceiver());
-        assertNull(result.getReceiver().getUserUuid());
-        assertNull(result.getReceiver().getName());
-        assertNull(result.getReceiver().getEmail());
-        assertNull(result.getReceiver().getImageUrl());
-        assertNull(result.getReceiver().getRole());
+    @DisplayName("Should handle both names null")
+    void buildFullName_bothNull_returnsEmpty() {
+        UserRequestDTO user = UserRequestDTO.builder().build();
+        assertThat(mapper.buildFullName(user)).isEmpty();
     }
 
     @Test
-    void toResponseList_ShouldConvertListOfEntitiesToListOfResponses() {
-        // Given
-        Message message2 = Message.builder()
-                .messageUuid("msg-456")
-                .conversationId("conv-456")
-                .subject("Subject 2")
-                .message("Content 2")
-                .status("READ")
-                .senderUuid("user-333")
-                .senderName("Bob Wilson")
-                .senderEmail("bob@test.com")
-                .receiverUuid("user-444")
-                .receiverName("Alice Brown")
-                .receiverEmail("alice@test.com")
-                .build();
-
-        List<Message> messages = List.of(message, message2);
-
-        // When
-        List<MessageResponse> results = messageMapper.toResponseList(messages);
-
-        // Then
-        assertNotNull(results);
-        assertEquals(2, results.size());
-
-        // Vérifier premier message
-        MessageResponse firstResult = results.getFirst();
-        assertEquals(message.getMessageUuid(), firstResult.getMessageUuid());
-        assertNotNull(firstResult.getSender());
-        assertEquals(message.getSenderName(), firstResult.getSender().getName());
-        assertNotNull(firstResult.getReceiver());
-        assertEquals(message.getReceiverName(), firstResult.getReceiver().getName());
-
-        // Vérifier deuxième message
-        MessageResponse secondResult = results.get(1);
-        assertEquals(message2.getMessageUuid(), secondResult.getMessageUuid());
-        assertNotNull(secondResult.getSender());
-        assertEquals(message2.getSenderName(), secondResult.getSender().getName());
-        assertNotNull(secondResult.getReceiver());
-        assertEquals(message2.getReceiverName(), secondResult.getReceiver().getName());
-    }
-
-    @Test
-    void toResponseList_ShouldReturnEmptyList_WhenMessagesListIsNull() {
-        // When
-        List<MessageResponse> results = messageMapper.toResponseList(null);
-
-        // Then
-        assertNotNull(results);
-        assertTrue(results.isEmpty());
-    }
-
-    @Test
-    void toResponseList_ShouldReturnEmptyList_WhenMessagesListIsEmpty() {
-        // When
-        List<MessageResponse> results = messageMapper.toResponseList(List.of());
-
-        // Then
-        assertNotNull(results);
-        assertTrue(results.isEmpty());
-    }
-
-    @Test
-    void updateStatus_ShouldUpdateStatusAndUpdatedAt() {
-        // Given
-        String newStatus = "READ";
-        String oldUpdatedAt = message.getUpdatedAt();
-
-        // Attendre un peu pour que le timestamp soit différent
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            // Ignorer
-        }
-
-        // When
-        Message result = messageMapper.updateStatus(message, newStatus);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(newStatus, result.getStatus());
-        assertNotEquals(oldUpdatedAt, result.getUpdatedAt());
-        assertNotNull(result.getUpdatedAt());
-    }
-
-    @Test
-    void updateStatus_ShouldReturnNull_WhenMessageIsNull() {
-        // When
-        Message result = messageMapper.updateStatus(null, "READ");
-
-        // Then
-        assertNull(result);
-    }
-
-    @Test
-    void updateStatus_ShouldUpdateWithNullStatus() {
-        // Given
-        String oldStatus = message.getStatus();
-
-        // When
-        Message result = messageMapper.updateStatus(message, null);
-
-        // Then
-        assertNotNull(result);
-        assertNull(result.getStatus());
-        assertNotNull(result.getUpdatedAt());
-        assertNotEquals(null, oldStatus);
-    }
-
-    @Test
-    void updateStatus_ShouldPreserveOtherFields() {
-        // Given
-        String originalUuid = message.getMessageUuid();
-        String originalConversationId = message.getConversationId();
-        String originalSubject = message.getSubject();
-        String originalMessage = message.getMessage();
-        String originalSenderUuid = message.getSenderUuid();
-
-        // When
-        Message result = messageMapper.updateStatus(message, "READ");
-
-        // Then
-        assertNotNull(result);
-        assertEquals(originalUuid, result.getMessageUuid());
-        assertEquals(originalConversationId, result.getConversationId());
-        assertEquals(originalSubject, result.getSubject());
-        assertEquals(originalMessage, result.getMessage());
-        assertEquals(originalSenderUuid, result.getSenderUuid());
-        assertEquals("READ", result.getStatus());
-    }
-
-    @Test
-    void buildFullName_ShouldCombineFirstAndLastName() throws Exception {
-        // Utilisation de la réflexion pour tester la méthode privée
-        java.lang.reflect.Method method = MessageMapper.class.getDeclaredMethod("buildFullName", UserRequest.class);
-        method.setAccessible(true);
-
-        // Test avec prénom et nom
-        String result1 = (String) method.invoke(messageMapper, senderRequest);
-        assertEquals("John Doe", result1);
-
-        // Test avec prénom null
-        UserRequest userNullFirst = UserRequest.builder().firstName(null).lastName("Doe").build();
-        String result2 = (String) method.invoke(messageMapper, userNullFirst);
-        assertEquals("Doe", result2);
-
-        // Test avec nom null
-        UserRequest userNullLast = UserRequest.builder().firstName("John").lastName(null).build();
-        String result3 = (String) method.invoke(messageMapper, userNullLast);
-        assertEquals("John", result3);
-
-        // Test avec prénom et nom null
-        UserRequest userBothNull = UserRequest.builder().firstName(null).lastName(null).build();
-        String result4 = (String) method.invoke(messageMapper, userBothNull);
-        assertEquals("", result4);
+    @DisplayName("Should handle null user")
+    void buildFullName_nullUser_returnsEmpty() {
+        assertThat(mapper.buildFullName(null)).isEmpty();
     }
 }

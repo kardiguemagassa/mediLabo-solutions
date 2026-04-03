@@ -1,4 +1,4 @@
-package com.openclassrooms.notificationservice.dtoresponse;
+package com.openclassrooms.notificationservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MessageResponse {
+public class MessageResponseDTO {
     private String messageUuid;
     private String conversationId;
     private String subject;

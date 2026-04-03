@@ -1,6 +1,7 @@
-package com.openclassrooms.notificationservice.service.implementation;
+package com.openclassrooms.notificationservice.service;
 
 import com.openclassrooms.notificationservice.exception.ApiException;
+import com.openclassrooms.notificationservice.service.implementation.EmailServiceImpl;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

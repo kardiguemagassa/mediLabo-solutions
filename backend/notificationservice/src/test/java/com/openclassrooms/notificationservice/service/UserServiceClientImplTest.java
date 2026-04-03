@@ -1,9 +1,9 @@
-package com.openclassrooms.notificationservice.service.implementation;
+package com.openclassrooms.notificationservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.notificationservice.domain.Response;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
-import com.openclassrooms.notificationservice.exception.ApiException;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
+import com.openclassrooms.notificationservice.service.implementation.UserServiceClientImpl;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -70,7 +70,7 @@ class UserServiceClientImplTest {
      * Crée une Response valide contenant un user dans data.
      * Le service attend ce format : Response avec data.user
      */
-    private Response createValidResponse(UserRequest user) {
+    private Response createValidResponse(UserRequestDTO user) {
         return new Response(
                 LocalDateTime.now().toString(),
                 HttpStatus.OK.value(),
@@ -92,7 +92,7 @@ class UserServiceClientImplTest {
         @DisplayName("Devrait retourner UserRequest quand l'utilisateur existe")
         void shouldReturnUserRequestWhenUserExists() throws Exception {
             // Given
-            UserRequest expectedUser = UserRequest.builder()
+            UserRequestDTO expectedUser = UserRequestDTO.builder()
                     .userUuid("user-uuid-123")
                     .firstName("Jean")
                     .lastName("Dupont")

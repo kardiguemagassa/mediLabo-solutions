@@ -38,7 +38,7 @@ class WebClientConfigTest {
         String customUrl = "http://custom-auth-server:9002";
         int customTimeout = 10000;
 
-        setAuthorizationServerUrl(customUrl);
+        setUserServiceUrl(customUrl);
         setTimeout(customTimeout);
 
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
@@ -60,7 +60,7 @@ class WebClientConfigTest {
         // Given
         int customTimeout = 3000;
         setTimeout(customTimeout);
-        setAuthorizationServerUrl("http://localhost:9001");
+        setUserServiceUrl("http://localhost:8085");
 
         // Capturer le HttpClient créé
         HttpClient[] capturedHttpClient = new HttpClient[1];
@@ -102,7 +102,7 @@ class WebClientConfigTest {
     @Test
     void authServerWebClient_ShouldConfigureAllDefaultHeaders() throws Exception {
         // Given
-        setAuthorizationServerUrl("http://localhost:9001");
+        setUserServiceUrl("http://localhost:8085");
         setTimeout(5000);
 
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
@@ -125,7 +125,7 @@ class WebClientConfigTest {
     @Test
     void authServerWebClient_ShouldReturnDifferentInstances_WhenCalledMultipleTimes() throws Exception {
         // Given
-        setAuthorizationServerUrl("http://localhost:9001");
+        setUserServiceUrl("http://localhost:8085");
         setTimeout(5000);
 
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
@@ -147,7 +147,7 @@ class WebClientConfigTest {
     @Test
     void authServerWebClient_ShouldHandleExtremeTimeoutValues() throws Exception {
         // Given
-        setAuthorizationServerUrl("http://localhost:9001");
+        setUserServiceUrl("http://localhost:8085");
 
         int[] timeouts = {0, 1, 100, 30000, 60000, 3600000}; // 0ms à 1h
 
@@ -176,7 +176,7 @@ class WebClientConfigTest {
     void authServerWebClient_ShouldHandleMalformedUrlGracefully() throws Exception {
         // Given
         String malformedUrl = "not-a-valid-url";
-        setAuthorizationServerUrl(malformedUrl);
+        setUserServiceUrl(malformedUrl);
         setTimeout(5000);
 
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
@@ -197,7 +197,7 @@ class WebClientConfigTest {
     @Test
     void authServerWebClient_ShouldLogConfiguration() throws Exception {
         // Given
-        setAuthorizationServerUrl("http://localhost:9001");
+        setUserServiceUrl("http://localhost:8085");
         setTimeout(5000);
 
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
@@ -214,8 +214,8 @@ class WebClientConfigTest {
     }
 
     // Méthodes utilitaires pour définir les valeurs des champs privés
-    private void setAuthorizationServerUrl(String value) throws Exception {
-        Field field = WebClientConfig.class.getDeclaredField("authorizationServerUrl");
+    private void setUserServiceUrl(String value) throws Exception {
+        Field field = WebClientConfig.class.getDeclaredField("userService");
         field.setAccessible(true);
         field.set(webClientConfig, value);
     }

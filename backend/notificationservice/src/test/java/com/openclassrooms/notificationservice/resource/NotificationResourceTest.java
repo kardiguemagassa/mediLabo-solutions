@@ -1,9 +1,9 @@
 package com.openclassrooms.notificationservice.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
-import com.openclassrooms.notificationservice.dtoresponse.MessageResponse;
+import com.openclassrooms.notificationservice.dto.MessageRequestDTO;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
+import com.openclassrooms.notificationservice.dto.MessageResponseDTO;
 import com.openclassrooms.notificationservice.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,9 +17,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -49,11 +46,11 @@ class NotificationResourceTest {
     @MockitoBean
     private org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
 
-    private MessageResponse messageResponse;
+    private MessageResponseDTO messageResponse;
 
     @BeforeEach
     void setUp() {
-        messageResponse = MessageResponse.builder()
+        messageResponse = MessageResponseDTO.builder()
                 .messageUuid("msg-uuid-123")
                 .conversationId("conv-uuid-456")
                 .subject("Résultats d'analyses")
@@ -71,13 +68,13 @@ class NotificationResourceTest {
         @Test
         @DisplayName("Devrait envoyer un message avec succès - 201 Created")
         void shouldSendMessageSuccessfully() throws Exception {
-            MessageRequest request = MessageRequest.builder()
+            MessageRequestDTO request = MessageRequestDTO.builder()
                     .receiverEmail("marie.martin@patient.fr")
                     .subject("Résultats d'analyses")
                     .message("Vos résultats sont disponibles.")
                     .build();
 
-            when(notificationService.sendMessage(any(MessageRequest.class), any(UserRequest.class)))
+            when(notificationService.sendMessage(any(MessageRequestDTO.class), any(UserRequestDTO.class)))
                     .thenReturn(Mono.just(messageResponse));
 
             MvcResult mvcResult = mockMvc.perform(post("/api/notifications/messages")
@@ -100,7 +97,7 @@ class NotificationResourceTest {
         @Test
         @DisplayName("Devrait retourner 400 si email destinataire manquant")
         void shouldReturn400WhenReceiverEmailMissing() throws Exception {
-            MessageRequest request = MessageRequest.builder()
+            MessageRequestDTO request = MessageRequestDTO.builder()
                     .subject("Sujet")
                     .message("Message")
                     .build();
@@ -116,7 +113,7 @@ class NotificationResourceTest {
         @Test
         @DisplayName("Devrait retourner 403 si non authentifié")
         void shouldReturn403WhenNotAuthenticated() throws Exception {
-            MessageRequest request = MessageRequest.builder()
+            MessageRequestDTO request = MessageRequestDTO.builder()
                     .receiverEmail("test@email.com")
                     .subject("Sujet")
                     .message("Message")
@@ -139,14 +136,14 @@ class NotificationResourceTest {
         void shouldReplyMessageSuccessfully() throws Exception {
             // MessageRequest exige subject et receiverEmail via @NotBlank
             // Pour une réponse, on doit quand même les fournir (même si logiquement inutiles)
-            MessageRequest request = MessageRequest.builder()
+            MessageRequestDTO request = MessageRequestDTO.builder()
                     .conversationId("conv-uuid-456")
                     .receiverEmail("marie.martin@patient.fr")
                     .subject("Re: Résultats d'analyses")
                     .message("Merci pour les résultats.")
                     .build();
 
-            when(notificationService.sendMessage(any(MessageRequest.class), any(UserRequest.class)))
+            when(notificationService.sendMessage(any(MessageRequestDTO.class), any(UserRequestDTO.class)))
                     .thenReturn(Mono.just(messageResponse));
 
             MvcResult mvcResult = mockMvc.perform(post("/api/notifications/reply")

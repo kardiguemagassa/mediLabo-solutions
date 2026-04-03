@@ -1,158 +1,188 @@
 package com.openclassrooms.notificationservice.service.implementation;
 
-import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
-import com.openclassrooms.notificationservice.dtoresponse.MessageResponse;
+import com.openclassrooms.notificationservice.dto.MessageRequestDTO;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
+import com.openclassrooms.notificationservice.dto.MessageResponseDTO;
 import com.openclassrooms.notificationservice.exception.ApiException;
 import com.openclassrooms.notificationservice.mapper.MessageMapper;
+import com.openclassrooms.notificationservice.model.Conversation;
 import com.openclassrooms.notificationservice.model.Message;
-import com.openclassrooms.notificationservice.repository.NotificationRepository;
+import com.openclassrooms.notificationservice.model.MessageStatus;
+import com.openclassrooms.notificationservice.repository.ConversationRepository;
+import com.openclassrooms.notificationservice.repository.MessageRepository;
+import com.openclassrooms.notificationservice.repository.MessageStatusRepository;
 import com.openclassrooms.notificationservice.service.NotificationService;
 import com.openclassrooms.notificationservice.service.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import static com.openclassrooms.notificationservice.utils.NotificationUtils.randomUUID;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * Implémentation réactive du service de notification.
- * Mono<T> : Représente 0 ou 1 élément (équivalent à Optional réactif)
- * Flux<T> : Représente 0 à N éléments (équivalent à Stream réactif)
- * Schedulers.boundedElastic() : Thread-pool pour opérations bloquantes (JDBC)
- * Mono.fromCallable() : Encapsule les appels JDBC synchrones dans un contexte réactif
- * subscribeOn() : Déplace l'exécution vers un thread-pool dédié
- * flatMap() : Chaîne les opérations asynchrones séquentiellement
- * flatMapMany() : Convertit un Mono<List> en Flux<Element>
- *
- * @author Kardigué MAGASSA
- * @version 2.1
- * @since 2026-02-09
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NotificationServiceImpl implements NotificationService {
 
-    private final NotificationRepository notificationRepository;
+    private final MessageRepository messageRepository;
+    private final MessageStatusRepository messageStatusRepository;
+    private final ConversationRepository conversationRepository;
     private final UserServiceClient userService;
     private final MessageMapper messageMapper;
 
-    /**
-     * Envoie un message de manière réactive.
-     * Appel réactif à Auth Server pour récupérer le destinataire (UserService)
-     * Si destinataire introuvable → erreur
-     * Vérification/création de conversation (JDBC sur boundedElastic)
-     * Mapping et sauvegarde du message (JDBC sur boundedElastic)
-     * Retour du MessageResponse
-     *
-     * @param request Les données du message (sujet, contenu, email destinataire)
-     * @param sender L'expéditeur (extrait du JWT dans le controller)
-     * @return Mono<MessageResponse> Le message créé
-     */
     @Override
-    public Mono<MessageResponse> sendMessage(MessageRequest request, UserRequest sender) {
+    @Transactional
+    public Mono<MessageResponseDTO> sendMessage(MessageRequestDTO request, UserRequestDTO sender) {
         log.info("Envoi de message de {} vers {}", sender.getEmail(), request.getReceiverEmail());
 
-        return Mono.zip(userService.getUserByEmail(sender.getEmail()).defaultIfEmpty(sender), userService.getUserByEmail(request.getReceiverEmail())
-                        .switchIfEmpty(Mono.error(new ApiException("Destinataire introuvable : " + request.getReceiverEmail()))))
-                .flatMap(tuple -> {UserRequest enrichedSender = tuple.getT1();UserRequest receiver = tuple.getT2();
 
-            UserRequest finalSender = sender.toBuilder().imageUrl(enrichedSender.getImageUrl()).build();
+        Mono<UserRequestDTO> senderMono = userService.getUserByUuid(sender.getUserUuid()).defaultIfEmpty(sender);
 
-            return Mono.fromCallable(() -> {
-                String conversationId = notificationRepository.conversationExists(finalSender.getUserUuid(), receiver.getEmail())
-                        ? notificationRepository.getConversationId(finalSender.getUserUuid(), receiver.getEmail())
-                        : randomUUID.get();
+        Mono<UserRequestDTO> receiverMono = userService.getUserByEmail(request.getReceiverEmail())
+                .switchIfEmpty(Mono.error(new ApiException("Destinataire introuvable : " + request.getReceiverEmail())));
 
-                Message messageToSave = messageMapper.toEntity(request, finalSender, receiver);
-                messageToSave.setConversationId(conversationId);
+        return Mono.zip(senderMono, receiverMono)
+                .flatMap(tuple -> {
+                    UserRequestDTO enrichedSender = tuple.getT1();
+                    UserRequestDTO receiver = tuple.getT2();
 
-                Message savedMessage = notificationRepository.saveMessage(messageToSave);
-                log.info("Message créé avec succès: {}", savedMessage.getMessageUuid());
-                return messageMapper.toResponseWithUserInfo(savedMessage);
-            }).subscribeOn(Schedulers.boundedElastic());
-        });
+                    UserRequestDTO finalSender = sender.toBuilder()
+                            .email(enrichedSender.getEmail())
+                            .firstName(enrichedSender.getFirstName() != null ? enrichedSender.getFirstName() : sender.getFirstName())
+                            .lastName(enrichedSender.getLastName() != null ? enrichedSender.getLastName() : sender.getLastName())
+                            .imageUrl(enrichedSender.getImageUrl())
+                            .build();
+
+                    return Mono.fromCallable(() -> createMessageWithConversation(request, finalSender, receiver))
+                            .subscribeOn(Schedulers.boundedElastic());
+                });
     }
 
-    /**
-     * Récupère tous les messages d'un utilisateur (Inbox).
-     * Appel JDBC pour récupérer la liste des messages
-     * Conversion List<Message> → Flux<Message>
-     * Mapping de chaque message vers MessageResponse
-     *
-     * @param userUuid L'UUID de l'utilisateur
-     * @return Flux<MessageResponse> Stream réactif des messages
-     */
     @Override
-    public Flux<MessageResponse> getMessages(String userUuid) {
+    public Flux<MessageResponseDTO> getMessages(String userUuid) {
         log.debug("Récupération messages pour user: {}", userUuid);
-        return Mono.fromCallable(() -> notificationRepository.getMessages(userUuid))
+
+        return Mono.fromCallable(() -> {
+                    List<Message> messages = messageRepository.findAllByUser(userUuid);
+                    return messageMapper.toResponseListForUser(messages, userUuid);
+                })
                 .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(Flux::fromIterable)
-                .map(messageMapper::toResponseWithUserInfo);
+                .flatMapMany(Flux::fromIterable);
     }
 
-    /**
-     * Récupère les messages d'une conversation et marque les non-lus comme lus.
-     * Appel JDBC pour récupérer les messages de la conversation
-     * Pour chaque message UNREAD → mise à jour du statut en READ
-     * Mapping vers MessageResponse
-     * @param userUuid L'UUID de l'utilisateur
-     * @param conversationId L'ID de la conversation
-     * @return Flux<MessageResponse> Stream réactif des messages de la conversation
-     */
     @Override
-    public Flux<MessageResponse> getConversation(String userUuid, String conversationId) {
+    @Transactional
+    public Flux<MessageResponseDTO> getConversation(String userUuid, String conversationId) {
         log.debug("Récupération conversation {} pour user {}", conversationId, userUuid);
 
-        return Mono.fromCallable(() -> notificationRepository.getConversations(userUuid, conversationId))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(Flux::fromIterable)
-                .flatMap(message -> {
-                    if ("UNREAD".equals(message.getStatus())) {
-
-                        return Mono.fromCallable(() -> {
-                                    notificationRepository.updateMessageStatus(userUuid, message.getMessageId(), "READ");
-                                    message.setStatus("READ");
-                                    return message;
-                                })
-                                .subscribeOn(Schedulers.boundedElastic());
-                    }
-                    return Mono.just(message);
+        return Mono.fromCallable(() -> {
+                    List<Message> messages = messageRepository.findByConversationId(conversationId);
+                    // Marquer les messages non lus comme lus
+                    messages.forEach(msg -> {
+                        if ("UNREAD".equals(msg.getStatusForUser(userUuid))) {
+                            messageStatusRepository.updateStatus(userUuid, msg.getMessageId(), "READ");
+                        }
+                    });
+                    return messageMapper.toResponseListForUser(messages, userUuid);
                 })
-                .map(messageMapper::toResponseWithUserInfo);
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable);
     }
 
-    /**
-     * Compte le nombre de messages non lus pour un utilisateur.
-     *
-     * @param userUuid L'UUID de l'utilisateur
-     * @return Mono<Integer> Le nombre de messages non lus
-     */
     @Override
     public Mono<Integer> getUnreadCount(String userUuid) {
         log.debug("Comptage messages non lus pour user: {}", userUuid);
-        return Mono.fromCallable(() -> notificationRepository.getUnreadCount(userUuid)).subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(() -> messageStatusRepository.countUnread(userUuid))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
-    /**
-     * Marque un message spécifique comme lu.
-     *
-     * @param userUuid L'UUID de l'utilisateur
-     * @param messageId L'ID du message à marquer
-     * @return Mono<Void> Complète quand l'opération est terminée
-     */
     @Override
+    @Transactional
     public Mono<Void> markMessageAsRead(String userUuid, Long messageId) {
         log.debug("Marquage message {} comme lu pour user {}", messageId, userUuid);
-
-        return Mono.fromCallable(() -> notificationRepository.updateMessageStatus(userUuid, messageId, "READ"))
+        return Mono.fromCallable(() -> messageStatusRepository.updateStatus(userUuid, messageId, "READ"))
                 .subscribeOn(Schedulers.boundedElastic())
-                .doOnSuccess(status -> log.info("Message {} marqué comme lu", messageId))
+                .doOnSuccess(count -> log.info("Message {} marqué comme lu", messageId))
                 .then();
+    }
+
+    private MessageResponseDTO createMessageWithConversation(MessageRequestDTO request, UserRequestDTO sender, UserRequestDTO receiver) {
+        // Résoudre ou créer la conversation
+        String conversationId = resolveConversationId(sender, receiver, request.getSubject());
+
+        // Créer le message
+        Message message = messageMapper.toEntity(request, sender, receiver);
+        message.setConversationId(conversationId);
+        Message saved = messageRepository.save(message);
+
+        // Créer les statuts (READ pour sender, UNREAD pour receiver)
+        createStatuses(saved, sender.getUserUuid(), receiver.getUserUuid());
+
+        // Mettre à jour la conversation
+        updateConversation(conversationId, sender, receiver, request.getSubject());
+
+        log.info("Message créé avec succès: {}", saved.getMessageUuid());
+
+        MessageResponseDTO response = messageMapper.toResponse(saved);
+        response.setStatus("READ"); // l'expéditeur voit son message comme lu
+        return response;
+    }
+
+    private String resolveConversationId(UserRequestDTO sender, UserRequestDTO receiver, String subject) {
+        if (messageRepository.conversationExists(sender.getUserUuid(), receiver.getEmail())) {
+            List<String> ids = messageRepository.findConversationIds(sender.getUserUuid(), receiver.getEmail());
+            if (!ids.isEmpty()) return ids.getFirst();
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    private void createStatuses(Message message, String senderUuid, String receiverUuid) {
+        MessageStatus senderStatus = MessageStatus.builder()
+                .message(message)
+                .userUuid(senderUuid)
+                .messageStatus("READ")
+                .readAt(LocalDateTime.now())
+                .build();
+
+        MessageStatus receiverStatus = MessageStatus.builder()
+                .message(message)
+                .userUuid(receiverUuid)
+                .messageStatus("UNREAD")
+                .build();
+
+        messageStatusRepository.save(senderStatus);
+        if (!senderUuid.equals(receiverUuid)) {
+            messageStatusRepository.save(receiverStatus);
+        }
+    }
+
+    private void updateConversation(String conversationId, UserRequestDTO sender, UserRequestDTO receiver, String subject) {
+        conversationRepository.findByConversationUuid(conversationId)
+                .ifPresentOrElse(
+                        conv -> {
+                            conv.setLastMessageAt(LocalDateTime.now());
+                            conv.setMessageCount(conv.getMessageCount() + 1);
+                            conversationRepository.save(conv);
+                        },
+                        () -> conversationRepository.save(Conversation.builder()
+                                .conversationUuid(conversationId)
+                                .participant1Uuid(sender.getUserUuid())
+                                .participant1Name(messageMapper.buildFullName(sender))
+                                .participant1Role(sender.getRole())
+                                .participant2Uuid(receiver.getUserUuid())
+                                .participant2Name(messageMapper.buildFullName(receiver))
+                                .participant2Role(receiver.getRole())
+                                .subject(subject)
+                                .lastMessageAt(LocalDateTime.now())
+                                .messageCount(1)
+                                .build())
+                );
     }
 }

@@ -1,8 +1,8 @@
 package com.openclassrooms.notificationservice.service;
 
-import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
-import com.openclassrooms.notificationservice.dtoresponse.MessageResponse;
+import com.openclassrooms.notificationservice.dto.MessageRequestDTO;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
+import com.openclassrooms.notificationservice.dto.MessageResponseDTO;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -14,9 +14,9 @@ import reactor.core.publisher.Mono;
  * @since 2026-02-09
  */
 public interface NotificationService {
-    Mono<MessageResponse> sendMessage(MessageRequest request, UserRequest sender);
-    Flux<MessageResponse> getMessages(String userUuid);
-    Flux<MessageResponse> getConversation(String userUuid, String conversationId);
+    Mono<MessageResponseDTO> sendMessage(MessageRequestDTO request, UserRequestDTO sender);
+    Flux<MessageResponseDTO> getMessages(String userUuid);
+    Flux<MessageResponseDTO> getConversation(String userUuid, String conversationId);
     Mono<Integer> getUnreadCount(String userUuid);
     Mono<Void> markMessageAsRead(String userUuid, Long messageId);
 }

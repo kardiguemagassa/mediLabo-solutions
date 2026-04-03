@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${AUTH_SERVER_ISSUER_URI:http://localhost:9001}")
-    private String authorizationServerUrl;
+    @Value("${services.user-service.url:http://localhost:8085}")
+    private String userService;
 
     @Value("${services.authorization-server.timeout:5000}")
     private int timeout;
@@ -40,12 +40,12 @@ public class WebClientConfig {
      */
     @Bean("authServerWebClient")
     public WebClient authServerWebClient(WebClient.Builder builder) {
-        log.info("Configuring WebClient for Authorization Server: {}", authorizationServerUrl);
+        log.info("Configuring WebClient for Authorization Server: {}", userService);
 
         HttpClient httpClient = createHttpClient();
 
         return builder
-                .baseUrl(authorizationServerUrl)
+                .baseUrl(userService)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
