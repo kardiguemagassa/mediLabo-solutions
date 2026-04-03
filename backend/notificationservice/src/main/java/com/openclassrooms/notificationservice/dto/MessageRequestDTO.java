@@ -1,4 +1,4 @@
-package com.openclassrooms.notificationservice.dtorequest;
+package com.openclassrooms.notificationservice.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -17,7 +17,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MessageRequest {
+public class MessageRequestDTO {
     private String conversationId;
 
     @NotBlank(message = "Le sujet est obligatoire")

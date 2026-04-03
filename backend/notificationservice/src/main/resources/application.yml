@@ -25,8 +25,24 @@ spring:
     username: ${POSTGRES_USERNAME:postgres}
     password: ${POSTGRES_PASSWORD:postgres}
     hikari:
+      connection-test-query: SELECT 1
       maximum-pool-size: 10
       minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    database: POSTGRESQL
+    open-in-view: false
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate  # le schéma existe déjà
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
 
   # KAFKA CONFIGURATION
   kafka:
@@ -117,9 +133,14 @@ resilience4j:
           jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
 
 # SERVICES CONFIGURATION     AUTH_SERVER_URL
+#services:
+  #authorization-server:
+    #url: ${AUTH_SERVER_URL:http://localhost:9001}
+    #timeout: 5000
+
 services:
-  authorization-server:
-    url: ${AUTH_SERVER_URL:http://localhost:9001}
+  user-service:
+    url: ${USER_SERVICE_URL:http://localhost:8085}
     timeout: 5000
 
 

@@ -1,8 +1,8 @@
 package com.openclassrooms.notificationservice.resource;
 
 import com.openclassrooms.notificationservice.domain.Response;
-import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
+import com.openclassrooms.notificationservice.dto.MessageRequestDTO;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
 import com.openclassrooms.notificationservice.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,11 +57,11 @@ public class NotificationResource {
             @ApiResponse(responseCode = "503", description = "Service Auth Server indisponible")
     })
     @PostMapping("/messages")
-    public Mono<ResponseEntity<Response>> sendMessage(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) {
+    public Mono<ResponseEntity<Response>> sendMessage(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Valid @RequestBody MessageRequestDTO messageRequest) {
 
         log.info("Envoi message de {} vers {}", jwt.getClaim("email"), messageRequest.getReceiverEmail());
 
-        UserRequest sender = buildSenderFromJwt(jwt);
+        UserRequestDTO sender = buildSenderFromJwt(jwt);
 
         return notificationService.sendMessage(messageRequest, sender)
                 .map(messageResponse -> ResponseEntity
@@ -71,11 +71,11 @@ public class NotificationResource {
 
     @Operation(summary = "Répondre à un message")
     @PostMapping("/reply")
-    public Mono<ResponseEntity<Response>> replyMessage(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) {
+    public Mono<ResponseEntity<Response>> replyMessage(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, @Valid @RequestBody MessageRequestDTO messageRequest) {
 
         log.info("Réponse de {} dans conversation {}", jwt.getClaim("email"), messageRequest.getConversationId());
 
-        UserRequest sender = buildSenderFromJwt(jwt);
+        UserRequestDTO sender = buildSenderFromJwt(jwt);
 
         return notificationService.sendMessage(messageRequest, sender)
                 .map(messageResponse -> ResponseEntity
@@ -134,8 +134,8 @@ public class NotificationResource {
      * Construit un UserRequest à partir des claims JWT.
      * Centralise l'extraction des informations utilisateur.
      */
-    private UserRequest buildSenderFromJwt(Jwt jwt) {
-        return UserRequest.builder()
+    private UserRequestDTO buildSenderFromJwt(Jwt jwt) {
+        return UserRequestDTO.builder()
                 .userUuid(extractUserUuid(jwt))
                 .firstName(extractFirstName(jwt))
                 .lastName(extractLastName(jwt))

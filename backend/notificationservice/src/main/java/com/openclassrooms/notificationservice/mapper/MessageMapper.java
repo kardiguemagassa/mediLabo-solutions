@@ -1,91 +1,57 @@
 package com.openclassrooms.notificationservice.mapper;
 
-import com.openclassrooms.notificationservice.dtorequest.MessageRequest;
-import com.openclassrooms.notificationservice.dtorequest.UserRequest;
-import com.openclassrooms.notificationservice.dtoresponse.MessageResponse;
+import com.openclassrooms.notificationservice.dto.MessageRequestDTO;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
+import com.openclassrooms.notificationservice.dto.MessageResponseDTO;
 import com.openclassrooms.notificationservice.model.Message;
-import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.stereotype.Component;
+import org.mapstruct.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Mapper pour les conversions Message Entity ↔ DTOs.
- *
- * @author Kardigué MAGASSA
- * @version 2.0
- * @since 2026-02-09
- */
-@Component
-public class MessageMapper {
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, imports = UUID.class)
+public interface MessageMapper {
 
-    /**Convertit une requête en Entité Message*/
-    public Message toEntity(MessageRequest request, UserRequest sender, UserRequest receiver) {
-        if (ObjectUtils.anyNull(request, sender, receiver)) {
-            return null;
-        }
+    /**MessageRequest + sender + receiver → Entity*/
+    @Mapping(target = "messageId", ignore = true)
+    @Mapping(target = "messageUuid", expression = "java(UUID.randomUUID().toString())")
+    @Mapping(target = "conversationId", ignore = true) // set dans le service
+    @Mapping(target = "subject", source = "request.subject")
+    @Mapping(target = "message", source = "request.message")
+    @Mapping(target = "senderUuid", source = "sender.userUuid")
+    @Mapping(target = "senderName", expression = "java(buildFullName(sender))")
+    @Mapping(target = "senderEmail", source = "sender.email")
+    @Mapping(target = "senderImageUrl", source = "sender.imageUrl")
+    @Mapping(target = "senderRole", source = "sender.role")
+    @Mapping(target = "receiverUuid", source = "receiver.userUuid")
+    @Mapping(target = "receiverName", expression = "java(buildFullName(receiver))")
+    @Mapping(target = "receiverEmail", source = "receiver.email")
+    @Mapping(target = "receiverImageUrl", source = "receiver.imageUrl")
+    @Mapping(target = "receiverRole", source = "receiver.role")
+    @Mapping(target = "statuses", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    Message toEntity(MessageRequestDTO request, UserRequestDTO sender, UserRequestDTO receiver);
 
-        return Message.builder()
-                .messageUuid(UUID.randomUUID().toString())
-                .conversationId(request.getConversationId())
-                .subject(request.getSubject())
-                .message(request.getMessage())
-                .status("UNREAD")
-                .senderUuid(sender.getUserUuid())
-                .senderName(buildFullName(sender))
-                .senderEmail(sender.getEmail())
-                .senderImageUrl(sender.getImageUrl())
-                .senderRole(sender.getRole())
-                .receiverUuid(receiver.getUserUuid())
-                .receiverName(buildFullName(receiver))
-                .receiverEmail(receiver.getEmail())
-                .receiverImageUrl(receiver.getImageUrl())
-                .receiverRole(receiver.getRole())
-                .createdAt(LocalDateTime.now().toString())
-                .updatedAt(LocalDateTime.now().toString())
-                .build();
-    }
-
-    /**Convertit l'entité Message vers la réponse API */
-    public MessageResponse toResponse(Message message) {
+    /**Entity → Response avec UserInfo (sender + receiver)*/
+    default MessageResponseDTO toResponse(Message message) {
         if (message == null) return null;
-
-        return MessageResponse.builder()
+        return MessageResponseDTO.builder()
                 .messageUuid(message.getMessageUuid())
                 .conversationId(message.getConversationId())
                 .subject(message.getSubject())
                 .message(message.getMessage())
-                .status(message.getStatus())
-                .createdAt(message.getCreatedAt())
-                .updatedAt(message.getUpdatedAt())
-                .build();
-    }
-
-    /**
-     * Convertit l'entité Message vers la réponse API avec UserInfo.
-     * Utilise les données dénormalisées stockées dans le message.
-     */
-    public MessageResponse toResponseWithUserInfo(Message message) {
-        if (message == null) return null;
-
-        return MessageResponse.builder()
-                .messageUuid(message.getMessageUuid())
-                .conversationId(message.getConversationId())
-                .subject(message.getSubject())
-                .message(message.getMessage())
-                .status(message.getStatus())
-                .createdAt(message.getCreatedAt())
-                .updatedAt(message.getUpdatedAt())
-                .sender(MessageResponse.UserInfo.builder()
+                .status(null) // sera set par le service avec le contexte utilisateur
+                .createdAt(message.getCreatedAt() != null ? message.getCreatedAt().toString() : null)
+                .updatedAt(message.getUpdatedAt() != null ? message.getUpdatedAt().toString() : null)
+                .sender(MessageResponseDTO.UserInfo.builder()
                         .userUuid(message.getSenderUuid())
                         .name(message.getSenderName())
                         .email(message.getSenderEmail())
                         .imageUrl(message.getSenderImageUrl())
                         .role(message.getSenderRole())
                         .build())
-                .receiver(MessageResponse.UserInfo.builder()
+                .receiver(MessageResponseDTO.UserInfo.builder()
                         .userUuid(message.getReceiverUuid())
                         .name(message.getReceiverName())
                         .email(message.getReceiverEmail())
@@ -95,26 +61,26 @@ public class MessageMapper {
                 .build();
     }
 
-    /**Convertit une liste d'entités en liste de DTOs avec UserInfo*/
-    public List<MessageResponse> toResponseList(List<Message> messages) {
+    /**Entity → Response avec statut pour un utilisateur donné*/
+    default MessageResponseDTO toResponseForUser(Message message, String userUuid) {
+        MessageResponseDTO response = toResponse(message);
+        if (response != null) {
+            response.setStatus(message.getStatusForUser(userUuid));
+        }
+        return response;
+    }
+
+    default List<MessageResponseDTO> toResponseListForUser(List<Message> messages, String userUuid) {
         if (messages == null) return List.of();
         return messages.stream()
-                .map(this::toResponseWithUserInfo)
+                .map(m -> toResponseForUser(m, userUuid))
                 .toList();
     }
 
-    /** Met à jour le statut du message */
-    public Message updateStatus(Message existing, String newStatus) {
-        if (existing != null) {
-            existing.setStatus(newStatus);
-            existing.setUpdatedAt(LocalDateTime.now().toString());
-        }
-        return existing;
-    }
-
-    private String buildFullName(UserRequest user) {
-        String firstName = user.getFirstName() != null ? user.getFirstName() : "";
-        String lastName = user.getLastName() != null ? user.getLastName() : "";
-        return (firstName + " " + lastName).trim();
+    default String buildFullName(UserRequestDTO user) {
+        if (user == null) return "";
+        String first = user.getFirstName() != null ? user.getFirstName() : "";
+        String last = user.getLastName() != null ? user.getLastName() : "";
+        return (first + " " + last).trim();
     }
 }

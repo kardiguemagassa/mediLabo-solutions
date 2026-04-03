@@ -42,7 +42,6 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-
     /** AUTHENTIFICATION */
     @Override
     @Async
@@ -330,9 +329,7 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(email, SUBJECT_NEW_MESSAGE + " de " + senderName, TEMPLATE_NEW_MESSAGE, variables);
     }
 
-    /**
-     * Envoie un email avec le template Thymeleaf spécifié.
-     */
+    /**Envoie un email avec le template Thymeleaf spécifié.*/
     private void sendEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         try {
             var context = new Context();
@@ -358,9 +355,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    /**
-     * Retourne la recommandation par défaut selon le niveau de risque.
-     */
+    /**Retourne la recommandation par défaut selon le niveau de risque.*/
     private String getDefaultRecommendation(String riskLevel) {
         return switch (riskLevel) {
             case "DANGER" -> "Consultation urgente recommandée. Veuillez prendre rendez-vous avec votre médecin dans les plus brefs délais.";
@@ -370,9 +365,7 @@ public class EmailServiceImpl implements EmailService {
         };
     }
 
-    /**
-     * Formate le rôle pour l'affichage.
-     */
+    /**Formate le rôle pour l'affichage.*/
     private String formatRole(String role) {
         if (role == null) return "";
         return switch (role.toUpperCase()) {
@@ -383,9 +376,7 @@ public class EmailServiceImpl implements EmailService {
         };
     }
 
-    /**
-     * Tronque un message à la longueur spécifiée.
-     */
+    /**Tronque un message à la longueur spécifiée.*/
     private String truncateMessage(String message, int maxLength) {
         if (message == null) return "";
         if (message.length() <= maxLength) return message;
