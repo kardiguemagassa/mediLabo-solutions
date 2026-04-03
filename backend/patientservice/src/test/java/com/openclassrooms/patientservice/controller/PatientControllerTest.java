@@ -2,8 +2,8 @@ package com.openclassrooms.patientservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.openclassrooms.patientservice.dtorequest.PatientRequest;
-import com.openclassrooms.patientservice.dtoresponse.PatientResponse;
+import com.openclassrooms.patientservice.dto.PatientRequestDTO;
+import com.openclassrooms.patientservice.dto.PatientResponseDTO;
 import com.openclassrooms.patientservice.exception.HandleException;
 import com.openclassrooms.patientservice.service.PatientService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +22,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import static org.mockito.Mockito.mock;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import java.util.Collections;
+import java.util.List;
 
 import java.time.LocalDate;
 
@@ -49,8 +56,8 @@ class PatientControllerTest {
     private PatientController patientController;
 
     private ObjectMapper objectMapper;
-    private PatientRequest testRequest;
-    private PatientResponse testResponse;
+    private PatientRequestDTO testRequest;
+    private PatientResponseDTO testResponse;
 
     @BeforeEach
     void setUp() {
@@ -61,14 +68,14 @@ class PatientControllerTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
 
-        testRequest = PatientRequest.builder()
+        testRequest = PatientRequestDTO.builder()
                 .userUuid("user-uuid-456")
                 .dateOfBirth(LocalDate.of(1990, 5, 15))
                 .gender("M")
                 .bloodType("O+")
                 .build();
 
-        testResponse = PatientResponse.builder()
+        testResponse = PatientResponseDTO.builder()
                 .patientUuid("patient-uuid-123")
                 .userUuid("user-uuid-456")
                 .medicalRecordNumber("MED-2026-000001")
@@ -77,6 +84,79 @@ class PatientControllerTest {
                 .gender("M")
                 .bloodType("O+")
                 .build();
+    }
+
+    // READ WITH PAGINATION
+
+    @Nested
+    @DisplayName("GET /api/patients/page")
+    class GetAllPatientsPageableEndpoint {
+
+        @Test
+        @DisplayName("Should return paginated patients with default parameters")
+        void getAllPatientsPageable_withDefaultParams_returns200() throws Exception {
+            // Given
+            Page<PatientResponseDTO> mockPage = createMockPage();
+            when(patientService.getAllPatientsPageable(any(Pageable.class)))
+                    .thenReturn(Mono.just(mockPage));
+
+            // When & Then
+            MvcResult mvcResult = mockMvc.perform(get("/api/patients/page"))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(mvcResult))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.patients", hasSize(1)))
+                    .andExpect(jsonPath("$.data.currentPage", is(0)))
+                    .andExpect(jsonPath("$.data.totalPages", is(1)))
+                    .andExpect(jsonPath("$.data.totalElements", is(1)))
+                    .andExpect(jsonPath("$.data.size", is(10)))
+                    .andExpect(jsonPath("$.message", containsString("récupérés")));
+
+            verify(patientService).getAllPatientsPageable(any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("Should return paginated patients with custom parameters")
+        void getAllPatientsPageable_withCustomParams_returns200() throws Exception {
+            // Given
+            Page<PatientResponseDTO> mockPage = createMockPage();
+            when(patientService.getAllPatientsPageable(any(Pageable.class)))  // Changé ici
+                    .thenReturn(Mono.just(mockPage));
+
+            // When & Then
+            MvcResult mvcResult = mockMvc.perform(get("/api/patients/page")
+                            .param("page", "2")
+                            .param("size", "5")
+                            .param("sortBy", "patientUuid")
+                            .param("direction", "asc"))
+                    .andExpect(request().asyncStarted())
+                    .andReturn();
+
+            mockMvc.perform(asyncDispatch(mvcResult))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.currentPage", is(0)))
+                    .andExpect(jsonPath("$.data.size", is(10)));
+
+            verify(patientService).getAllPatientsPageable(any(Pageable.class));  // Changé ici
+        }
+
+        // Helper method to create mock page
+        private Page<PatientResponseDTO> createMockPage() {
+            PatientResponseDTO response = PatientResponseDTO.builder()
+                    .patientUuid("patient-uuid-123")
+                    .userUuid("user-uuid-456")
+                    .medicalRecordNumber("MED-2026-000001")
+                    .dateOfBirth(LocalDate.of(1990, 5, 15))
+                    .age(35)
+                    .gender("M")
+                    .bloodType("O+")
+                    .build();
+
+            List<PatientResponseDTO> patients = Collections.singletonList(response);
+            return new PageImpl<>(patients, PageRequest.of(0, 10), 1);
+        }
     }
 
     // CREATE
@@ -88,7 +168,7 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should create patient and return 201")
         void createPatient_validRequest_returns201() throws Exception {
-            when(patientService.createPatient(any(PatientRequest.class))).thenReturn(Mono.just(testResponse));
+            when(patientService.createPatient(any(PatientRequestDTO.class))).thenReturn(Mono.just(testResponse));
 
 
             MvcResult mvcResult = mockMvc.perform(post("/api/patients")
@@ -103,14 +183,14 @@ class PatientControllerTest {
                     .andExpect(jsonPath("$.data.patient.patientUuid", is("patient-uuid-123")))
                     .andExpect(jsonPath("$.message", containsString("créé")));
 
-            verify(patientService).createPatient(any(PatientRequest.class));
+            verify(patientService).createPatient(any(PatientRequestDTO.class));
         }
 
         @Test
         @DisplayName("Should return 400 when request is invalid")
         void createPatient_invalidRequest_returns400() throws Exception {
 
-            PatientRequest invalidRequest = PatientRequest.builder().gender("M").build();
+            PatientRequestDTO invalidRequest = PatientRequestDTO.builder().gender("M").build();
 
             mockMvc.perform(post("/api/patients")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -242,7 +322,7 @@ class PatientControllerTest {
         @Test
         @DisplayName("Should update patient and return 200")
         void updatePatient_validRequest_returns200() throws Exception {
-            when(patientService.updatePatient(eq("patient-uuid-123"), any(PatientRequest.class)))
+            when(patientService.updatePatient(eq("patient-uuid-123"), any(PatientRequestDTO.class)))
                     .thenReturn(Mono.just(testResponse));
 
             MvcResult mvcResult = mockMvc.perform(put("/api/patients/patient-uuid-123")

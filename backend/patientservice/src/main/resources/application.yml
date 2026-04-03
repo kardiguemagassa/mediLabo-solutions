@@ -32,14 +32,12 @@ spring:
 
   jpa:
     database: POSTGRESQL
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
     generate-ddl: false
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         jdbc:
           time_zone: UTC
@@ -53,7 +51,6 @@ spring:
           # sinon on reconstruit dynamiquement pour Docker
           jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
 
-
   # KAFKA CONFIGURATION - POUR LES NOTIFICATIONS
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
@@ -62,6 +59,11 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+
+services:
+  user-service:
+    url: ${USER_SERVICE_URL:http://localhost:8085}
+    timeout: 5000
 
 # SERVER CONFIGURATION
 server:
@@ -107,7 +109,7 @@ eureka:
 
 
 # SWAGGER URL GATEWAY
-spring doc:
+springdoc:
   api-docs:
     path: /api/patients/v3/api-docs
 

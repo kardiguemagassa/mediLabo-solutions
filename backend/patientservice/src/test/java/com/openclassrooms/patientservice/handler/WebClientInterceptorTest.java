@@ -77,7 +77,6 @@ class WebClientInterceptorTest {
         }
     }
 
-
     @Test
     @DisplayName("Devrait ne pas ajouter de header quand pas de JWT")
     void jwtAuthorizationFilter_ShouldNotAddHeader_WhenNoJwt() {

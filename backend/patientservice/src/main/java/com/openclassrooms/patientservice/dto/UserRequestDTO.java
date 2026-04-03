@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dtorequest;
+package com.openclassrooms.patientservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
@@ -18,7 +18,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserRequest {
+public class UserRequestDTO {
     private String userUuid;
     private String firstName;
     private String lastName;

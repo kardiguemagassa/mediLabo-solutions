@@ -1,8 +1,8 @@
 package com.openclassrooms.patientservice.service.implementation;
 
-import com.openclassrooms.patientservice.dtorequest.PatientRequest;
-import com.openclassrooms.patientservice.dtorequest.UserRequest;
-import com.openclassrooms.patientservice.dtoresponse.PatientResponse;
+import com.openclassrooms.patientservice.dto.PatientRequestDTO;
+import com.openclassrooms.patientservice.dto.UserRequestDTO;
+import com.openclassrooms.patientservice.dto.PatientResponseDTO;
 import com.openclassrooms.patientservice.event.Event;
 import com.openclassrooms.patientservice.exception.ApiException;
 import com.openclassrooms.patientservice.mapper.PatientMapper;
@@ -13,6 +13,8 @@ import com.openclassrooms.patientservice.service.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -21,17 +23,11 @@ import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.time.Year;
+import java.util.List;
 import java.util.Map;
 
 import static com.openclassrooms.patientservice.enumeration.EventType.*;
 
-/**
- * Implémentation du service Patient (Full Réactif)
- *
- * @author Kardigué MAGASSA
- * @version 2.1
- * @since 2026-01-09
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,14 +39,36 @@ public class PatientServiceImpl implements PatientService {
     private final UserServiceClient userService;
     private final ApplicationEventPublisher eventPublisher;
 
-    //  CRUD OPERATIONS
+    // CRUD OPERATIONS
+
+    @Override
+    public Mono<Page<PatientResponseDTO>> getAllPatientsPageable(Pageable pageable) {
+        return Mono.fromCallable(() -> patientRepository.findAllByOrderByCreatedAtDesc(pageable))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(page -> {
+                    List<Patient> patients = page.getContent();
+                    if (patients.isEmpty()) {
+                        return Mono.just(page.map(patientMapper::toResponse));
+                    }
+                    // Enrichir chaque patient avec les infos utilisateur
+                    return Flux.fromIterable(patients)
+                            .flatMap(patient -> enrichWithUserInfo(patient)
+                                    .onErrorResume(e -> {
+                                        log.warn("Could not enrich patient {}: {}", patient.getPatientUuid(), e.getMessage());
+                                        return Mono.just(patientMapper.toResponse(patient));
+                                    }))
+                            .collectList()
+                            .map(enrichedList -> new org.springframework.data.domain.PageImpl<>(
+                                    enrichedList, page.getPageable(), page.getTotalElements()));
+                });
+    }
 
     @Override
     @Transactional
-    public Mono<PatientResponse> createPatient(PatientRequest request) {
+    public Mono<PatientResponseDTO> createPatient(PatientRequestDTO request) {
         log.info("Creating patient for user: {}", request.getUserUuid());
 
-        return Mono.fromCallable(() -> patientRepository.existsPatientByUserUuid(request.getUserUuid()))
+        return Mono.fromCallable(() -> patientRepository.existsByUserUuid(request.getUserUuid()))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(exists -> {
                     if (exists) {
@@ -63,9 +81,8 @@ public class PatientServiceImpl implements PatientService {
 
                     return Mono.fromCallable(() -> {
                                 Patient patient = patientMapper.toEntity(request, medicalRecordNumber);
-                                Patient savedPatient = patientRepository.savePatient(patient);
+                                Patient savedPatient = patientRepository.save(patient);
 
-                                // Publier l'événement
                                 eventPublisher.publishEvent(Event.builder()
                                         .eventType(PATIENT_CREATED)
                                         .data(Map.of(
@@ -84,7 +101,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Mono<PatientResponse> getPatientByUuid(String patientUuid) {
+    public Mono<PatientResponseDTO> getPatientByUuid(String patientUuid) {
         log.debug("Fetching patient by UUID: {}", patientUuid);
 
         return Mono.fromCallable(() -> patientRepository.findByPatientUuid(patientUuid))
@@ -96,7 +113,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Mono<PatientResponse> getPatientByUserUuid(String userUuid) {
+    public Mono<PatientResponseDTO> getPatientByUserUuid(String userUuid) {
         log.debug("Fetching patient for user: {}", userUuid);
 
         return Mono.fromCallable(() -> patientRepository.findByUserUuid(userUuid))
@@ -108,7 +125,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Mono<PatientResponse> getPatientByEmail(String email) {
+    public Mono<PatientResponseDTO> getPatientByEmail(String email) {
         log.debug("Fetching patient by email: {}", email);
 
         return userService.getUserByEmail(email)
@@ -121,10 +138,8 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Flux<PatientResponse> getAllActivePatients() {
-        log.debug("Fetching all active patients");
-
-        return Mono.fromCallable(patientRepository::findAllPatientByActiveTrue)
+    public Flux<PatientResponseDTO> getAllActivePatients() {
+        return Mono.fromCallable(patientRepository::findAllByOrderByCreatedAtDesc)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
                 .flatMap(patient -> enrichWithUserInfo(patient)
@@ -135,8 +150,15 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
+    public Mono<Page<PatientResponseDTO>> getAllActivePatientsPageable(Pageable pageable) {
+        return Mono.fromCallable(() -> patientRepository.findAllByOrderByCreatedAtDesc(pageable))
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(page -> page.map(patientMapper::toResponse));
+    }
+
+    @Override
     @Transactional
-    public Mono<PatientResponse> updatePatient(String patientUuid, PatientRequest request) {
+    public Mono<PatientResponseDTO> updatePatient(String patientUuid, PatientRequestDTO request) {
         log.info("Updating patient: {}", patientUuid);
 
         return Mono.fromCallable(() -> patientRepository.findByPatientUuid(patientUuid))
@@ -150,10 +172,10 @@ public class PatientServiceImpl implements PatientService {
 
                                     Mono<Patient> updatePatientMono = Mono.fromCallable(() -> {
                                         Patient updatedPatient = patientMapper.updateEntity(existingPatient, request);
-                                        return patientRepository.updatePatient(updatedPatient);
+                                        return patientRepository.save(updatedPatient);
                                     }).subscribeOn(Schedulers.boundedElastic());
 
-                                    Mono<UserRequest> updateUserMono;
+                                    Mono<UserRequestDTO> updateUserMono;
                                     if (request.getPhone() != null || request.getAddress() != null) {
                                         updateUserMono = userService.updateUserContactInfo(
                                                 existingPatient.getUserUuid(),
@@ -170,7 +192,7 @@ public class PatientServiceImpl implements PatientService {
                                     return Mono.zip(updatePatientMono, updateUserMono)
                                             .map(tuple -> {
                                                 Patient savedPatient = tuple.getT1();
-                                                UserRequest updatedUser = tuple.getT2();
+                                                UserRequestDTO updatedUser = tuple.getT2();
 
                                                 publishPatientUpdatedEvent(updatedUser.getEmail(),
                                                         updatedUser.getFirstName() + " " + updatedUser.getLastName(),
@@ -194,22 +216,22 @@ public class PatientServiceImpl implements PatientService {
                     if (optional.isEmpty()) {
                         return Mono.error(new ApiException("Patient non trouvé: " + patientUuid));
                     }
-
                     Patient patient = optional.get();
+                    // Vérifie que le patient est actif avant de supprimer
+                    if (!patient.getActive()) {
+                        log.warn("Patient already inactive: {}", patientUuid);
+                        return Mono.error(new ApiException("Ce patient est déjà désactivé"));
+                    }
 
-                    // Récupérer les infos utilisateur pour l'email
                     return userService.getUserByUuid(patient.getUserUuid())
                             .flatMap(user -> Mono.fromCallable(() -> {
-                                        boolean deleted = patientRepository.softDeletePatientByPatientUuid(patientUuid);
-
-                                        if (deleted) {
-                                            // Publier l'événement PATIENT_DELETED
+                                        int deleted = patientRepository.softDeleteByPatientUuid(patientUuid);
+                                        if (deleted > 0) {
                                             publishPatientDeletedEvent(user.getEmail(),
                                                     user.getFirstName() + " " + user.getLastName(),
                                                     patient.getMedicalRecordNumber());
                                         }
-
-                                        return deleted;
+                                        return deleted > 0;
                                     })
                                     .subscribeOn(Schedulers.boundedElastic()));
                 })
@@ -224,18 +246,18 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     @Transactional
-    public Mono<PatientResponse> restorePatient(String patientUuid) {
+    public Mono<PatientResponseDTO> restorePatient(String patientUuid) {
         log.info("Restoring patient: {}", patientUuid);
 
-        return Mono.fromCallable(() -> patientRepository.findSoftDeletedByPatientUuid(patientUuid))
+        return Mono.fromCallable(() -> patientRepository.findByPatientUuidAndActiveFalse(patientUuid))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optional -> optional
                         .map(Mono::just)
                         .orElseGet(() -> Mono.error(new ApiException("Patient supprimé non trouvé: " + patientUuid))))
-                .flatMap(patient -> Mono.fromCallable(() -> patientRepository.restorePatientByPatientUuid(patientUuid))
+                .flatMap(patient -> Mono.fromCallable(() -> patientRepository.restoreByPatientUuid(patientUuid))
                         .subscribeOn(Schedulers.boundedElastic())
                         .flatMap(restored -> {
-                            if (!restored) {
+                            if (restored == 0) {
                                 return Mono.error(new ApiException("Erreur lors de la restauration du patient"));
                             }
                             log.info("Patient restored successfully: {}", patientUuid);
@@ -246,10 +268,10 @@ public class PatientServiceImpl implements PatientService {
     // QUERY OPERATIONS
 
     @Override
-    public Mono<PatientResponse> getPatientByMedicalRecordNumber(String medicalRecordNumber) {
+    public Mono<PatientResponseDTO> getPatientByMedicalRecordNumber(String medicalRecordNumber) {
         log.debug("Fetching patient by medical record: {}", medicalRecordNumber);
 
-        return Mono.fromCallable(() -> patientRepository.findPatientByMedicalRecordNumber(medicalRecordNumber))
+        return Mono.fromCallable(() -> patientRepository.findByMedicalRecordNumber(medicalRecordNumber))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optional -> optional
                         .map(Mono::just)
@@ -258,10 +280,10 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Flux<PatientResponse> getPatientsByBloodType(String bloodType) {
+    public Flux<PatientResponseDTO> getPatientsByBloodType(String bloodType) {
         log.debug("Fetching patients by blood type: {}", bloodType);
 
-        return Mono.fromCallable(() -> patientRepository.findPatientByBloodTypeAndActiveTrue(bloodType))
+        return Mono.fromCallable(() -> patientRepository.findByBloodTypeAndActiveTrue(bloodType))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
                 .map(patientMapper::toResponse);
@@ -271,18 +293,19 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public Mono<Boolean> hasPatientRecord(String userUuid) {
-        return Mono.fromCallable(() -> patientRepository.existsPatientByUserUuid(userUuid))
+        return Mono.fromCallable(() -> patientRepository.existsByUserUuid(userUuid))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<Long> countActivePatients() {
-        return Mono.fromCallable(patientRepository::countPatientByActiveTrue).subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(patientRepository::countByActiveTrue)
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
-    //  PRIVATE METHODS
+    // PRIVATE METHODS
 
-    private Mono<PatientResponse> enrichWithUserInfo(Patient patient) {
+    private Mono<PatientResponseDTO> enrichWithUserInfo(Patient patient) {
         return userService.getUserByUuid(patient.getUserUuid())
                 .map(user -> patientMapper.toResponseWithUserInfo(patient, user))
                 .onErrorResume(e -> {
@@ -299,11 +322,10 @@ public class PatientServiceImpl implements PatientService {
         do {
             medicalRecordNumber = generateMedicalRecordNumber();
             attempts++;
-
             if (attempts >= maxAttempts) {
                 throw new ApiException("Impossible de générer un numéro de dossier unique");
             }
-        } while (patientRepository.existsPatientByMedicalRecordNumber(medicalRecordNumber));
+        } while (patientRepository.existsByMedicalRecordNumber(medicalRecordNumber));
 
         return medicalRecordNumber;
     }

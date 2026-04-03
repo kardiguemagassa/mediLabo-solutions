@@ -178,7 +178,7 @@
                     <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
                 </svg>
             </div>
-        } @else if (paginatedPatients().length === 0) {
+        } @else if (filteredPatients().length === 0) {
             <div class="flex flex-col items-center justify-center py-12">
                 <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <p class="text-gray-500 font-medium">Aucun patient trouvé</p>
@@ -200,7 +200,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        @for (patient of paginatedPatients(); track patient.patientUuid) {
+                        @for (patient of filteredPatients(); track patient.patientUuid) {
                             <tr class="hover:bg-gray-50 transition-colors" [class.bg-red-50]="isInactive(patient)">
                                 <!-- Patient info -->
                                 <td class="px-6 py-4">
@@ -297,25 +297,39 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
+            <!-- PAGINATION BACKEND -->
             @if (totalPages() > 1) {
                 <div class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
-                    <p class="text-sm text-gray-500">
-                        Page {{(store.currentPage() ?? 0) + 1}} sur {{totalPages()}} — {{filteredPatients().length}} patient(s)
-                    </p>
+                    <div class="flex items-center gap-3">
+                        <p class="text-sm text-gray-500">
+                            Page {{ currentPage() + 1 }} sur {{ totalPages() }} — {{ totalElements() }} patient(s)
+                        </p>
+                        <select (change)="changePageSize($event)" [value]="pageSize()" class="bg-white border border-gray-300 text-gray-700 text-xs rounded-lg px-2 py-1">
+                            <option [value]="5">5 / page</option>
+                            <option [value]="10">10 / page</option>
+                            <option [value]="20">20 / page</option>
+                            <option [value]="50">50 / page</option>
+                        </select>
+                    </div>
                     <div class="flex items-center gap-1">
-                        <button (click)="previousPage()" [disabled]="(store.currentPage() ?? 0) === 0" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button (click)="goToPage(0)" [disabled]="currentPage() === 0" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            ««
+                        </button>
+                        <button (click)="previousPage()" [disabled]="currentPage() === 0" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                             Précédent
                         </button>
                         @for (page of [].constructor(totalPages()); track $index) {
-                            @if ($index < 5 || $index === totalPages() - 1 || ($index >= (store.currentPage() ?? 0) - 1 && $index <= (store.currentPage() ?? 0) + 1)) {
-                                <button (click)="goToPage($index)" [ngClass]="$index === (store.currentPage() ?? 0) ? 'px-3 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-lg' : 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50'">
-                                    {{$index + 1}}
+                            @if ($index < 3 || $index === totalPages() - 1 || ($index >= currentPage() - 1 && $index <= currentPage() + 1)) {
+                                <button (click)="goToPage($index)" [class]="$index === currentPage() ? 'px-3 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-lg' : 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50'">
+                                    {{ $index + 1 }}
                                 </button>
                             }
                         }
-                        <button (click)="nextPage()" [disabled]="(store.currentPage() ?? 0) >= totalPages() - 1" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                             Suivant
+                        </button>
+                        <button (click)="goToPage(totalPages() - 1)" [disabled]="currentPage() >= totalPages() - 1" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            »»
                         </button>
                     </div>
                 </div>

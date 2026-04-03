@@ -2,6 +2,7 @@ import { IAssessment, IAssessmentDetail } from "./assessment";
 import { IDevice } from "./device";
 import { IMessage } from "./message";
 import { INote } from "./note";
+import { IPage } from "./pagination.interface";
 import { IPatient } from "./patient";
 import { IPatientDetail } from "./patientDetail";
 import { defaultQuery, IQuery } from "./query";
@@ -31,6 +32,7 @@ export interface IState {
     messages?: IMessage[];
     conversation?: IMessage[];
     devices?: IDevice[];
+    patientPage?: IPage<IPatient>;
 }
 
 export const initialState: IState = {
@@ -43,5 +45,6 @@ export const initialState: IState = {
     pages: null, currentPage: 0, reportRequest: undefined,
     loading: false, error: null,
     messages: null, conversation: null, devices: null,
-    query: defaultQuery
+    query: defaultQuery,
+    patientPage: null
 };

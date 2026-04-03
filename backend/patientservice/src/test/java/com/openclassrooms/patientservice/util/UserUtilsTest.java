@@ -248,17 +248,8 @@ class UserUtilsTest {
     }
 
     private List<String> getAllDefinedRoles() {
-        return List.of(
-                Role.USER,
-                Role.ADMIN,
-                Role.PRACTITIONER,
-                Role.ORGANIZER,
-                Role.SUPER_ADMIN
-        );
+        return List.of(Role.USER, Role.ADMIN, Role.PRACTITIONER, Role.ORGANIZER, Role.SUPER_ADMIN);
     }
-
-
-    // Tests pour getCurrentUserUuid
 
     @Test
     void getCurrentUserUuid_shouldReturnUsername_whenAuthenticated() {
@@ -454,9 +445,6 @@ class UserUtilsTest {
         assertThat(result).isFalse();
     }
 
-
-    // Tests pour les différents rôles avec canAccess
-
     @ParameterizedTest
     @MethodSource("provideAllElevatedRolesForCanAccess")
     void canAccess_shouldReturnTrue_forAllElevatedRoles(String role) {
@@ -480,12 +468,7 @@ class UserUtilsTest {
     }
 
     private static Stream<Arguments> provideAllElevatedRolesForCanAccess() {
-        return Stream.of(
-                Arguments.of(Role.SUPER_ADMIN),
-                Arguments.of(Role.ADMIN),
-                Arguments.of(Role.ORGANIZER),
-                Arguments.of(Role.PRACTITIONER)
-        );
+        return Stream.of(Arguments.of(Role.SUPER_ADMIN), Arguments.of(Role.ADMIN), Arguments.of(Role.ORGANIZER), Arguments.of(Role.PRACTITIONER));
     }
 
     @Test
@@ -507,7 +490,6 @@ class UserUtilsTest {
         assertThat(result).isFalse();
     }
 
-    // Test pour le constructeur privé
 
     @Test
     void constructor_shouldBePrivate() throws Exception {
@@ -523,9 +505,6 @@ class UserUtilsTest {
         // Then
         assertThat(constructor.newInstance()).isNotNull();
     }
-
-
-    // Tests d'intégration des différentes méthodes
 
     @Test
     void methods_shouldWorkTogetherCorrectly_forAdmin() {

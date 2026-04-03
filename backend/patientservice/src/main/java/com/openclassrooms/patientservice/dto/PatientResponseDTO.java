@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dtoresponse;
+package com.openclassrooms.patientservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PatientResponse {
+public class PatientResponseDTO {
     private String patientUuid;
     private String userUuid;
     private String medicalRecordNumber;
@@ -44,9 +44,9 @@ public class PatientResponse {
     private String emergencyContactRelationship;
     private String insuranceNumber;
     private String insuranceProvider;
+    private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    // User Info  enrich
     private UserInfo userInfo;
 
     /**Informations utilisateur depuis Authorization Server*/

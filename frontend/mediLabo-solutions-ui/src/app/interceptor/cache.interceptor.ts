@@ -26,7 +26,7 @@ export const cacheInterceptor = (request: HttpRequest<unknown>, next: HttpHandle
         cache.evictAll();
         return next(request);
     }
-    const cachedResponse = cache.get(request.url);
+    const cachedResponse = cache.get(request.urlWithParams);
     if (cachedResponse) {
         console.log('Found response in cache', cachedResponse);
         return of(cachedResponse);
@@ -39,7 +39,7 @@ const handleRequest = (request: HttpRequest<unknown>, next: HttpHandlerFn, cache
         tap(response => {
             if (response instanceof HttpResponse && request.method === 'GET') {
                 console.log('Caching get request resopnse', response);
-                cache.put(request.url, response);
+                cache.put(request.urlWithParams, response);
             }
         }))
 };

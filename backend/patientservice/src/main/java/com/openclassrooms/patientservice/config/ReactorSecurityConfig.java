@@ -9,7 +9,7 @@ public class ReactorSecurityConfig {
 
     @PostConstruct
     public void enableSecurityContextPropagation() {
-        // Permet à Reactor de propager le SecurityContext
+        /** Permet à Reactor de propager le SecurityContext */
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
     }
 }
