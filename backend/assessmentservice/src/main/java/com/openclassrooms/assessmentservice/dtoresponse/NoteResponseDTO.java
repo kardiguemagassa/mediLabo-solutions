@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NoteResponse {
+public class NoteResponseDTO {
     private String noteUuid;
     private String patientUuid;
     private String practitionerUuid;

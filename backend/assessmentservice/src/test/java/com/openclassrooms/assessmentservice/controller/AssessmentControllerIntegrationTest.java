@@ -1,6 +1,6 @@
 package com.openclassrooms.assessmentservice.controller;
 
-import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponseDTO;
 import com.openclassrooms.assessmentservice.mapper.AssessmentMapper;
 import com.openclassrooms.assessmentservice.model.Assessment;
 import com.openclassrooms.assessmentservice.model.Gender;
@@ -55,7 +55,7 @@ class AssessmentControllerIntegrationTest {
 
         Assessment assessment = new Assessment(PATIENT_UUID, "Jean Dupont", 45, Gender.MALE, RiskLevel.NONE, 0, List.of(), LocalDateTime.now());
 
-        AssessmentResponse assessmentResponse = AssessmentResponse.builder()
+        AssessmentResponseDTO assessmentResponseDTO = AssessmentResponseDTO.builder()
                 .patientUuid(PATIENT_UUID)
                 .patientName("Jean Dupont")
                 .age(45)
@@ -68,7 +68,7 @@ class AssessmentControllerIntegrationTest {
                 .build();
 
         Mockito.when(assessmentService.assessDiabetesRisk(eq(PATIENT_UUID), any())).thenReturn(Mono.just(assessment));
-        Mockito.when(assessmentMapper.toResponse(any(Assessment.class))).thenReturn(assessmentResponse);
+        Mockito.when(assessmentMapper.toResponse(any(Assessment.class))).thenReturn(assessmentResponseDTO);
 
         MvcResult mvcResult = mockMvc.perform(
                         get(BASE_URL + "/{patientUuid}", PATIENT_UUID)
@@ -110,7 +110,7 @@ class AssessmentControllerIntegrationTest {
 
         Assessment assessment = new Assessment(PATIENT_UUID, "Marie Martin", 25, Gender.FEMALE, RiskLevel.IN_DANGER, 5, triggers, LocalDateTime.now());
 
-        AssessmentResponse assessmentResponse = AssessmentResponse.builder()
+        AssessmentResponseDTO assessmentResponseDTO = AssessmentResponseDTO.builder()
                 .patientUuid(PATIENT_UUID)
                 .patientName("Marie Martin")
                 .age(25)
@@ -123,7 +123,7 @@ class AssessmentControllerIntegrationTest {
                 .build();
 
         Mockito.when(assessmentService.assessDiabetesRisk(eq(PATIENT_UUID), any())).thenReturn(Mono.just(assessment));
-        Mockito.when(assessmentMapper.toResponse(any(Assessment.class))).thenReturn(assessmentResponse);
+        Mockito.when(assessmentMapper.toResponse(any(Assessment.class))).thenReturn(assessmentResponseDTO);
 
         MvcResult mvcResult = mockMvc.perform(
                         get(BASE_URL + "/{patientUuid}", PATIENT_UUID)

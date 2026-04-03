@@ -3,7 +3,7 @@ package com.openclassrooms.assessmentservice.service.implementation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.openclassrooms.assessmentservice.dtoresponse.PatientResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.PatientResponseDTO;
 import com.openclassrooms.assessmentservice.model.Gender;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -78,7 +78,7 @@ class PatientServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // WHEN
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN).block();
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN).block();
 
         // THEN
         assertThat(result).isNotNull();
@@ -121,7 +121,7 @@ class PatientServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // WHEN
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN).block();
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN).block();
 
         // THEN
         assertThat(result).isNotNull();
@@ -151,7 +151,7 @@ class PatientServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // WHEN
-        PatientResponse result = patientClient.getPatientByUuid("unknown", TEST_TOKEN)
+        PatientResponseDTO result = patientClient.getPatientByUuid("unknown", TEST_TOKEN)
                 .onErrorResume(e -> Mono.empty())
                 .block();
 
@@ -176,7 +176,7 @@ class PatientServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // WHEN - Le fallback doit retourner Mono.empty()
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
                 .onErrorResume(e -> Mono.empty())
                 .block();
 
@@ -196,7 +196,7 @@ class PatientServiceClientImplTest {
                 .setBody(malformedJson));
 
         // WHEN - Le fallback doit gérer l'erreur de parsing
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
                 .onErrorResume(e -> Mono.empty())
                 .block();
 
@@ -231,7 +231,7 @@ class PatientServiceClientImplTest {
                 .setBody(""));
 
         // WHEN
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
                 .onErrorResume(e -> Mono.empty())
                 .block();
 
@@ -257,7 +257,7 @@ class PatientServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // WHEN - Le flux sera vide car data est null
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
                 .onErrorResume(e -> Mono.empty())
                 .block();
 
@@ -285,7 +285,7 @@ class PatientServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // WHEN - Le flux sera vide car patient est null
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
                 .onErrorResume(e -> Mono.empty())
                 .block();
 
@@ -315,7 +315,7 @@ class PatientServiceClientImplTest {
                 .setBody(mockJsonResponse));
 
         // WHEN - Le patient peut être créé avec des champs null
-        PatientResponse result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
                 .onErrorResume(e -> Mono.empty())
                 .block();
 
@@ -332,7 +332,7 @@ class PatientServiceClientImplTest {
         Throwable ex = new RuntimeException("Service Down");
 
         // WHEN
-        PatientResponse result = patientClient.getPatientByUuidFallback("uuid-123", TEST_TOKEN, ex).block();
+        PatientResponseDTO result = patientClient.getPatientByUuidFallback("uuid-123", TEST_TOKEN, ex).block();
 
         // THEN
         assertThat(result).isNull();

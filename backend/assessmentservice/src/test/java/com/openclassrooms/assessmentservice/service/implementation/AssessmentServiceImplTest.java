@@ -3,8 +3,8 @@ package com.openclassrooms.assessmentservice.service.implementation;
 import com.openclassrooms.assessmentservice.model.Gender;
 import com.openclassrooms.assessmentservice.model.RiskLevel;
 import com.openclassrooms.assessmentservice.exception.ApiException;
-import com.openclassrooms.assessmentservice.dtoresponse.NoteResponse;
-import com.openclassrooms.assessmentservice.dtoresponse.PatientResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.NoteResponseDTO;
+import com.openclassrooms.assessmentservice.dtoresponse.PatientResponseDTO;
 import com.openclassrooms.assessmentservice.service.RiskLevelCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,12 +56,12 @@ class AssessmentServiceImplTest {
     @BeforeEach
     void setUp() {}
 
-    private PatientResponse createPatient(int age, Gender gender) {
-        return PatientResponse.builder()
+    private PatientResponseDTO createPatient(int age, Gender gender) {
+        return PatientResponseDTO.builder()
                 .patientUuid(PATIENT_UUID)
                 .dateOfBirth(LocalDate.now().minusYears(age))
                 .gender(gender)
-                .userInfo(new PatientResponse.UserInfo(
+                .userInfo(new PatientResponseDTO.UserInfo(
                         "Jean",
                         "Dupont",
                         "jean.dupont@email.com",
@@ -70,8 +70,8 @@ class AssessmentServiceImplTest {
                 .build();
     }
 
-    private NoteResponse createNote(String content) {
-        return NoteResponse.builder()
+    private NoteResponseDTO createNote(String content) {
+        return NoteResponseDTO.builder()
                 .noteUuid("note-uuid-" + System.nanoTime())
                 .patientUuid(PATIENT_UUID)
                 .content(content)
@@ -88,9 +88,9 @@ class AssessmentServiceImplTest {
         @Test
         @DisplayName("Devrait évaluer BORDERLINE avec 2 déclencheurs pour patient > 30 ans")
         void shouldReturnBorderline_whenOver30With2Triggers() {
-            PatientResponse patient = createPatient(45, Gender.FEMALE);
+            PatientResponseDTO patient = createPatient(45, Gender.FEMALE);
 
-            List<NoteResponse> notes = List.of(createNote("Patient fumeur, cholestérol élevé"), createNote("Poids anormal"));
+            List<NoteResponseDTO> notes = List.of(createNote("Patient fumeur, cholestérol élevé"), createNote("Poids anormal"));
 
             when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
             when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.fromIterable(notes));
@@ -109,9 +109,9 @@ class AssessmentServiceImplTest {
         @Test
         @DisplayName("Devrait évaluer IN_DANGER pour homme < 30 ans avec 3 déclencheurs")
         void shouldReturnInDanger_whenYoungMaleWith3Triggers() {
-            PatientResponse patient = createPatient(25, Gender.MALE);
+            PatientResponseDTO patient = createPatient(25, Gender.MALE);
 
-            List<NoteResponse> notes = List.of(createNote("Fumeur, taille anormale, poids élevé"));
+            List<NoteResponseDTO> notes = List.of(createNote("Fumeur, taille anormale, poids élevé"));
 
             //when(patientServiceClient.getPatientByUuid(PATIENT_UUID)).thenReturn(Mono.just(patient));
             when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
@@ -131,9 +131,9 @@ class AssessmentServiceImplTest {
         @Test
         @DisplayName("Devrait évaluer EARLY_ONSET pour homme < 30 ans avec 5+ déclencheurs")
         void shouldReturnEarlyOnset_whenYoungMaleWith5Triggers() {
-            PatientResponse patient = createPatient(28, Gender.MALE);
+            PatientResponseDTO patient = createPatient(28, Gender.MALE);
 
-            List<NoteResponse> notes = List.of(
+            List<NoteResponseDTO> notes = List.of(
                     createNote("Fumeur, cholestérol anormal, vertiges"),
                     createNote("Anticorps détectés, réaction allergique")
             );
@@ -182,7 +182,7 @@ class AssessmentServiceImplTest {
         @Test
         @DisplayName("Devrait propager l'erreur si Notes Service indisponible")
         void shouldPropagateError_whenNotesServiceUnavailable() {
-            PatientResponse patient = createPatient(50, Gender.FEMALE);
+            PatientResponseDTO patient = createPatient(50, Gender.FEMALE);
             RuntimeException notesError = new RuntimeException("Notes down");
 
             when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
@@ -206,9 +206,9 @@ class AssessmentServiceImplTest {
         @Test
         @DisplayName("Devrait gérer les notes avec contenu null")
         void shouldHandleNotesWithNullContent() {
-            PatientResponse patient = createPatient(35, Gender.MALE);
+            PatientResponseDTO patient = createPatient(35, Gender.MALE);
 
-            NoteResponse note = createNote(null);
+            NoteResponseDTO note = createNote(null);
 
             when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
             when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.just(note));
@@ -226,9 +226,9 @@ class AssessmentServiceImplTest {
         @Test
         @DisplayName("Devrait gérer les notes avec contenu vide")
         void shouldHandleNotesWithEmptyContent() {
-            PatientResponse patient = createPatient(35, Gender.FEMALE);
+            PatientResponseDTO patient = createPatient(35, Gender.FEMALE);
 
-            NoteResponse note = createNote("");
+            NoteResponseDTO note = createNote("");
 
             when(patientServiceClient.getPatientByUuid(eq(PATIENT_UUID), anyString())).thenReturn(Mono.just(patient));
             when(noteServiceClient.getNotesByPatientUuid(eq(PATIENT_UUID), anyString())).thenReturn(Flux.just(note));

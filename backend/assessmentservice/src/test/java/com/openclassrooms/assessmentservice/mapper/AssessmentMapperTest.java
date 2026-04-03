@@ -1,6 +1,6 @@
 package com.openclassrooms.assessmentservice.mapper;
 
-import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponseDTO;
 import com.openclassrooms.assessmentservice.model.Assessment;
 import com.openclassrooms.assessmentservice.model.Gender;
 import com.openclassrooms.assessmentservice.model.RiskLevel;
@@ -40,7 +40,7 @@ class AssessmentMapperTest {
                 .build();
 
         // WHEN
-        AssessmentResponse response = assessmentMapper.toResponse(assessment);
+        AssessmentResponseDTO response = assessmentMapper.toResponse(assessment);
 
         // THEN
         assertThat(response).isNotNull();
@@ -70,7 +70,7 @@ class AssessmentMapperTest {
                 .build();
 
         // WHEN
-        AssessmentResponse response = assessmentMapper.toResponse(assessment);
+        AssessmentResponseDTO response = assessmentMapper.toResponse(assessment);
 
         // THEN
         assertThat(response).isNotNull();
@@ -92,7 +92,7 @@ class AssessmentMapperTest {
                 .build();
 
         // WHEN
-        AssessmentResponse response = assessmentMapper.toResponse(assessment);
+        AssessmentResponseDTO response = assessmentMapper.toResponse(assessment);
 
         // THEN
         assertThat(response).isNotNull();
@@ -102,7 +102,7 @@ class AssessmentMapperTest {
     @Test
     void toResponse_ShouldHandleNullAssessment() {
         // WHEN
-        AssessmentResponse response = assessmentMapper.toResponse(null);
+        AssessmentResponseDTO response = assessmentMapper.toResponse(null);
 
         // THEN
         assertThat(response).isNull();
@@ -123,7 +123,7 @@ class AssessmentMapperTest {
                 .build();
 
         // WHEN
-        AssessmentResponse response = assessmentMapper.toResponse(assessment);
+        AssessmentResponseDTO response = assessmentMapper.toResponse(assessment);
 
         // THEN
         assertThat(response).isNotNull();
@@ -146,7 +146,7 @@ class AssessmentMapperTest {
                 .build();
 
         // WHEN
-        AssessmentResponse response = assessmentMapper.toResponse(assessment);
+        AssessmentResponseDTO response = assessmentMapper.toResponse(assessment);
 
         // THEN
         assertThat(response).isNotNull();

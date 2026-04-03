@@ -1,6 +1,6 @@
 package com.openclassrooms.assessmentservice.service;
 
-import com.openclassrooms.assessmentservice.dtoresponse.NoteResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.NoteResponseDTO;
 import reactor.core.publisher.Flux;
 
 /**
@@ -18,5 +18,5 @@ public interface NoteServiceClient {
      * @param patientUuid UUID du patient
      * @return Flux<NoteResponse> ou Flux.empty() si aucune note
      */
-    Flux<NoteResponse> getNotesByPatientUuid(String patientUuid, String token);
+    Flux<NoteResponseDTO> getNotesByPatientUuid(String patientUuid, String token);
 }

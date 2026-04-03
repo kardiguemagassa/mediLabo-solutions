@@ -21,7 +21,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PatientResponse {
+public class PatientResponseDTO {
     private String patientUuid;
     private LocalDate dateOfBirth;
     private Gender gender;
