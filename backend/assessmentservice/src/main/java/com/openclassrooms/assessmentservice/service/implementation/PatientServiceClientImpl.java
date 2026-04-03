@@ -2,7 +2,7 @@ package com.openclassrooms.assessmentservice.service.implementation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.assessmentservice.domain.Response;
-import com.openclassrooms.assessmentservice.dtoresponse.PatientResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.PatientResponseDTO;
 import com.openclassrooms.assessmentservice.exception.ApiException;
 import com.openclassrooms.assessmentservice.service.PatientServiceClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -30,7 +30,7 @@ public class PatientServiceClientImpl implements PatientServiceClient {
 
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getPatientByUuidFallback")
-    public Mono<PatientResponse> getPatientByUuid(String patientUuid, String token) {
+    public Mono<PatientResponseDTO> getPatientByUuid(String patientUuid, String token) {
         log.info("Fetching patient from PatientService: {}", patientUuid);
 
         return patientServiceWebClient.get()
@@ -49,18 +49,18 @@ public class PatientServiceClientImpl implements PatientServiceClient {
                 .timeout(TIMEOUT);
     }
 
-    public Mono<PatientResponse> getPatientByUuidFallback(String patientUuid, String token, Throwable throwable) {
+    public Mono<PatientResponseDTO> getPatientByUuidFallback(String patientUuid, String token, Throwable throwable) {
         log.error("Fallback getPatientByUuid - UUID: {}, Cause: {}", patientUuid, throwable.getMessage());
         return Mono.empty();
     }
 
-    private PatientResponse extractPatient(Response response) {
+    private PatientResponseDTO extractPatient(Response response) {
         Object patientData = response.data().get("patient");
         if (patientData == null) {
             throw new ApiException("Données patient manquantes");
         }
 
-        return objectMapper.convertValue(patientData, PatientResponse.class);
+        return objectMapper.convertValue(patientData, PatientResponseDTO.class);
     }
 
 }

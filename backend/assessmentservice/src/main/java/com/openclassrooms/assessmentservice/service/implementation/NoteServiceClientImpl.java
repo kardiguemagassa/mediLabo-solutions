@@ -3,7 +3,7 @@ package com.openclassrooms.assessmentservice.service.implementation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.assessmentservice.domain.Response;
-import com.openclassrooms.assessmentservice.dtoresponse.NoteResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.NoteResponseDTO;
 import com.openclassrooms.assessmentservice.exception.ApiException;
 import com.openclassrooms.assessmentservice.service.NoteServiceClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -34,7 +34,7 @@ public class NoteServiceClientImpl implements NoteServiceClient {
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getNotesByPatientUuidFallback")
-    public Flux<NoteResponse> getNotesByPatientUuid(String patientUuid, String token) {
+    public Flux<NoteResponseDTO> getNotesByPatientUuid(String patientUuid, String token) {
         log.info("Fetching notes from NotesService for patient: {}", patientUuid);
 
         return notesServiceWebClient.get()
@@ -53,18 +53,18 @@ public class NoteServiceClientImpl implements NoteServiceClient {
                 .timeout(TIMEOUT);
     }
 
-    public Flux<NoteResponse> getNotesByPatientUuidFallback(String patientUuid, String token, Throwable throwable) {
+    public Flux<NoteResponseDTO> getNotesByPatientUuidFallback(String patientUuid, String token, Throwable throwable) {
         log.error("Fallback getNotesByPatientUuid - UUID: {}, Cause: {}", patientUuid, throwable.getMessage());
         return Flux.empty();
     }
 
-    private List<NoteResponse> extractNotes(Response response) {
+    private List<NoteResponseDTO> extractNotes(Response response) {
         try {
             if (response == null || response.data() == null || !response.data().containsKey("notes")) {
                 return Collections.emptyList();
             }
             Object notesData = response.data().get("notes");
-            List<NoteResponse> notes = objectMapper.convertValue(notesData, new TypeReference<>() {});
+            List<NoteResponseDTO> notes = objectMapper.convertValue(notesData, new TypeReference<>() {});
             log.debug("Extracted {} notes", notes.size());
             return notes;
         } catch (Exception e) {

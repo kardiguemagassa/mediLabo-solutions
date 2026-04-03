@@ -21,7 +21,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AssessmentResponse {
+public class AssessmentResponseDTO {
     private String patientUuid;
     private String patientName;
     private int age;

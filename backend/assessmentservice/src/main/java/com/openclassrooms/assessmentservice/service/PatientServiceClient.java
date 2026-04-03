@@ -1,6 +1,6 @@
 package com.openclassrooms.assessmentservice.service;
 
-import com.openclassrooms.assessmentservice.dtoresponse.PatientResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.PatientResponseDTO;
 import reactor.core.publisher.Mono;
 
 /**
@@ -18,5 +18,5 @@ public interface PatientServiceClient {
      * @param patientUuid UUID du patient
      * @return Mono<PatientResponse> ou Mono.empty() si non trouvé
      */
-    Mono<PatientResponse> getPatientByUuid(String patientUuid, String token);
+    Mono<PatientResponseDTO> getPatientByUuid(String patientUuid, String token);
 }

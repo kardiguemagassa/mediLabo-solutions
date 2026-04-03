@@ -1,7 +1,7 @@
 package com.openclassrooms.assessmentservice.mapper;
 
 import com.openclassrooms.assessmentservice.model.Assessment;
-import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.AssessmentResponseDTO;
 import com.openclassrooms.assessmentservice.model.RiskLevel;
 import org.springframework.stereotype.Component;
 
@@ -15,12 +15,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class AssessmentMapper {
 
-    public AssessmentResponse toResponse(Assessment assessment) {
+    public AssessmentResponseDTO toResponse(Assessment assessment) {
         if (assessment == null) {
             return null;
         }
 
-        return AssessmentResponse.builder()
+        return AssessmentResponseDTO.builder()
                 .patientUuid(assessment.patientUuid())
                 .patientName(assessment.patientName())
                 .age(assessment.age())

@@ -14,21 +14,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
 import static com.openclassrooms.assessmentservice.util.RequestUtils.getResponse;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 /**
  * Controller REST réactif pour l'évaluation du risque de diabète.
  * ARCHITECTURE RÉACTIVE:
- * - Retourne Mono<ResponseEntity<Response>>
- * - Le JWT est propagé automatiquement via WebClientInterceptor
+ * Retourne Mono<ResponseEntity<Response>>
+ * Le JWT est propagé automatiquement via WebClientInterceptor
  *
  * @author Kardigué MAGASSA
  * @version 2.0

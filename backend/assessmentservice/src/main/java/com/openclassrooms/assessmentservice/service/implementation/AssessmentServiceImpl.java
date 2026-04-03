@@ -1,8 +1,8 @@
 package com.openclassrooms.assessmentservice.service.implementation;
 
 import com.openclassrooms.assessmentservice.cache.AssessmentCache;
-import com.openclassrooms.assessmentservice.dtoresponse.NoteResponse;
-import com.openclassrooms.assessmentservice.dtoresponse.PatientResponse;
+import com.openclassrooms.assessmentservice.dtoresponse.NoteResponseDTO;
+import com.openclassrooms.assessmentservice.dtoresponse.PatientResponseDTO;
 import com.openclassrooms.assessmentservice.exception.ApiException;
 import com.openclassrooms.assessmentservice.model.Assessment;
 import com.openclassrooms.assessmentservice.model.RiskLevel;
@@ -66,11 +66,11 @@ public class AssessmentServiceImpl implements AssessmentService {
      */
     @Override
     public Mono<Assessment> assessDiabetesRisk(String patientUuid, String token) {
-        Mono<PatientResponse> patientMono = patientServiceClient
+        Mono<PatientResponseDTO> patientMono = patientServiceClient
                 .getPatientByUuid(patientUuid, token)
                 .switchIfEmpty(Mono.error(new ApiException("Patient non trouvé: " + patientUuid)));
 
-        Mono<List<NoteResponse>> notesMono = noteServiceClient
+        Mono<List<NoteResponseDTO>> notesMono = noteServiceClient
                 .getNotesByPatientUuid(patientUuid, token)
                 .collectList()
                 .defaultIfEmpty(List.of());
@@ -91,9 +91,9 @@ public class AssessmentServiceImpl implements AssessmentService {
     /**
      * Construit l'Assessment à partir des données patient et notes.
      */
-    private Assessment buildAssessment(PatientResponse patient, List<NoteResponse> notes) {
+    private Assessment buildAssessment(PatientResponseDTO patient, List<NoteResponseDTO> notes) {
         // Extraire le contenu des notes
-        List<String> noteContents = notes.stream().map(NoteResponse::getContent).toList();
+        List<String> noteContents = notes.stream().map(NoteResponseDTO::getContent).toList();
 
         // Analyser les termes déclencheurs
         Set<String> triggersFound = TriggerTerms.findTriggersInMultipleTexts(noteContents);
@@ -109,7 +109,7 @@ public class AssessmentServiceImpl implements AssessmentService {
     /**
      * Publie un événement ASSESSMENT_COMPLETED pour notification email.
      */
-    private void publishAssessmentCompletedEvent(PatientResponse patient, Assessment assessment) {
+    private void publishAssessmentCompletedEvent(PatientResponseDTO patient, Assessment assessment) {
         try {
             Map<String, Object> data = new HashMap<>();
             data.put("patientUuid", assessment.patientUuid());
