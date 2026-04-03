@@ -47,12 +47,12 @@ public class ResourceServerConfig {
             "/actuator/**", // Gateway's actuator
             "/api/*/actuator/**",      // All microservices actuators
             "/authorization/**",
-            "/user/register/**",
-            "/user/verify/account/**",
-            "/user/verify/password/**",
-            "/user/resetpassword/**",
+            "/api/users/register/**",
+            "/api/users/verify/account/**",
+            "/api/users/verify/password/**",
+            "/api/users/resetpassword/**",
             "/.well-known/**",
-           "/fallback/**" // <--- pour que le Circuit Breaker réponde toujours
+           "/fallback/**" // pour que le Circuit Breaker réponde toujours
     };
 
     private static final String[] SWAGGER_ENDPOINTS = {

@@ -1,12 +1,6 @@
 package com.openclassrooms.patientservice.constant;
 
 /**
- * Constantes pour les rôles utilisateur.
- * Centralise tous les rôles pour :
- * Éviter les fautes de frappe
- * Faciliter la maintenance
- * Cohérence dans tout le code
- *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09

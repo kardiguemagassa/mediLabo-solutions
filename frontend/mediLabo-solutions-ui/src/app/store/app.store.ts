@@ -2,7 +2,7 @@ import { patchState, signalStore, watchState, withComputed, withHooks, withMetho
 import { tapResponse } from '@ngrx/operators';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { initialState, IState } from '../interface/state';
-import { computed, inject } from '@angular/core';
+import { computed, inject, Query } from '@angular/core';
 import { getMessageCount } from '../utils/fileutils';
 import { UserService } from '../service/user.service';
 import { HotToastService } from '@ngxpert/hot-toast';
@@ -14,6 +14,7 @@ import { UpdatePassword } from '../interface/credentials';
 import { AssessmentService } from '../service/assessment.service';
 import { NoteService } from '../service/note.service';
 import { PatientService } from '../service/patient.service';
+import { IQuery } from '../interface/query';
 
 export const AppStore = signalStore(
     { providedIn: 'root' },
@@ -280,6 +281,31 @@ export const AppStore = signalStore(
             )))),
 
         // PATIENTSSERVICE
+        getAllPatientsPageable: rxMethod<IQuery>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap((query) => patientService.allPatientsPageable$(query).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, {
+                            patientPage: {
+                                content: response.data.patients,
+                                currentPage: response.data.currentPage,
+                                totalPages: response.data.totalPages,
+                                totalElements: response.data.totalElements,
+                                size: response.data.size
+                            },
+                            query,
+                            loading: false,
+                            error: null
+                        });
+                    },
+                    error: (error: string) => {
+                        toastService.error(error ?? `Une erreur s'est produite.`);
+                        patchState(store, { loading: false, error });
+                    }
+                })
+            ))
+        )),
         getAllPatients: rxMethod<void>(pipe(
             tap(() => patchState(store, { loading: true, error: null })),
             switchMap(() => patientService.allPatients$().pipe(

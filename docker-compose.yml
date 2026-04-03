@@ -173,6 +173,7 @@ services:
       EUREKA_HOST: discovery-server
       JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks        
       AUTH_SERVER_ISSUER_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}
+      USER_SERVICE_URL: http://user-service:8085
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       PATIENT_SERVICE_HOST: patient-service
     ports:

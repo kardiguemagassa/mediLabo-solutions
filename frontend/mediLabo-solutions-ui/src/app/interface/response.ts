@@ -7,6 +7,7 @@ import { IPatient } from './patient';
 import { IAssessment } from './assessment';
 import { INote } from './note';
 import { IUser } from './user';
+import { IPage } from './pagination.interface';
 
 export interface IResponse {
   time: Date | string;
@@ -38,5 +39,9 @@ export interface IResponse {
     tasks?: any[];
     assignee?: IMedilaboSupport;
     medilaboSupports?: IMedilaboSupport[];
+    currentPage?: number;
+    totalPages?: number;
+    totalElements?: number;
+    size?: number;
   };
 }

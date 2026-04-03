@@ -1,7 +1,7 @@
 package com.openclassrooms.patientservice.service.implementation;
 
 import com.openclassrooms.patientservice.domain.Response;
-import com.openclassrooms.patientservice.dtorequest.UserRequest;
+import com.openclassrooms.patientservice.dto.UserRequestDTO;
 import com.openclassrooms.patientservice.exception.ApiException;
 import com.openclassrooms.patientservice.service.UserServiceClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -39,7 +39,7 @@ public class UserServiceClientImpl implements UserServiceClient {
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getUserByUuidFallback")
-    public Mono<UserRequest> getUserByUuid(String userUuid) {
+    public Mono<UserRequestDTO> getUserByUuid(String userUuid) {
         log.debug("Fetching user by UUID: {}", userUuid);
 
         return authServerWebClient.get()
@@ -51,7 +51,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
-                .map(response -> convertResponse(response, UserRequest.class, "user"))
+                .map(response -> convertResponse(response, UserRequestDTO.class, "user"))
                 .switchIfEmpty(Mono.error(new ApiException("Réponse vide du service utilisateur")))
                 .doOnSuccess(user -> log.debug("User found: {}", userUuid))
                 .doOnError(error -> log.error("Error fetching user {}: {}", userUuid, error.getMessage()))
@@ -61,7 +61,7 @@ public class UserServiceClientImpl implements UserServiceClient {
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getUserByEmailFallback")
-    public Mono<UserRequest> getUserByEmail(String email) {
+    public Mono<UserRequestDTO> getUserByEmail(String email) {
         log.debug("Fetching user by email: {}", email);
 
         return authServerWebClient.get()
@@ -72,7 +72,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
-                .map(response -> convertResponse(response, UserRequest.class, "user"))
+                .map(response -> convertResponse(response, UserRequestDTO.class, "user"))
                 .doOnSuccess(user -> {if (user != null) log.debug("User found for email: {}", email);})
                 .doOnError(error -> log.error("Error fetching user by email {}: {}", email, error.getMessage()))
                 .timeout(TIMEOUT);
@@ -81,7 +81,7 @@ public class UserServiceClientImpl implements UserServiceClient {
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getAssigneeFallback")
-    public Mono<UserRequest> getAssignee(String patientUuid) {
+    public Mono<UserRequestDTO> getAssignee(String patientUuid) {
         log.debug("Fetching assignee for patient: {}", patientUuid);
 
         return authServerWebClient.get()
@@ -93,7 +93,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                 .bodyToMono(Response.class)
                 .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
-                .map(response -> convertResponse(response, UserRequest.class, "user"))
+                .map(response -> convertResponse(response, UserRequestDTO.class, "user"))
                 .switchIfEmpty(Mono.error(new ApiException("Réponse vide du service utilisateur")))
                 .doOnSuccess(user -> log.debug("Assignee found for patient: {}", patientUuid))
                 .doOnError(error -> log.error("Error fetching assignee for {}: {}", patientUuid, error.getMessage()))
@@ -103,7 +103,7 @@ public class UserServiceClientImpl implements UserServiceClient {
     @Override
     @Retry(name = CIRCUIT_BREAKER_NAME)
     @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "updateUserContactInfoFallback")
-    public Mono<UserRequest> updateUserContactInfo(String userUuid, String phone, String address) {
+    public Mono<UserRequestDTO> updateUserContactInfo(String userUuid, String phone, String address) {
         log.debug("Updating contact info for user: {}", userUuid);
 
         return getUserByUuid(userUuid)
@@ -132,7 +132,7 @@ public class UserServiceClientImpl implements UserServiceClient {
                                     response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
                             .bodyToMono(Response.class)
                             .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
-                            .map(response -> convertResponse(response, UserRequest.class, "user"))
+                            .map(response -> convertResponse(response, UserRequestDTO.class, "user"))
                             .doOnSuccess(user -> log.debug("Contact info updated for user: {}", userUuid))
                             .doOnError(error -> log.error("Error updating contact info for {}: {}", userUuid, error.getMessage()))
                             .timeout(TIMEOUT);
@@ -141,22 +141,22 @@ public class UserServiceClientImpl implements UserServiceClient {
 
     /** Fallback*/
 
-    public Mono<UserRequest> getUserByUuidFallback(String userUuid, Throwable t) {
+    public Mono<UserRequestDTO> getUserByUuidFallback(String userUuid, Throwable t) {
         log.error("Fallback getUserByUuid - UUID: {}, Cause: {}", userUuid, t.getMessage());
         return Mono.error(new ApiException("Service utilisateur indisponible"));
     }
 
-    public Mono<UserRequest> getUserByEmailFallback(String email, Throwable t) {
+    public Mono<UserRequestDTO> getUserByEmailFallback(String email, Throwable t) {
         log.error("Fallback getUserByEmail - Email: {}, Cause: {}", email, t.getMessage());
         return Mono.empty();
     }
 
-    public Mono<UserRequest> getAssigneeFallback(String patientUuid, Throwable t) {
+    public Mono<UserRequestDTO> getAssigneeFallback(String patientUuid, Throwable t) {
         log.error("Fallback getAssignee - Patient: {}, Cause: {}", patientUuid, t.getMessage());
         return Mono.error(new ApiException("Service utilisateur indisponible"));
     }
 
-    public Mono<UserRequest> updateUserContactInfoFallback(String userUuid, String phone, String address, Throwable t) {
+    public Mono<UserRequestDTO> updateUserContactInfoFallback(String userUuid, String phone, String address, Throwable t) {
         log.error("Fallback updateUserContactInfo - UUID: {}, Cause: {}", userUuid, t.getMessage());
         return Mono.empty();
     }

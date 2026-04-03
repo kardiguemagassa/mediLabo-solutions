@@ -1,7 +1,7 @@
 package com.openclassrooms.patientservice.service.implementation;
 
 import com.openclassrooms.patientservice.domain.Response;
-import com.openclassrooms.patientservice.dtorequest.UserRequest;
+import com.openclassrooms.patientservice.dto.UserRequestDTO;
 import com.openclassrooms.patientservice.exception.ApiException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,7 +44,7 @@ public class UserServiceClientImplTest {
     @InjectMocks
     private UserServiceClientImpl userService;
 
-    private UserRequest testUser;
+    private UserRequestDTO testUser;
     private Response successResponse;
     private String currentTime;
 
@@ -52,7 +52,7 @@ public class UserServiceClientImplTest {
     void setUp() {
         currentTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
-        testUser = UserRequest.builder()
+        testUser = UserRequestDTO.builder()
                 .userUuid("user-uuid-123")
                 .firstName("John")
                 .lastName("Doe")
@@ -77,16 +77,12 @@ public class UserServiceClientImplTest {
         );
     }
 
-    // Helper pour configurer les mocks
-
     private void setupWebClientMocks() {
         when(authServerWebClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
     }
-
-    //  getUserByUuid - Success
 
     @Nested
     @DisplayName("getUserByUuid() - Success Cases")
@@ -108,11 +104,9 @@ public class UserServiceClientImplTest {
                     })
                     .verifyComplete();
 
-            verify(requestHeadersUriSpec).uri("/user/{userUuid}", "user-uuid-123");
+            verify(requestHeadersUriSpec).uri("/api/users/{userUuid}", "user-uuid-123");
         }
     }
-
-    // getUserByUuid - Error Cases
 
     @Nested
     @DisplayName("getUserByUuid() - Error Cases")
@@ -182,8 +176,6 @@ public class UserServiceClientImplTest {
         }
     }
 
-    // getUserByEmail - Success
-
     @Nested
     @DisplayName("getUserByEmail() - Success Cases")
     class GetUserByEmailSuccessTests {
@@ -196,7 +188,7 @@ public class UserServiceClientImplTest {
             Response emailSuccessResponse = new Response(
                     currentTime,
                     HttpStatus.OK.value(),
-                    "/user/user/john.doe@email.com",
+                    "/api/users/user/john.doe@email.com",
                     HttpStatus.OK,
                     "User retrieved successfully",
                     null,
@@ -214,11 +206,9 @@ public class UserServiceClientImplTest {
                     .verifyComplete();
 
 
-            verify(requestHeadersUriSpec).uri("/user/user/{email}", "john.doe@email.com");
+            verify(requestHeadersUriSpec).uri("/api/users/user/{email}", "john.doe@email.com");
         }
     }
-
-    //  getUserByEmail - Error Cases
 
     @Nested
     @DisplayName("getUserByEmail() - Error Cases")
@@ -245,7 +235,7 @@ public class UserServiceClientImplTest {
             Response responseNoUserData = new Response(
                     currentTime,
                     HttpStatus.OK.value(),
-                    "/user/user/john.doe@email.com",
+                    "/api/users/user/john.doe@email.com",
                     HttpStatus.OK,
                     "Success",
                     null,
@@ -254,8 +244,7 @@ public class UserServiceClientImplTest {
             when(responseSpec.bodyToMono(Response.class)).thenReturn(Mono.just(responseNoUserData));
 
             // When & Then - filter() filtre cette réponse donc Mono.empty()
-            StepVerifier.create(userService.getUserByEmail("john.doe@email.com"))
-                    .verifyComplete();
+            StepVerifier.create(userService.getUserByEmail("john.doe@email.com")).verifyComplete();
         }
 
         @Test
@@ -291,8 +280,6 @@ public class UserServiceClientImplTest {
         }
     }
 
-    // getAssignee - Success
-
     @Nested
     @DisplayName("getAssignee() - Success Cases")
     class GetAssigneeSuccessTests {
@@ -302,7 +289,7 @@ public class UserServiceClientImplTest {
         void getAssignee_assigneeExists_returnsUser() {
             // Given
             setupWebClientMocks();
-            UserRequest assignee = UserRequest.builder()
+            UserRequestDTO assignee = UserRequestDTO.builder()
                     .userUuid("doctor-uuid-456")
                     .firstName("Jane")
                     .lastName("Smith")
@@ -315,7 +302,7 @@ public class UserServiceClientImplTest {
             Response assigneeResponse = new Response(
                     currentTime,
                     HttpStatus.OK.value(),
-                    "/user/assignee/patient-uuid-123",
+                    "/api/users/assignee/patient-uuid-123",
                     HttpStatus.OK,
                     "Assignee retrieved successfully",
                     null,
@@ -332,11 +319,9 @@ public class UserServiceClientImplTest {
                     })
                     .verifyComplete();
 
-            verify(requestHeadersUriSpec).uri("/user/assignee/{patientUuid}", "patient-uuid-123");
+            verify(requestHeadersUriSpec).uri("/api/users/assignee/{patientUuid}", "patient-uuid-123");
         }
     }
-
-    // getAssignee - Error Cases
 
     @Nested
     @DisplayName("getAssignee() - Error Cases")
@@ -433,8 +418,6 @@ public class UserServiceClientImplTest {
         }
     }
 
-    // FALLBACK METHODS
-
     @Nested
     @DisplayName("Fallback Methods Tests")
     class FallbackMethodsTests {
@@ -479,6 +462,184 @@ public class UserServiceClientImplTest {
         }
     }
 
+    @Nested
+    @DisplayName("updateUserContactInfo() - Success Cases")
+    class UpdateUserContactInfoSuccessTests {
 
+        @Mock
+        private WebClient.RequestBodyUriSpec requestBodyUriSpec;
+        @Mock
+        private WebClient.RequestBodySpec requestBodySpec;
+        @Mock
+        @SuppressWarnings("rawtypes")
+        private WebClient.RequestHeadersSpec patchHeadersSpec;
+        @Mock
+        private WebClient.ResponseSpec patchResponseSpec;
+
+        private void setupPatchMocks() {
+            // GET chain (getUserByUuid interne)
+            lenient().when(authServerWebClient.get()).thenReturn(requestHeadersUriSpec);
+            lenient().when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            lenient().when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
+            lenient().when(responseSpec.bodyToMono(Response.class)).thenReturn(Mono.just(successResponse));
+
+            // PATCH chain (séparé)
+            lenient().when(authServerWebClient.patch()).thenReturn(requestBodyUriSpec);
+            lenient().when(requestBodyUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestBodySpec);
+            lenient().when(requestBodySpec.bodyValue(any())).thenReturn(patchHeadersSpec);
+            lenient().when(patchHeadersSpec.retrieve()).thenReturn(patchResponseSpec);
+            lenient().when(patchResponseSpec.onStatus(any(), any())).thenReturn(patchResponseSpec);
+        }
+
+        @Test
+        @DisplayName("Should update contact info successfully")
+        void updateUserContactInfo_success_returnsUpdatedUser() {
+            setupPatchMocks();
+
+            UserRequestDTO updatedUser = testUser.toBuilder()
+                    .phone("+33699999999")
+                    .address("456 New Address")
+                    .build();
+
+            Response updateResponse = new Response(
+                    currentTime, HttpStatus.OK.value(),
+                    "/api/users/update/user-uuid-123", HttpStatus.OK,
+                    "Updated", null,
+                    Map.of("user", updatedUser)
+            );
+            when(patchResponseSpec.bodyToMono(Response.class)).thenReturn(Mono.just(updateResponse));
+
+            StepVerifier.create(userService.updateUserContactInfo("user-uuid-123", "+33699999999", "456 New Address"))
+                    .assertNext(result -> {
+                        assertThat(result).isNotNull();
+                        assertThat(result.getPhone()).isEqualTo("+33699999999");
+                        assertThat(result.getAddress()).isEqualTo("456 New Address");
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should use existing phone when new phone is null")
+        void updateUserContactInfo_nullPhone_keepsExisting() {
+            setupPatchMocks();
+            when(patchResponseSpec.bodyToMono(Response.class)).thenReturn(Mono.just(successResponse));
+
+            StepVerifier.create(userService.updateUserContactInfo("user-uuid-123", null, "New Address"))
+                    .assertNext(result -> assertThat(result).isNotNull())
+                    .verifyComplete();
+
+            verify(requestBodySpec).bodyValue(argThat(body -> {
+                @SuppressWarnings("unchecked")
+                Map<String, String> map = (Map<String, String>) body;
+                return map.get("phone").equals("+1234567890")
+                        && map.get("address").equals("New Address");
+            }));
+        }
+
+        @Test
+        @DisplayName("Should use existing address when new address is null")
+        void updateUserContactInfo_nullAddress_keepsExisting() {
+            setupPatchMocks();
+            when(patchResponseSpec.bodyToMono(Response.class)).thenReturn(Mono.just(successResponse));
+
+            StepVerifier.create(userService.updateUserContactInfo("user-uuid-123", "+33699999999", null))
+                    .assertNext(result -> assertThat(result).isNotNull())
+                    .verifyComplete();
+
+            verify(requestBodySpec).bodyValue(argThat(body -> {
+                @SuppressWarnings("unchecked")
+                Map<String, String> map = (Map<String, String>) body;
+                return map.get("phone").equals("+33699999999")
+                        && map.get("address").equals("123 Main St");
+            }));
+        }
+    }
+
+    @Nested
+    @DisplayName("updateUserContactInfo() - Error Cases")
+    class UpdateUserContactInfoErrorTests {
+
+        @Mock
+        private WebClient.RequestBodyUriSpec requestBodyUriSpec;
+        @Mock
+        private WebClient.RequestBodySpec requestBodySpec;
+        @Mock
+        @SuppressWarnings("rawtypes")
+        private WebClient.RequestHeadersSpec patchHeadersSpec;
+        @Mock
+        private WebClient.ResponseSpec patchResponseSpec;
+
+        private void setupPatchMocks() {
+            lenient().when(authServerWebClient.get()).thenReturn(requestHeadersUriSpec);
+            lenient().when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            lenient().when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
+            lenient().when(responseSpec.bodyToMono(Response.class)).thenReturn(Mono.just(successResponse));
+
+            lenient().when(authServerWebClient.patch()).thenReturn(requestBodyUriSpec);
+            lenient().when(requestBodyUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestBodySpec);
+            lenient().when(requestBodySpec.bodyValue(any())).thenReturn(patchHeadersSpec);
+            lenient().when(patchHeadersSpec.retrieve()).thenReturn(patchResponseSpec);
+            lenient().when(patchResponseSpec.onStatus(any(), any())).thenReturn(patchResponseSpec);
+        }
+
+        @Test
+        @DisplayName("Should throw ApiException on 4xx error during update")
+        void updateUserContactInfo_4xxError_throwsApiException() {
+            setupPatchMocks();
+            when(patchResponseSpec.bodyToMono(Response.class))
+                    .thenReturn(Mono.error(new ApiException("Erreur mise à jour coordonnées: Bad Request")));
+
+            StepVerifier.create(userService.updateUserContactInfo("user-uuid-123", "+33699999999", "Address"))
+                    .expectErrorMatches(throwable ->
+                            throwable instanceof ApiException &&
+                                    throwable.getMessage().contains("Erreur mise à jour coordonnées"))
+                    .verify();
+        }
+
+        @Test
+        @DisplayName("Should throw ApiException on 5xx error during update")
+        void updateUserContactInfo_5xxError_throwsApiException() {
+            setupPatchMocks();
+            when(patchResponseSpec.bodyToMono(Response.class))
+                    .thenReturn(Mono.error(new ApiException("Erreur serveur Authorization Server")));
+
+            StepVerifier.create(userService.updateUserContactInfo("user-uuid-123", "+33699999999", "Address"))
+                    .expectErrorMatches(throwable ->
+                            throwable instanceof ApiException &&
+                                    throwable.getMessage().contains("Erreur serveur"))
+                    .verify();
+        }
+
+        @Test
+        @DisplayName("Should propagate error when getUserByUuid fails inside update")
+        void updateUserContactInfo_getUserFails_propagatesError() {
+            // Seulement GET — PATCH jamais atteint
+            when(authServerWebClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
+            when(responseSpec.bodyToMono(Response.class))
+                    .thenReturn(Mono.error(new ApiException("Utilisateur non trouvé: user-uuid-999")));
+
+            StepVerifier.create(userService.updateUserContactInfo("user-uuid-999", "+33699999999", "Address"))
+                    .expectErrorMatches(throwable ->
+                            throwable instanceof ApiException &&
+                                    throwable.getMessage().contains("Utilisateur non trouvé"))
+                    .verify();
+
+            verify(authServerWebClient, never()).patch();
+        }
+    }
+
+    @Test
+    @DisplayName("updateUserContactInfoFallback should return empty Mono")
+    void updateUserContactInfoFallback_returnsEmpty() {
+        Throwable cause = new RuntimeException("Connection timeout");
+
+        StepVerifier.create(userService.updateUserContactInfoFallback("user-uuid-123", "+33699999999", "Address", cause))
+                .verifyComplete();
+    }
 
 }

@@ -1,7 +1,7 @@
 package com.openclassrooms.patientservice.controller;
 
 import com.openclassrooms.patientservice.domain.Response;
-import com.openclassrooms.patientservice.dtorequest.PatientRequest;
+import com.openclassrooms.patientservice.dto.PatientRequestDTO;
 import com.openclassrooms.patientservice.service.PatientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +21,10 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.Map;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import static com.openclassrooms.patientservice.constant.Role.*;
 import static com.openclassrooms.patientservice.util.RequestUtils.getResponse;
@@ -43,6 +47,30 @@ public class PatientController {
 
     private final PatientService patientService;
 
+    @Operation(summary = "Lister les patients actifs avec pagination")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page récupérée"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé")
+    })
+    @GetMapping("/page")
+    @PreAuthorize(ALL_STAFF)
+    public Mono<ResponseEntity<Response>> getAllPatientsPageable(@RequestParam(defaultValue = "10") int page, @RequestParam(defaultValue = "2") int size, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "desc") String direction, HttpServletRequest request) {
+
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Retourne touts les patients actifs + inactifs pour que le frontend filtre
+        return patientService.getAllPatientsPageable(pageable)
+                .map(patientPage -> ResponseEntity.ok(getResponse(request, Map.of(
+                        "patients", patientPage.getContent(),
+                        "currentPage", patientPage.getNumber(),
+                        "totalPages", patientPage.getTotalPages(),
+                        "totalElements", patientPage.getTotalElements(),
+                        "size", patientPage.getSize()
+                ), "Patients récupérés avec succès", OK)));
+    }
+
+
     @Operation(summary = "Créer un nouveau patient",
             description = "Crée un dossier patient associé à un utilisateur existant")
     @ApiResponses({
@@ -54,7 +82,7 @@ public class PatientController {
     @PostMapping
     @PreAuthorize(ALL_STAFF)
     public Mono<ResponseEntity<Response>> createPatient(@Parameter(description = "Données du patient", required = true)
-                                                            @Valid @RequestBody PatientRequest request, HttpServletRequest httpRequest) {
+                                                            @Valid @RequestBody PatientRequestDTO request, HttpServletRequest httpRequest) {
 
         log.info("Creating patient for user: {}", request.getUserUuid());
 
@@ -163,11 +191,11 @@ public class PatientController {
     @PutMapping("/{patientUuid}")
     @PreAuthorize(ALL_STAFF)
     public Mono<ResponseEntity<Response>> updatePatient(@Parameter(description = "UUID du patient") @PathVariable String patientUuid,
-            @Valid @RequestBody PatientRequest patientRequest, HttpServletRequest request) {
+                                                        @Valid @RequestBody PatientRequestDTO patientRequestDTO, HttpServletRequest request) {
 
         log.info("Updating patient: {}", patientUuid);
 
-        return patientService.updatePatient(patientUuid, patientRequest).map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient mis à jour avec succès", OK)))
+        return patientService.updatePatient(patientUuid, patientRequestDTO).map(patient -> ResponseEntity.ok(getResponse(request, Map.of("patient", patient), "Patient mis à jour avec succès", OK)))
                 .switchIfEmpty(Mono.just(ResponseEntity.status(NOT_FOUND).body(getResponse(request, Map.of(), "Patient introuvable", NOT_FOUND))));
     }
 

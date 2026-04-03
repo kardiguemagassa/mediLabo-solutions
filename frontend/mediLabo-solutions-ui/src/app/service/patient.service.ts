@@ -1,8 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Query } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { server } from '../utils/fileutils';
 import { IResponse } from '../interface/response';
+import { IQuery } from '../interface/query';
 
 @Injectable()
 export class PatientService {
@@ -16,6 +17,20 @@ export class PatientService {
       this.http
         .post<IResponse>(`${server}/api/patients`, patient)
         .pipe(tap(console.log), catchError(this.handleError))
+    );
+
+  allPatientsPageable$ = (query: IQuery) =>
+    <Observable<IResponse>>(
+        this.http
+            .get<IResponse>(`${server}/api/patients/page`, {
+                params: {
+                    page: query.page,
+                    size: query.size,
+                    sortBy: query.sortBy ?? 'createdAt',
+                    direction: query.direction ?? 'desc'
+                }
+            })
+            .pipe(tap(console.log), catchError(this.handleError))
     );
 
   allPatients$ = () =>

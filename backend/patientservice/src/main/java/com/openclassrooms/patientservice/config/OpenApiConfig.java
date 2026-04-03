@@ -25,7 +25,6 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
-                        // Schéma de sécurité (JWT Bearer)
                         .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
                                         .name(securitySchemeName)
@@ -34,7 +33,6 @@ public class OpenApiConfig {
                                         .bearerFormat("JWT")
                                         .description("Entrez le token JWT obtenu via l'Authorization Server"))
 
-                        // Réponses d'erreurs standardisées pour le domaine Patient
                         .addResponses("Unauthorized", new ApiResponse().description("Identification requise : Token manquant ou expiré"))
                         .addResponses("Forbidden", new ApiResponse().description("Droits insuffisants : Vous n'avez pas le rôle requis (ex: ADMIN, PRACTITIONER)"))
                         .addResponses("NotFound", new ApiResponse().description("Patient introuvable pour l'identifiant fourni"))

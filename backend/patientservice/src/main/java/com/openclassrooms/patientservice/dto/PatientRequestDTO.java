@@ -1,4 +1,4 @@
-package com.openclassrooms.patientservice.dtorequest;
+package com.openclassrooms.patientservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,8 +13,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * DTO pour créer un patient
- *
  * @author Kardigué MAGASSA
  * @version 1.0
  * @since 2026-01-09
@@ -23,7 +21,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PatientRequest {
+public class PatientRequestDTO {
 
     @NotBlank(message = "L'UUID utilisateur est obligatoire")
     private String userUuid;

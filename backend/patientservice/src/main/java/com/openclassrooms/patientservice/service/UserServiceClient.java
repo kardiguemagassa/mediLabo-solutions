@@ -1,6 +1,6 @@
 package com.openclassrooms.patientservice.service;
 
-import com.openclassrooms.patientservice.dtorequest.UserRequest;
+import com.openclassrooms.patientservice.dto.UserRequestDTO;
 import reactor.core.publisher.Mono;
 
 /**
@@ -13,8 +13,8 @@ import reactor.core.publisher.Mono;
  */
 public interface UserServiceClient {
 
-    Mono<UserRequest> getUserByUuid(String userUuid);
-    Mono<UserRequest> getUserByEmail(String email);
-    Mono<UserRequest> getAssignee(String patientUuid);
-    Mono<UserRequest> updateUserContactInfo(String userUuid, String phone, String address);
+    Mono<UserRequestDTO> getUserByUuid(String userUuid);
+    Mono<UserRequestDTO> getUserByEmail(String email);
+    Mono<UserRequestDTO> getAssignee(String patientUuid);
+    Mono<UserRequestDTO> updateUserContactInfo(String userUuid, String phone, String address);
 }

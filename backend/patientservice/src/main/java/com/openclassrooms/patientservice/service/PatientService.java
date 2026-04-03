@@ -1,7 +1,9 @@
 package com.openclassrooms.patientservice.service;
 
-import com.openclassrooms.patientservice.dtorequest.PatientRequest;
-import com.openclassrooms.patientservice.dtoresponse.PatientResponse;
+import com.openclassrooms.patientservice.dto.PatientRequestDTO;
+import com.openclassrooms.patientservice.dto.PatientResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -15,18 +17,20 @@ import reactor.core.publisher.Mono;
 public interface PatientService {
 
     // CRUD
-    Mono<PatientResponse> createPatient(PatientRequest request);
-    Mono<PatientResponse> getPatientByUuid(String patientUuid);
-    Mono<PatientResponse> getPatientByUserUuid(String userUuid);
-    Mono<PatientResponse> getPatientByEmail(String email);
-    Flux<PatientResponse> getAllActivePatients();
-    Mono<PatientResponse> updatePatient(String patientUuid, PatientRequest request);
+    Mono<Page<PatientResponseDTO>> getAllPatientsPageable(Pageable pageable);
+    Mono<Page<PatientResponseDTO>> getAllActivePatientsPageable(Pageable pageable);
+    Mono<PatientResponseDTO> createPatient(PatientRequestDTO request);
+    Mono<PatientResponseDTO> getPatientByUuid(String patientUuid);
+    Mono<PatientResponseDTO> getPatientByUserUuid(String userUuid);
+    Mono<PatientResponseDTO> getPatientByEmail(String email);
+    Flux<PatientResponseDTO> getAllActivePatients();
+    Mono<PatientResponseDTO> updatePatient(String patientUuid, PatientRequestDTO request);
     Mono<Void> deletePatient(String patientUuid);
-    Mono<PatientResponse> restorePatient(String patientUuid);
+    Mono<PatientResponseDTO> restorePatient(String patientUuid);
 
     // QUERY
-    Mono<PatientResponse> getPatientByMedicalRecordNumber(String medicalRecordNumber);
-    Flux<PatientResponse> getPatientsByBloodType(String bloodType);
+    Mono<PatientResponseDTO> getPatientByMedicalRecordNumber(String medicalRecordNumber);
+    Flux<PatientResponseDTO> getPatientsByBloodType(String bloodType);
 
     // UTILITY
     Mono<Boolean> hasPatientRecord(String userUuid);
