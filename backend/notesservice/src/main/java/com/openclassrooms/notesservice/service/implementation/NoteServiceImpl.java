@@ -1,12 +1,11 @@
 package com.openclassrooms.notesservice.service.implementation;
 
-import com.openclassrooms.notesservice.dto.CommentResponse;
-import com.openclassrooms.notesservice.dto.FileResponse;
 import com.openclassrooms.notesservice.dto.NoteRequest;
 import com.openclassrooms.notesservice.dto.NoteResponse;
+import com.openclassrooms.notesservice.enumeration.EventType;
+import com.openclassrooms.notesservice.event.Event;
 import com.openclassrooms.notesservice.exception.ApiException;
-import com.openclassrooms.notesservice.model.Comment;
-import com.openclassrooms.notesservice.model.FileAttachment;
+import com.openclassrooms.notesservice.mapper.NoteMapper;
 import com.openclassrooms.notesservice.model.Note;
 import com.openclassrooms.notesservice.repository.NoteRepository;
 import com.openclassrooms.notesservice.service.NoteService;
@@ -14,36 +13,24 @@ import com.openclassrooms.notesservice.service.PatientServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import com.openclassrooms.notesservice.enumeration.EventType;
-import com.openclassrooms.notesservice.event.Event;
-
-
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Implémentation réactive du service de gestion des notes.
- * ARCHITECTURE RÉACTIVE:
- * Mono<T> : Représente 0 ou 1 élément
- * Flux<T> : Représente 0 à N éléments
- * Mono.fromCallable() : Encapsule les appels MongoDB bloquants
- * subscribeOn(Schedulers.boundedElastic()) : Exécute sur thread-pool élastique
- *
- * @author Kardigué MAGASSA
- * @version 2.0
- * @since 2026-02-25
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
 
     private final NoteRepository noteRepository;
+    private final NoteMapper noteMapper;
     private final PatientServiceClient patientServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -52,7 +39,14 @@ public class NoteServiceImpl implements NoteService {
         return Mono.fromCallable(noteRepository::findByActiveTrueOrderByCreatedAtDesc)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
-                .map(this::toResponse);
+                .map(noteMapper::toResponse);
+    }
+
+    @Override
+    public Mono<Page<NoteResponse>> getAllActiveNotesPageable(Pageable pageable) {
+        return Mono.fromCallable(() -> noteRepository.findByActiveTrueOrderByCreatedAtDesc(pageable))
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(page -> page.map(noteMapper::toResponse));
     }
 
     @Override
@@ -62,40 +56,19 @@ public class NoteServiceImpl implements NoteService {
                 .flatMapMany(patient -> getNotesByPatientUuid(patient.getPatientUuid()));
     }
 
-    /**
-     * Crée une nouvelle note pour un patient.
-     * Construction de l'entité Note
-     * Sauvegarde en MongoDB (sur boundedElastic)
-     * Conversion en NoteResponse
-     */
-
     @Override
     public Mono<NoteResponse> createNote(NoteRequest request, String practitionerUuid, String practitionerName) {
         log.info("Creating note for patient: {} by practitioner: {}", request.getPatientUuid(), practitionerUuid);
 
         return Mono.fromCallable(() -> {
-                    Note note = Note.builder()
-                            .noteUuid(UUID.randomUUID().toString())
-                            .patientUuid(request.getPatientUuid())
-                            .practitionerUuid(practitionerUuid)
-                            .practitionerName(practitionerName)
-                            .content(request.getContent())
-                            .active(true)
-                            .createdAt(LocalDateTime.now())
-                            .updatedAt(LocalDateTime.now())
-                            .build();
-
-                    Note savedNote = noteRepository.save(note);
-                    log.info("Note created successfully: {}", savedNote.getNoteUuid());
-
-                    return savedNote;
+                    Note note = noteMapper.toEntity(request, practitionerUuid, practitionerName);
+                    return noteRepository.save(note);
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnSuccess(note -> publishNoteCreatedEvent(note, practitionerName))
-                .map(this::toResponse);
+                .map(noteMapper::toResponse);
     }
 
-    /** Récupère une note par son UUID*/
     @Override
     public Mono<NoteResponse> getNoteByUuid(String noteUuid) {
         log.debug("Fetching note: {}", noteUuid);
@@ -103,11 +76,10 @@ public class NoteServiceImpl implements NoteService {
         return Mono.fromCallable(() -> noteRepository.findByNoteUuidAndActiveTrue(noteUuid))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optional -> optional
-                        .map(note -> Mono.just(toResponse(note)))
+                        .map(note -> Mono.just(noteMapper.toResponse(note)))
                         .orElseGet(() -> Mono.error(new ApiException("Note non trouvée: " + noteUuid))));
     }
 
-    /**Récupère toutes les notes d'un patient*/
     @Override
     public Flux<NoteResponse> getNotesByPatientUuid(String patientUuid) {
         log.debug("Fetching notes for patient: {}", patientUuid);
@@ -115,10 +87,18 @@ public class NoteServiceImpl implements NoteService {
         return Mono.fromCallable(() -> noteRepository.findByPatientUuidAndActiveTrueOrderByCreatedAtDesc(patientUuid))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
-                .map(this::toResponse);
+                .map(noteMapper::toResponse);
     }
 
-    /**Récupère toutes les notes créées par un praticien*/
+    @Override
+    public Mono<Page<NoteResponse>> getNotesByPatientUuidPageable(String patientUuid, Pageable pageable) {
+        log.debug("Fetching notes page for patient: {}", patientUuid);
+
+        return Mono.fromCallable(() -> noteRepository.findByPatientUuidAndActiveTrueOrderByCreatedAtDesc(patientUuid, pageable))
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(page -> page.map(noteMapper::toResponse));
+    }
+
     @Override
     public Flux<NoteResponse> getNotesByPractitionerUuid(String practitionerUuid) {
         log.debug("Fetching notes by practitioner: {}", practitionerUuid);
@@ -126,16 +106,9 @@ public class NoteServiceImpl implements NoteService {
         return Mono.fromCallable(() -> noteRepository.findByPractitionerUuidAndActiveTrueOrderByCreatedAtDesc(practitionerUuid))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMapMany(Flux::fromIterable)
-                .map(this::toResponse);
+                .map(noteMapper::toResponse);
     }
 
-    /**
-     * Met à jour une note existante.
-     * Récupération de la note existante
-     * Vérification des droits (praticien = auteur)
-     * Mise à jour du contenu
-     * Sauvegarde
-     */
     @Override
     public Mono<NoteResponse> updateNote(String noteUuid, NoteRequest request, String practitionerUuid) {
         log.info("Updating note: {}", noteUuid);
@@ -146,28 +119,17 @@ public class NoteServiceImpl implements NoteService {
                     if (optional.isEmpty()) {
                         return Mono.error(new ApiException("Note non trouvée: " + noteUuid));
                     }
-
                     Note existingNote = optional.get();
-
-//                    if (!existingNote.getPractitionerUuid().equals(practitionerUuid)) {
-//                        return Mono.error(new ApiException("Vous n'êtes pas autorisé à modifier cette note"));
-//                    }
-
                     existingNote.setContent(request.getContent());
                     existingNote.setUpdatedAt(LocalDateTime.now());
 
-                    return Mono.fromCallable(() -> {
-                                Note updatedNote = noteRepository.save(existingNote);
-                                log.info("Note updated successfully: {}", noteUuid);
-                                return updatedNote;
-                            })
+                    return Mono.fromCallable(() -> noteRepository.save(existingNote))
                             .subscribeOn(Schedulers.boundedElastic())
                             .doOnSuccess(this::publishNoteUpdatedEvent)
-                            .map(this::toResponse);
+                            .map(noteMapper::toResponse);
                 });
     }
 
-    /**Supprime une note (soft delete)*/
     @Override
     public Mono<Void> deleteNote(String noteUuid) {
         log.info("Soft deleting note: {}", noteUuid);
@@ -178,31 +140,23 @@ public class NoteServiceImpl implements NoteService {
                     if (optional.isEmpty()) {
                         return Mono.error(new ApiException("Note non trouvée: " + noteUuid));
                     }
-
                     Note note = optional.get();
                     note.setActive(false);
                     note.setUpdatedAt(LocalDateTime.now());
 
-                    return Mono.fromCallable(() -> {
-                                noteRepository.save(note);
-                                log.info("Note deleted successfully: {}", noteUuid);
-                                return note;
-                            })
+                    return Mono.fromCallable(() -> noteRepository.save(note))
                             .subscribeOn(Schedulers.boundedElastic());
                 })
                 .then();
     }
 
-    /** Compte le nombre de notes pour un patient */
     @Override
     public Mono<Long> countNotesByPatientUuid(String patientUuid) {
-        log.debug("Counting notes for patient: {}", patientUuid);
-
         return Mono.fromCallable(() -> noteRepository.countByPatientUuidAndActiveTrue(patientUuid))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    /** EVENT PUBLISHING */
+    // EVENT PUBLISHING
 
     private void publishNoteCreatedEvent(Note note, String practitionerName) {
         patientServiceClient.getPatientContactInfo(note.getPatientUuid())
@@ -215,17 +169,12 @@ public class NoteServiceImpl implements NoteService {
                             data.put("doctorName", practitionerName);
                             data.put("department", "Médecine générale");
                             data.put("date", LocalDateTime.now().toString());
-                            data.put("notePreview", truncateContent(note.getContent(), 100));
+                            data.put("notePreview", truncate(note.getContent(), 100));
 
-                            Event event = Event.builder()
-                                    .eventType(EventType.NOTE_CREATED)
-                                    .data(data)
-                                    .build();
-                            eventPublisher.publishEvent(event);
-                            log.debug("NOTE_CREATED event published for note: {}", note.getNoteUuid());
+                            eventPublisher.publishEvent(Event.builder()
+                                    .eventType(EventType.NOTE_CREATED).data(data).build());
                         },
-                        error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage()),
-                        () -> log.debug("No patient info found for event, skipping notification")
+                        error -> log.error("Error publishing NOTE_CREATED: {}", error.getMessage())
                 );
     }
 
@@ -239,69 +188,17 @@ public class NoteServiceImpl implements NoteService {
                             data.put("patientNumber", note.getPatientUuid());
                             data.put("doctorName", note.getPractitionerName());
                             data.put("date", LocalDateTime.now().toString());
-                            data.put("notePreview", truncateContent(note.getContent(), 100));
+                            data.put("notePreview", truncate(note.getContent(), 100));
 
-                            Event event = Event.builder()
-                                    .eventType(EventType.NOTE_UPDATED)
-                                    .data(data)
-                                    .build();
-                            eventPublisher.publishEvent(event);
-                            log.debug("NOTE_UPDATED event published for note: {}", note.getNoteUuid());
+                            eventPublisher.publishEvent(Event.builder()
+                                    .eventType(EventType.NOTE_UPDATED).data(data).build());
                         },
-                        error -> log.error("Erreur lors de la récupération patient pour event: {}", error.getMessage()),
-                        () -> log.debug("No patient info found for event, skipping notification")
+                        error -> log.error("Error publishing NOTE_UPDATED: {}", error.getMessage())
                 );
     }
 
-    /**
-     * Convertit une entité Note en NoteResponse.
-     */
-    private NoteResponse toResponse(Note note) {
-        return NoteResponse.builder()
-                .noteUuid(note.getNoteUuid())
-                .patientUuid(note.getPatientUuid())
-                .practitionerUuid(note.getPractitionerUuid())
-                .practitionerName(note.getPractitionerName())
-                .content(note.getContent())
-                .createdAt(note.getCreatedAt())
-                .updatedAt(note.getUpdatedAt())
-                .fileCount(note.getFileCount())
-                .commentCount(note.getCommentCount())
-                .files(note.getFiles() != null ? note.getFiles().stream().map(this::toFileResponse).toList() : List.of())
-                .comments(note.getComments() != null ? note.getComments().stream().map(this::toCommentResponse).toList() : List.of())
-                .build();
-    }
-
-    private FileResponse toFileResponse(FileAttachment file) {
-        return FileResponse.builder()
-                .fileUuid(file.getFileUuid())
-                .name(file.getOriginalName())
-                .extension(file.getExtension())
-                .contentType(file.getContentType())
-                .size(file.getSize())
-                .formattedSize(file.getFormattedSize())
-                .uploadedByName(file.getUploadedByName())
-                .uploadedAt(file.getUploadedAt())
-                .build();
-    }
-
-    private CommentResponse toCommentResponse(Comment comment) {
-        return CommentResponse.builder()
-                .commentUuid(comment.getCommentUuid())
-                .content(comment.getContent())
-                .authorUuid(comment.getAuthorUuid())
-                .authorName(comment.getAuthorName())
-                .authorRole(comment.getAuthorRole())
-                .authorImageUrl(comment.getAuthorImageUrl())
-                .edited(comment.getEdited())
-                .createdAt(comment.getCreatedAt())
-                .updatedAt(comment.getUpdatedAt())
-                .build();
-    }
-
-    private String truncateContent(String content, int maxLength) {
+    private String truncate(String content, int max) {
         if (content == null) return "";
-        if (content.length() <= maxLength) return content;
-        return content.substring(0, maxLength - 3) + "...";
+        return content.length() <= max ? content : content.substring(0, max - 3) + "...";
     }
 }

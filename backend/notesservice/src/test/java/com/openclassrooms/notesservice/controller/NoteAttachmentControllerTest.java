@@ -119,9 +119,7 @@ class NoteAttachmentControllerTest {
                 .build();
     }
 
-    /**
-     * ArgumentResolver personnalisé pour injecter le JWT dans les tests
-     */
+    /**ArgumentResolver personnalisé pour injecter le JWT dans les tests*/
     static class JwtArgumentResolver implements HandlerMethodArgumentResolver {
 
         private final Jwt jwt;
@@ -143,7 +141,6 @@ class NoteAttachmentControllerTest {
     }
 
     // FICHIERS - UPLOAD
-
     @Nested
     @DisplayName("POST /api/notes/{noteUuid}/files")
     class UploadFileEndpoint {
@@ -151,12 +148,7 @@ class NoteAttachmentControllerTest {
         @Test
         @DisplayName("Should upload file successfully")
         void uploadFile_validFile_returns200() throws Exception {
-            MockMultipartFile file = new MockMultipartFile(
-                    "file",
-                    "rapport.pdf",
-                    "application/pdf",
-                    "PDF content".getBytes()
-            );
+            MockMultipartFile file = new MockMultipartFile("file", "rapport.pdf", "application/pdf", "PDF content".getBytes());
 
             when(noteFileService.uploadFile(eq("note-uuid-456"), any(), any(Jwt.class)))
                     .thenReturn(Mono.just(testFileResponse));
@@ -177,7 +169,6 @@ class NoteAttachmentControllerTest {
     }
 
     //  FICHIERS - LIST
-
     @Nested
     @DisplayName("GET /api/notes/{noteUuid}/files")
     class GetFilesEndpoint {
@@ -256,7 +247,6 @@ class NoteAttachmentControllerTest {
     }
 
     //  FICHIERS - DELETE
-
     @Nested
     @DisplayName("DELETE /api/notes/{noteUuid}/files/{fileUuid}")
     class DeleteFileEndpoint {
@@ -280,7 +270,6 @@ class NoteAttachmentControllerTest {
     }
 
     // COMMENTAIRES - ADD
-
     @Nested
     @DisplayName("POST /api/notes/{noteUuid}/comments")
     class AddCommentEndpoint {

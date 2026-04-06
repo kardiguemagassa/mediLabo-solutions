@@ -4,6 +4,9 @@ import com.openclassrooms.notesservice.model.Note;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +21,8 @@ import java.util.Optional;
 @Repository
 public interface NoteRepository extends MongoRepository<Note, String> {
 
+    Page<Note> findByActiveTrueOrderByCreatedAtDesc(Pageable pageable);
+    Page<Note> findByPatientUuidAndActiveTrueOrderByCreatedAtDesc(String patientUuid, Pageable pageable);
     List<Note> findByActiveTrueOrderByCreatedAtDesc();
     Optional<Note> findByNoteUuidAndActiveTrue(String noteUuid);
     List<Note> findByPatientUuidAndActiveTrueOrderByCreatedAtDesc(String patientUuid);

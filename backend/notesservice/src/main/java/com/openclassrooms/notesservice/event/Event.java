@@ -23,9 +23,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class Event {
 
-    /**
-     * Type d'événement (aligné avec NotificationService).
-     */
+    /**Type d'événement (aligné avec NotificationService).*/
     private EventType eventType;
     private Map<String, Object> data;
 }

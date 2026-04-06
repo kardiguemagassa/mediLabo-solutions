@@ -34,9 +34,7 @@ public class WebClientConfig {
     @Value("${services.patient-service.timeout:5000}")
     private int patientServiceTimeout;
 
-    /**
-     * WebClient pour communiquer avec PatientService.
-     */
+    /**WebClient pour communiquer avec PatientService.*/
     @Bean("patientServiceWebClient")
     public WebClient patientServiceWebClient(WebClient.Builder builder) {
         log.info("Configuring WebClient for PatientService: {}", patientServiceUrl);
@@ -53,9 +51,7 @@ public class WebClientConfig {
                 .build();
     }
 
-    /**
-     * Configuration HTTP avec timeouts.
-     */
+    /**Configuration HTTP avec timeouts.*/
     private HttpClient createHttpClient(int timeout) {
         return HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout)

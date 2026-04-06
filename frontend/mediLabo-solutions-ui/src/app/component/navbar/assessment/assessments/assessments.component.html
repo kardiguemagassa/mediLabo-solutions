@@ -161,27 +161,43 @@
                 }
             </div>
 
-            <!-- Pagination -->
-            @if (totalPages() > 1) {
+            <!-- PAGINATION -->
+            @if (filteredAssessments().length > 0) {
                 <div class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
-                    <p class="text-sm text-gray-500">
-                        Page {{(store.currentPage() ?? 0) + 1}} sur {{totalPages()}} — {{filteredAssessments().length}} évaluation(s)
-                    </p>
-                    <div class="flex items-center gap-1">
-                        <button (click)="previousPage()" [disabled]="(store.currentPage() ?? 0) === 0" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                            Précédent
-                        </button>
-                        @for (page of [].constructor(totalPages()); track $index) {
-                            @if ($index < 5 || $index === totalPages() - 1 || ($index >= (store.currentPage() ?? 0) - 1 && $index <= (store.currentPage() ?? 0) + 1)) {
-                                <button (click)="goToPage($index)" [ngClass]="$index === (store.currentPage() ?? 0) ? 'px-3 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-lg' : 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50'">
-                                    {{$index + 1}}
-                                </button>
-                            }
-                        }
-                        <button (click)="nextPage()" [disabled]="(store.currentPage() ?? 0) >= totalPages() - 1" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                            Suivant
-                        </button>
+                    <div class="flex items-center gap-3">
+                        <p class="text-sm text-gray-500">
+                            Page {{ (store.currentPage() ?? 0) + 1 }} sur {{ totalPages() || 1 }} — {{ filteredAssessments().length }} évaluation(s)
+                        </p>
+                        <select (change)="changePageSize($event)" [value]="pageSize()" class="bg-white border border-gray-300 text-gray-700 text-xs rounded-lg px-2 py-1">
+                            <option [value]="5">5 / page</option>
+                            <option [value]="10">10 / page</option>
+                            <option [value]="20">20 / page</option>
+                            <option [value]="50">50 / page</option>
+                        </select>
                     </div>
+                    @if (totalPages() > 1) {
+                        <div class="flex items-center gap-1">
+                            <button (click)="goToPage(0)" [disabled]="(store.currentPage() ?? 0) === 0" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                ««
+                            </button>
+                            <button (click)="previousPage()" [disabled]="(store.currentPage() ?? 0) === 0" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Précédent
+                            </button>
+                            @for (page of [].constructor(totalPages()); track $index) {
+                                @if ($index < 3 || $index === totalPages() - 1 || ($index >= (store.currentPage() ?? 0) - 1 && $index <= (store.currentPage() ?? 0) + 1)) {
+                                    <button (click)="goToPage($index)" [class]="$index === (store.currentPage() ?? 0) ? 'px-3 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-lg' : 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50'">
+                                        {{ $index + 1 }}
+                                    </button>
+                                }
+                            }
+                            <button (click)="nextPage()" [disabled]="(store.currentPage() ?? 0) >= totalPages() - 1" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Suivant
+                            </button>
+                            <button (click)="goToPage(totalPages() - 1)" [disabled]="(store.currentPage() ?? 0) >= totalPages() - 1" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                »»
+                            </button>
+                        </div>
+                    }
                 </div>
             }
         }

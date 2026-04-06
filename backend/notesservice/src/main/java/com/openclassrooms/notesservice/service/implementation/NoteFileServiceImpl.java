@@ -51,12 +51,12 @@ public class NoteFileServiceImpl implements NoteFileService {
 
     /**
      * Upload un fichier et l'attache à une note.
-     * 1. Récupération de la note
-     * 2. Stockage du fichier physiquement
-     * 3. Création de l'attachment
-     * 4. Ajout à la note et sauvegarde MongoDB
-     * 5. Publication de l'événement Kafka (async)
-     * 6. Retour du FileResponse
+     * Récupération de la note
+     * Stockage du fichier physiquement
+     * Création de l'attachment
+     * Ajout à la note et sauvegarde MongoDB
+     * Publication de l'événement Kafka (async)
+     * Retour du FileResponse
      */
     @Override
     public Mono<FileResponse> uploadFile(String noteUuid, MultipartFile file, Jwt jwt) {
@@ -98,9 +98,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                         .map(context -> mapToFileResponse(context.attachment(), noteUuid)));
     }
 
-    /**
-     * Liste tous les fichiers d'une note.
-     */
+    /**Liste tous les fichiers d'une note.*/
     @Override
     public Flux<FileResponse> getFiles(String noteUuid) {
         log.debug("Getting files for note: {}", noteUuid);
@@ -110,9 +108,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                 .map(file -> mapToFileResponse(file, noteUuid));
     }
 
-    /**
-     * Télécharge un fichier.
-     */
+    /**Télécharge un fichier.*/
     @Override
     public Mono<FileDownload> downloadFile(String noteUuid, String fileUuid) {
         log.debug("Downloading file: {} from note: {}", fileUuid, noteUuid);
@@ -210,9 +206,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                 );
     }
 
-    /**
-     * Recherche une note par UUID.
-     */
+    /**Recherche une note par UUID.*/
     private Mono<Note> findNoteByUuid(String noteUuid) {
         return Mono.fromCallable(() -> noteRepository.findByNoteUuidAndActiveTrue(noteUuid))
                 .subscribeOn(Schedulers.boundedElastic())
@@ -242,9 +236,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                 );
     }
 
-    /**
-     * Construit les données de l'événement.
-     */
+    /**Construit les données de l'événement.*/
     private Map<String, Object> buildEventData(Note note, FileAttachment file, PatientInfo patient) {
         Map<String, Object> data = new HashMap<>();
         data.put("name", patient != null ? patient.getFullName() : null);
@@ -257,9 +249,7 @@ public class NoteFileServiceImpl implements NoteFileService {
         return data;
     }
 
-    /**
-     * Mappe un FileAttachment vers FileResponse.
-     */
+    /**Mappe un FileAttachment vers FileResponse.*/
     private FileResponse mapToFileResponse(FileAttachment attachment, String noteUuid) {
         String downloadUrl = String.format("%s/%s/files/%s/download",
                 fileStorageConfig.getBaseDownloadUrl(),
@@ -282,9 +272,7 @@ public class NoteFileServiceImpl implements NoteFileService {
                 .build();
     }
 
-    /**
-     * Extrait le nom de l'utilisateur depuis le JWT.
-     */
+    /**Extrait le nom de l'utilisateur depuis le JWT.*/
     private String extractName(Jwt jwt) {
         String firstName = jwt.getClaimAsString("firstName");
         String lastName = jwt.getClaimAsString("lastName");
@@ -295,9 +283,7 @@ public class NoteFileServiceImpl implements NoteFileService {
         return name != null ? name : "Unknown";
     }
 
-    /**
-     * Extrait le rôle principal du JWT.
-     */
+    /**Extrait le rôle principal du JWT.*/
     private String extractRole(Jwt jwt) {
         var authorities = jwt.getClaimAsStringList("authorities");
         if (authorities != null && !authorities.isEmpty()) {
@@ -310,8 +296,6 @@ public class NoteFileServiceImpl implements NoteFileService {
         return "USER";
     }
 
-    /**
-     * Record interne pour transporter note et attachment ensemble.
-     */
+    /**Record interne pour transporter note et attachment ensemble.*/
     private record NoteFileContext(Note note, FileAttachment attachment) {}
 }

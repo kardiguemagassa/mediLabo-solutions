@@ -13,6 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -30,11 +33,6 @@ import static com.openclassrooms.notesservice.util.RequestUtils.getResponse;
 import static org.springframework.http.HttpStatus.*;
 
 /**
- * Controller REST réactif pour la gestion des notes médicales.
- *
- * ARCHITECTURE RÉACTIVE:
- * Toutes les méthodes retournent Mono<ResponseEntity<Response>>
- * Les Flux sont collectés en List via .collectList()
  *
  * @author Kardigué MAGASSA
  * @version 2.0
@@ -49,6 +47,26 @@ import static org.springframework.http.HttpStatus.*;
 public class NoteController {
 
     private final NoteService noteService;
+
+    @GetMapping("/page")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<ResponseEntity<Response>> getAllNotesPageable(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            HttpServletRequest request) {
+
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return noteService.getAllActiveNotesPageable(pageable)
+                .map(notePage -> ResponseEntity.ok(getResponse(request, Map.of(
+                        "notes", notePage.getContent(),
+                        "currentPage", notePage.getNumber(),
+                        "totalPages", notePage.getTotalPages(),
+                        "totalElements", notePage.getTotalElements(),
+                        "size", notePage.getSize()
+                ), "Notes récupérées avec succès", OK)));
+    }
 
     @Operation(summary = "Récupérer toutes les notes actives")
     @GetMapping

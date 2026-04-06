@@ -33,6 +33,7 @@ export interface IState {
     conversation?: IMessage[];
     devices?: IDevice[];
     patientPage?: IPage<IPatient>;
+    notePage?: IPage<INote>;
 }
 
 export const initialState: IState = {
@@ -46,5 +47,6 @@ export const initialState: IState = {
     loading: false, error: null,
     messages: null, conversation: null, devices: null,
     query: defaultQuery,
-    patientPage: null
+    patientPage: null, 
+    notePage: null
 };

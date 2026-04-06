@@ -16,7 +16,7 @@ export class AssessmentsComponent {
   searchQuery = signal('');
   riskFilter = signal('');
   genderFilter = signal('');
-  pageSize = 10;
+  pageSize = signal(10);
 
   ngOnInit() {
     this.store.getAllAssessments();
@@ -60,11 +60,17 @@ export class AssessmentsComponent {
 
   // Pagination
   paginatedAssessments = computed(() => {
-    const start = (this.store.currentPage() ?? 0) * this.pageSize;
-    return this.filteredAssessments().slice(start, start + this.pageSize);
+    const start = (this.store.currentPage() ?? 0) * this.pageSize();
+    return this.filteredAssessments().slice(start, start + this.pageSize());
   });
 
-  totalPages = computed(() => Math.ceil(this.filteredAssessments().length / this.pageSize));
+  totalPages = computed(() => Math.ceil(this.filteredAssessments().length / this.pageSize()));
+
+  changePageSize(event: Event) {
+    const newSize = +(event.target as HTMLSelectElement).value;
+    this.pageSize.set(newSize);
+    this.store.setCurrentPage(0);
+  }
 
   // Stats
   totalAssessments = computed(() => this.enrichedAssessments().length);

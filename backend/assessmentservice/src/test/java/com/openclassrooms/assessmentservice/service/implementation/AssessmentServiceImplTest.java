@@ -1,5 +1,6 @@
 package com.openclassrooms.assessmentservice.service.implementation;
 
+import com.openclassrooms.assessmentservice.cache.AssessmentCache;
 import com.openclassrooms.assessmentservice.model.Gender;
 import com.openclassrooms.assessmentservice.model.RiskLevel;
 import com.openclassrooms.assessmentservice.exception.ApiException;
@@ -46,6 +47,9 @@ class AssessmentServiceImplTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private AssessmentCache assessmentCache;
 
     @InjectMocks
     private AssessmentServiceImpl assessmentService;

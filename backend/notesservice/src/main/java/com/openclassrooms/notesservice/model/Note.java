@@ -31,22 +31,13 @@ public class Note {
     @Id
     private String id;
 
-    /**
-     * UUID unique de la note.
-     * Index: idx_note_uuid_unique (unique) - géré par script MongoDB
-     */
+    /*** UUID unique de la note. Index: idx_note_uuid_unique (unique) - géré par script MongoDB*/
     private String noteUuid;
 
-    /**
-     * UUID du patient.
-     * Index: idx_patient_created_at, idx_patient_active_created - géré par script MongoDB
-     */
+    /**UUID du patient. Index: idx_patient_created_at, idx_patient_active_created - géré par script MongoDB*/
     private String patientUuid;
 
-    /**
-     * UUID du praticien.
-     * Index: idx_practitioner_uuid - géré par script MongoDB
-     */
+    /**UUID du praticien. Index: idx_practitioner_uuid - géré par script MongoDB*/
     private String practitionerUuid;
     private String practitionerName;
     private String content;

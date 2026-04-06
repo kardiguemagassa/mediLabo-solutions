@@ -58,11 +58,7 @@ class NoteControllerIT {
         noteRepository.deleteAll();
     }
 
-    // HELPER METHODS
-
-    /**
-     * JWT praticien par défaut avec autorités requises
-     */
+    /**WT praticien par défaut avec autorités requises*/
     private SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor mockJwt() {
         return jwt()
                 .jwt(builder -> builder
@@ -79,9 +75,7 @@ class NoteControllerIT {
                 );
     }
 
-    /**
-     * JWT praticien avec UUID personnalisé
-     */
+    /**JWT praticien avec UUID personnalisé*/
     private SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor mockJwtAs(String uuid, String firstName, String lastName) {
         return jwt()
                 .jwt(builder -> builder
@@ -98,9 +92,7 @@ class NoteControllerIT {
                 );
     }
 
-    /**
-     * JWT admin
-     */
+    /**JWT admin*/
     private SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor mockAdmin() {
         return jwt()
                 .jwt(builder -> builder
@@ -118,9 +110,7 @@ class NoteControllerIT {
                 );
     }
 
-    /**
-     * Effectue une requête async et retourne le résultat après dispatch
-     */
+    /**Effectue une requête async et retourne le résultat après dispatch*/
     private MvcResult performAsyncAndDispatch(MvcResult mvcResult) throws Exception {
         return mockMvc.perform(asyncDispatch(mvcResult)).andReturn();
     }

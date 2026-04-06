@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { server } from '../utils/fileutils';
 import { IResponse } from '../interface/response';
+import { IQuery } from '../interface/query';
 
 @Injectable()
 export class NoteService {
@@ -10,6 +11,21 @@ export class NoteService {
   private http = inject(HttpClient);
 
   constructor() {}
+
+  // Ajouter cette méthode
+allNotesPageable$ = (query: IQuery) =>
+  <Observable<IResponse>>(
+    this.http
+      .get<IResponse>(`${server}/api/notes/page`, {
+        params: {
+          page: query.page.toString(),
+          size: query.size.toString(),
+          sortBy: query.sortBy || 'createdAt',
+          direction: query.direction || 'desc'
+        }
+      })
+      .pipe(tap(console.log), catchError(this.handleError))
+  );
 
   allNotes$ = () =>
     <Observable<IResponse>>(

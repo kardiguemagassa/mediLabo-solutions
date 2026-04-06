@@ -304,8 +304,8 @@ export const AppStore = signalStore(
                         patchState(store, { loading: false, error });
                     }
                 })
-            ))
-        )),
+            )))),
+        
         getAllPatients: rxMethod<void>(pipe(
             tap(() => patchState(store, { loading: true, error: null })),
             switchMap(() => patientService.allPatients$().pipe(
@@ -439,6 +439,30 @@ export const AppStore = signalStore(
             )))),
         
         // NOTESERVICE
+        getAllNotesPageable: rxMethod<IQuery>(pipe(
+            tap(() => patchState(store, { loading: true, error: null })),
+            switchMap((query) => noteService.allNotesPageable$(query).pipe(
+                tapResponse({
+                    next: (response: IResponse) => {
+                        patchState(store, {
+                            notePage: {
+                                content: response.data.notes,
+                                currentPage: response.data.currentPage,
+                                totalPages: response.data.totalPages,
+                                totalElements: response.data.totalElements,
+                                size: response.data.size
+                            },
+                            query,
+                            loading: false,
+                            error: null
+                        });
+                    },
+                    error: (error: string) => {
+                        toastService.error(error ?? `Une erreur s'est produite.`);
+                        patchState(store, { loading: false, error });
+                    }
+                })
+            )))),
         createNote: rxMethod<any>(pipe(
             tap(() => patchState(store, { loading: true, error: null })),
             switchMap((note) => noteService.createNote$(note).pipe(
