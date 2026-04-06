@@ -27,14 +27,9 @@ public class PatientInfo {
     private String userUuid;
     private String medicalRecordNumber;
 
-    /**
-     * Informations utilisateur enrichies (depuis Auth Server via PatientService).
-     */
     private UserInfo userInfo;
 
-    /**
-     * Informations utilisateur.
-     */
+    /**Informations utilisateur.*/
     @Data
     @Builder(toBuilder = true)
     @NoArgsConstructor
@@ -50,9 +45,7 @@ public class PatientInfo {
         private String imageUrl;
     }
 
-    /**
-     * Retourne le nom complet du patient.
-     */
+    /**Retourne le nom complet du patient.*/
     public String getFullName() {
         if (userInfo == null) {
             return "Patient " + patientUuid;
@@ -62,9 +55,7 @@ public class PatientInfo {
         return (firstName + " " + lastName).trim();
     }
 
-    /**
-     * Retourne l'email du patient.
-     */
+    /**Retourne l'email du patient.*/
     public String getEmail() {
         return userInfo != null ? userInfo.getEmail() : null;
     }

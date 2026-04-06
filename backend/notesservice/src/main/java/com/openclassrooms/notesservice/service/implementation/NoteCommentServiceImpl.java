@@ -87,9 +87,7 @@ public class NoteCommentServiceImpl implements NoteCommentService {
                 });
     }
 
-    /**
-     * Liste tous les commentaires d'une note.
-     */
+    /**Liste tous les commentaires d'une note.*/
     @Override
     public Flux<CommentResponse> getComments(String noteUuid) {
         log.debug("Getting comments for note: {}", noteUuid);

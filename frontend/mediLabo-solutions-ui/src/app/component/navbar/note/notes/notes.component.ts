@@ -3,7 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AppStore } from '../../../../store/app.store';
-//import { PermissionService } from '../../../../service/permission.service';
+import { IQuery, defaultQuery } from '../../../../interface/query';
 
 @Component({
   selector: 'app-notes',
@@ -13,10 +13,9 @@ import { AppStore } from '../../../../store/app.store';
 })
 export class NotesComponent {
   protected store = inject(AppStore);
-  //protected permission = inject(PermissionService);
 
   searchQuery = signal('');
-  pageSize = 10;
+ pageSize = signal(10);
 
   // Formulaire création note
   showCreateForm = signal(false);
@@ -24,9 +23,18 @@ export class NotesComponent {
   noteContent = signal('');
 
   ngOnInit() {
+    // Pagination backend pour la liste
+    this.store.getAllNotesPageable({ ...defaultQuery, size: this.pageSize() });
+    // Toutes les notes pour les stats
     this.store.getAllNotes();
     this.store.getAllPatients();
   }
+
+changePageSize(event: Event) {
+    const newSize = +(event.target as HTMLSelectElement).value;
+    this.pageSize.set(newSize);
+    this.store.getAllNotesPageable({ ...defaultQuery, page: 0, size: newSize });
+}
 
   // Patient sélectionné (aperçu)
   selectedPatient = computed(() => {
@@ -50,14 +58,15 @@ export class NotesComponent {
     const patientUuid = this.selectedPatientUuid();
     const content = this.noteContent().trim();
     if (!patientUuid || !content) return;
-
     this.store.createNote({ patientUuid, content });
     this.toggleCreateForm();
+    // Recharger la page courante
+    setTimeout(() => this.reloadCurrentPage(), 500);
   }
 
-  // Enrichir notes avec le nom du patient
+  // Notes enrichies depuis la page backend
   enrichedNotes = computed(() => {
-    const notes = this.store.allNotes() ?? [];
+    const notes = this.store.notePage()?.content ?? [];
     const patients = this.store.allPatients() ?? [];
     return notes.map(note => {
       const patient = patients.find(p => p.patientUuid === note.patientUuid);
@@ -71,7 +80,7 @@ export class NotesComponent {
     });
   });
 
-  // Filtrage
+  // Filtrage côté client sur la page courante
   filteredNotes = computed(() => {
     let notes = this.enrichedNotes();
     const query = this.searchQuery().toLowerCase();
@@ -85,36 +94,60 @@ export class NotesComponent {
     return notes;
   });
 
-  // Pagination
-  paginatedNotes = computed(() => {
-    const start = (this.store.currentPage() ?? 0) * this.pageSize;
-    return this.filteredNotes().slice(start, start + this.pageSize);
+  // Pas de pagination côté client — la page vient du backend
+  paginatedNotes = this.filteredNotes;
+
+  // Pagination info depuis le backend
+  currentPage = computed(() => this.store.notePage()?.currentPage ?? 0);
+  totalPages = computed(() => this.store.notePage()?.totalPages ?? 0);
+  totalElements = computed(() => this.store.notePage()?.totalElements ?? 0);
+
+  // Stats basées sur allNotes (chargement complet séparé)
+  allEnrichedNotes = computed(() => {
+    const notes = this.store.allNotes() ?? [];
+    const patients = this.store.allPatients() ?? [];
+    return notes.map(note => {
+      const patient = patients.find(p => p.patientUuid === note.patientUuid);
+      return { ...note, patientName: patient?.userInfo ? `${patient.userInfo.firstName} ${patient.userInfo.lastName}` : '' };
+    });
   });
 
-  totalPages = computed(() => Math.ceil(this.filteredNotes().length / this.pageSize));
-
-  // Stats
-  totalNotes = computed(() => this.enrichedNotes().length);
-  notesWithFiles = computed(() => this.enrichedNotes().filter(n => n.fileCount > 0).length);
-  notesWithComments = computed(() => this.enrichedNotes().filter(n => n.commentCount > 0).length);
+  totalNotes = computed(() => this.allEnrichedNotes().length);
+  notesWithFiles = computed(() => this.allEnrichedNotes().filter(n => n.fileCount > 0).length);
+  notesWithComments = computed(() => this.allEnrichedNotes().filter(n => n.commentCount > 0).length);
   recentNotes = computed(() => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return this.enrichedNotes().filter(n => new Date(n.createdAt) >= sevenDaysAgo).length;
+    return this.allEnrichedNotes().filter(n => new Date(n.createdAt) >= sevenDaysAgo).length;
   });
+
+  // Navigation
+  goToPage(page: number) {
+    this.store.getAllNotesPageable({ ...defaultQuery, page, size: this.pageSize() });
+  }
+
+  previousPage() {
+    const c = this.currentPage();
+    if (c > 0) this.goToPage(c - 1);
+  }
+
+  nextPage() {
+    const c = this.currentPage();
+    if (c < this.totalPages() - 1) this.goToPage(c + 1);
+  }
 
   onSearch(event: Event) {
     this.searchQuery.set((event.target as HTMLInputElement).value);
-    this.store.setCurrentPage(0);
   }
 
-  goToPage(page: number) { this.store.setCurrentPage(page); }
-  previousPage() { const c = this.store.currentPage() ?? 0; if (c > 0) this.store.setCurrentPage(c - 1); }
-  nextPage() { const c = this.store.currentPage() ?? 0; if (c < this.totalPages() - 1) this.store.setCurrentPage(c + 1); }
+  clearSearch() {
+    this.searchQuery.set('');
+  }
 
   deleteNote(noteUuid: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {
       this.store.deleteNote(noteUuid);
+      setTimeout(() => this.reloadCurrentPage(), 500);
     }
   }
 
@@ -123,8 +156,8 @@ export class NotesComponent {
     return text.length > length ? text.substring(0, length) + '...' : text;
   }
 
-  clearSearch() {
-    this.searchQuery.set('');
-    this.store.setCurrentPage(0);
-  }
+  private reloadCurrentPage() {
+    this.store.getAllNotesPageable({ ...defaultQuery, page: this.currentPage(), size: this.pageSize() });
+    this.store.getAllNotes();
+}
 }

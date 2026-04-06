@@ -21,32 +21,20 @@ import java.util.List;
 @Validated
 public class FileStorageConfig {
 
-    /**
-     * Répertoire racine pour le stockage des fichiers.
-     */
+    /**Répertoire racine pour le stockage des fichiers.*/
     @NotBlank
     private String uploadDir = "./uploads";
 
-    /**
-     * Taille maximale d'un fichier (en bytes).
-     * Par défaut: 10 MB
-     */
+    /**Taille maximale d'un fichier (en bytes).Par défaut: 10 MB*/
     private long maxFileSize = 10 * 1024 * 1024;
 
-    /**
-     * Taille maximale totale de la requête (en bytes).
-     * Par défaut: 50 MB
-     */
+    /**aille maximale totale de la requête (en bytes).Par défaut: 50 MB*/
     private long maxRequestSize = 50 * 1024 * 1024;
 
-    /**
-     * Extensions de fichiers autorisées.
-     */
+    /**Extensions de fichiers autorisées.*/
     private List<String> allowedExtensions = List.of("pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png", "gif", "txt", "csv");
 
-    /**
-     * Types MIME autorisés.
-     */
+    /**Types MIME autorisés.*/
     private List<String> allowedContentTypes = List.of(
             "application/pdf",
             "application/msword",
@@ -60,8 +48,6 @@ public class FileStorageConfig {
             "text/csv"
     );
 
-    /**
-     * URL de base pour le téléchargement des fichiers.
-     */
+    /**URL de base pour le téléchargement des fichiers.*/
     private String baseDownloadUrl = "/api/notes";
 }
