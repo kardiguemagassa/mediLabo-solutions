@@ -1,6 +1,7 @@
 package com.openclassrooms.userservice.service.impl;
 
 
+import com.openclassrooms.userservice.domain.PageResponse;
 import com.openclassrooms.userservice.event.Event;
 import com.openclassrooms.userservice.exception.ApiException;
 import com.openclassrooms.userservice.model.Credential;
@@ -66,7 +67,16 @@ public class UserServiceImpl implements UserService {
     private final ApplicationEventPublisher publisher;
     @Value("${app.photo.directory}")
     private String photoDirectory;
+    @Value("${app.gateway.url:http://localhost:8080}")
+    private String gatewayUrl;
 
+    @Override
+    public PageResponse<User> getUsersPageable(int page, int size) {
+        int offset = page * size;
+        List<User> users = userRepository.getUsersPageable(size, offset);
+        long total = userRepository.countUsers();
+        return PageResponse.of(users, page, size, total);
+    }
 
     /**
      * @param email adresse e-mail de l'utilisateur
@@ -340,16 +350,26 @@ public class UserServiceImpl implements UserService {
      */
     private String savePhoto(String imageUrl, MultipartFile image) {
         try {
-            var existingImage = Paths.get(photoDirectory + imageUrl.split("/")[imageUrl.split("/").length - 1]);
             var fileStorageLocation = Paths.get(photoDirectory).toAbsolutePath().normalize();
-            if(!Files.exists(fileStorageLocation)) { Files.createDirectories(fileStorageLocation); }
-            if(Files.exists(existingImage)) { Files.deleteIfExists(existingImage); }
+            if (!Files.exists(fileStorageLocation)) { Files.createDirectories(fileStorageLocation); }
+
+            // Supprimer l'ancienne image
+            if (imageUrl != null && !imageUrl.isBlank()) {
+                var oldFilename = imageUrl.contains("/") ? imageUrl.substring(imageUrl.lastIndexOf("/") + 1) : imageUrl;
+                // Retirer le query param ?timestamp=...
+                if (oldFilename.contains("?")) oldFilename = oldFilename.substring(0, oldFilename.indexOf("?"));
+                var existingImage = fileStorageLocation.resolve(oldFilename);
+                Files.deleteIfExists(existingImage);
+            }
+
             var filename = randomUUUID.get() + fileExtension.apply(image.getOriginalFilename());
             Files.copy(image.getInputStream(), fileStorageLocation.resolve(filename), REPLACE_EXISTING);
-            return ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/image/" + filename).toUriString();
+
+            //return ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/users/image/" + filename).toUriString();
+            return gatewayUrl + "/api/users/image/" + filename; // for prod docker
         } catch (Exception exception) {
             log.error(exception.getMessage());
-            throw new ApiException("Impossible de sauvegardé l'image");
+            throw new ApiException("Impossible de sauvegarder l'image");
         }
     }
 

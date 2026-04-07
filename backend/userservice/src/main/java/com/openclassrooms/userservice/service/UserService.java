@@ -1,6 +1,7 @@
 package com.openclassrooms.userservice.service;
 
 //import com.openclassrooms.userservice.dto.UserInfoDTO;
+import com.openclassrooms.userservice.domain.PageResponse;
 import com.openclassrooms.userservice.model.Credential;
 import com.openclassrooms.userservice.model.Device;
 import com.openclassrooms.userservice.model.User;
@@ -16,6 +17,7 @@ import java.util.List;
  */
 
 public interface UserService {
+    PageResponse<User> getUsersPageable(int page, int size);
     User getUserByEmail(String email);
     User getUserByUuid(String userUuid);
     User updateUser(String userUuid, String firstName, String lastName, String email, String phone, String bio, String address);

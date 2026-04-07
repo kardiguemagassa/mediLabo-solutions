@@ -39,6 +39,29 @@ import static com.openclassrooms.userservice.query.UserQuery.*;
 public class UserRepositoryImpl implements UserRepository {
     private final JdbcClient jdbc;
 
+    @Override
+    public List<User> getUsersPageable(int limit, int offset) {
+        try {
+            return jdbc.sql(SELECT_USERS_PAGEABLE_QUERY)
+                    .params(of("limit", limit, "offset", offset))
+                    .query(User.class)
+                    .list();
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("Une erreur s'est produite. Veuillez réessayer.");
+        }
+    }
+
+    @Override
+    public long countUsers() {
+        try {
+            return jdbc.sql(COUNT_USERS_QUERY).query(Long.class).single();
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            return 0;
+        }
+    }
+
     /**
      * @param uuid UUID unique de l'utilisateur
      * @return l'objet {@link User} correspondant

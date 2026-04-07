@@ -8,6 +8,7 @@ import com.openclassrooms.userservice.dtorequest.UserRequest;
 import com.openclassrooms.userservice.service.UserService;
 import com.openclassrooms.userservice.exception.HandleException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static com.openclassrooms.userservice.util.RequestUtils.getResponse;
 import static java.util.Collections.emptyMap;
@@ -96,6 +98,23 @@ public class UserResourceController {
     public UserResourceController(UserService userService, @Value("${app.photo.directory}") String photoDirectory) {
         this.userService = userService;
         this.photoDirectory = photoDirectory;
+    }
+
+    @Operation(
+            summary = "Get users with pagination",
+            description = "Retrieve a paginated list of users. Accessible only to ADMIN and SUPER_ADMIN roles"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "User not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @GetMapping("/page")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Response> getUsersPageable(@RequestParam(defaultValue = "0") @Parameter(description = "Page number (starting from 0)", example = "0") int page, @RequestParam(defaultValue = "10") @Parameter(description = "Number of users per page", example = "10") int size, HttpServletRequest request) {
+
+        var pageResult = userService.getUsersPageable(page, size);
+        return ResponseEntity.ok(getResponse(request, Map.of("users", pageResult.content(), "currentPage", pageResult.currentPage(), "totalPages", pageResult.totalPages(), "totalElements", pageResult.totalElements(), "size", pageResult.size()), "Utilisateurs récupérés avec succès", OK));
     }
 
     @Operation(summary = "Register a new user", description = "Creates a new user and sends an email confirmation")

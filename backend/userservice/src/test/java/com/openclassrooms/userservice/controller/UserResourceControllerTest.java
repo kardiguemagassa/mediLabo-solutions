@@ -1,6 +1,7 @@
 package com.openclassrooms.userservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openclassrooms.userservice.domain.PageResponse;
 import com.openclassrooms.userservice.dtorequest.PasswordRequest;
 import com.openclassrooms.userservice.dtorequest.ResetPasswordRequest;
 import com.openclassrooms.userservice.dtorequest.RoleRequest;
@@ -9,6 +10,7 @@ import com.openclassrooms.userservice.model.Device;
 import com.openclassrooms.userservice.model.User;
 import com.openclassrooms.userservice.service.UserService;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,6 +21,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository; // AJOUT
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -57,6 +60,81 @@ class UserResourceControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Nested
+    @DisplayName("getUsersPageable Tests")
+    class GetUsersPageableTests {
+
+        @Test
+        @DisplayName("Should return paginated users successfully")
+        void shouldReturnPaginatedUsers() throws Exception {
+            // Given
+            var users = List.of(
+                    User.builder().userUuid("uuid-1").firstName("John").lastName("Doe").email("john@test.com").build(),
+                    User.builder().userUuid("uuid-2").firstName("Jane").lastName("Smith").email("jane@test.com").build()
+            );
+            var pageResult = PageResponse.of(users, 0, 10, 25L);
+
+            when(userService.getUsersPageable(0, 10)).thenReturn(pageResult);
+
+            // When & Then
+            mockMvc.perform(get("/api/users/page")
+                            .param("page", "0")
+                            .param("size", "10")
+                            .with(SecurityMockMvcRequestPostProcessors.jwt()
+                                    .authorities(new SimpleGrantedAuthority("SUPER_ADMIN"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.users").isArray())
+                    .andExpect(jsonPath("$.data.users.length()").value(2))
+                    .andExpect(jsonPath("$.data.currentPage").value(0))
+                    .andExpect(jsonPath("$.data.totalPages").value(3))
+                    .andExpect(jsonPath("$.data.totalElements").value(25))
+                    .andExpect(jsonPath("$.data.size").value(10))
+                    .andExpect(jsonPath("$.message").value("Utilisateurs récupérés avec succès"));
+
+            verify(userService).getUsersPageable(0, 10);
+        }
+
+        @Test
+        @DisplayName("Should use default values when no params provided")
+        void shouldUseDefaultValues() throws Exception {
+            // Given
+            PageResponse<User> pageResult = PageResponse.of(List.<User>of(), 0, 10, 0L);
+            when(userService.getUsersPageable(0, 10)).thenReturn(pageResult);
+
+            // When & Then
+            mockMvc.perform(get("/api/users/page")
+                            .with(SecurityMockMvcRequestPostProcessors.jwt()
+                                    .authorities(new SimpleGrantedAuthority("ADMIN"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.users").isEmpty())
+                    .andExpect(jsonPath("$.data.totalElements").value(0));
+
+            verify(userService).getUsersPageable(0, 10);
+        }
+
+        @Test
+        @DisplayName("Should return page 2 with custom size")
+        void shouldReturnPage2WithCustomSize() throws Exception {
+            // Given
+            var users = List.of(
+                    User.builder().userUuid("uuid-5").firstName("Alice").build()
+            );
+            var pageResult = PageResponse.of(users, 2, 5, 11L);
+            when(userService.getUsersPageable(2, 5)).thenReturn(pageResult);
+
+            // When & Then
+            mockMvc.perform(get("/api/users/page")
+                            .param("page", "2")
+                            .param("size", "5")
+                            .with(SecurityMockMvcRequestPostProcessors.jwt()
+                                    .authorities(new SimpleGrantedAuthority("SUPER_ADMIN"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.currentPage").value(2))
+                    .andExpect(jsonPath("$.data.size").value(5))
+                    .andExpect(jsonPath("$.data.totalPages").value(3));
+        }
+    }
 
     @Test
     @DisplayName("POST /register - Succès")

@@ -4,6 +4,8 @@ import com.openclassrooms.userservice.exception.ApiException;
 import com.openclassrooms.userservice.model.*;
 import com.openclassrooms.userservice.repository.impl.UserRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
@@ -37,6 +39,74 @@ class UserRepositoryImplTest {
     @BeforeEach
     void setUp() {
         userRepository = new UserRepositoryImpl(jdbcClient);
+    }
+
+    @Nested
+    @DisplayName("getUsersPageable Tests")
+    class GetUsersPageableTests {
+
+        @Test
+        @DisplayName("Should return paginated users list")
+        void shouldReturnPaginatedUsers() {
+            List<User> expectedUsers = List.of(new User(), new User());
+
+            when(jdbcClient.sql(anyString()).params(anyMap()).query(User.class).list())
+                    .thenReturn(expectedUsers);
+
+            List<User> result = userRepository.getUsersPageable(10, 0);
+
+            assertNotNull(result);
+            assertEquals(2, result.size());
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no users on page")
+        void shouldReturnEmptyList_WhenNoUsersOnPage() {
+            when(jdbcClient.sql(anyString()).params(anyMap()).query(User.class).list())
+                    .thenReturn(List.of());
+
+            List<User> result = userRepository.getUsersPageable(10, 100);
+
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Should throw ApiException on database error")
+        void shouldThrowApiException_OnDatabaseError() {
+            when(jdbcClient.sql(anyString())).thenThrow(new RuntimeException("DB error"));
+
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> userRepository.getUsersPageable(10, 0));
+
+            assertEquals("Une erreur s'est produite. Veuillez réessayer.", ex.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("countUsers Tests")
+    class CountUsersTests {
+
+        @Test
+        @DisplayName("Should return total user count")
+        void shouldReturnTotalCount() {
+            when(jdbcClient.sql(anyString()).query(Long.class).single())
+                    .thenReturn(25L);
+
+            long count = userRepository.countUsers();
+
+            assertEquals(25L, count);
+        }
+
+        @Test
+        @DisplayName("Should return 0 on database error")
+        void shouldReturnZero_OnDatabaseError() {
+            when(jdbcClient.sql(anyString())).thenThrow(new RuntimeException("DB error"));
+
+            long count = userRepository.countUsers();
+
+            assertEquals(0L, count);
+        }
     }
 
     @Test

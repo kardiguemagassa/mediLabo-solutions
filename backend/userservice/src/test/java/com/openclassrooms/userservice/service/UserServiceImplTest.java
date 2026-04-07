@@ -59,6 +59,7 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(userService, "photoDirectory", tempDir.toString() + "/");
+        ReflectionTestUtils.setField(userService, "gatewayUrl", "http://localhost:8080");
     }
 
     @Test
@@ -81,6 +82,49 @@ class UserServiceImplTest {
         verify(encoder).encode(password);
         verify(userRepository).createUser(anyString(), anyString(), eq(email), anyString(), eq(encodedPassword));
         verify(publisher).publishEvent(any(Event.class));
+    }
+
+    @Test
+    @DisplayName("getUsersPageable doit retourner une page de résultats")
+    void getUsersPageable_ShouldReturnPageResponse() {
+        List<User> users = List.of(new User(), new User(), new User());
+        when(userRepository.getUsersPageable(10, 0)).thenReturn(users);
+        when(userRepository.countUsers()).thenReturn(25L);
+
+        var result = userService.getUsersPageable(0, 10);
+
+        assertThat(result.content()).hasSize(3);
+        assertThat(result.currentPage()).isZero();
+        assertThat(result.size()).isEqualTo(10);
+        assertThat(result.totalElements()).isEqualTo(25);
+        assertThat(result.totalPages()).isEqualTo(3); // ceil(25/10)
+        verify(userRepository).getUsersPageable(10, 0);
+        verify(userRepository).countUsers();
+    }
+
+    @Test
+    @DisplayName("getUsersPageable doit calculer l'offset correctement pour la page 2")
+    void getUsersPageable_ShouldCalculateOffset_ForPage2() {
+        when(userRepository.getUsersPageable(10, 20)).thenReturn(List.of());
+        when(userRepository.countUsers()).thenReturn(25L);
+
+        var result = userService.getUsersPageable(2, 10);
+
+        assertThat(result.currentPage()).isEqualTo(2);
+        verify(userRepository).getUsersPageable(10, 20); // offset = 2 * 10
+    }
+
+    @Test
+    @DisplayName("getUsersPageable doit retourner une page vide quand pas d'utilisateurs")
+    void getUsersPageable_ShouldReturnEmptyPage_WhenNoUsers() {
+        when(userRepository.getUsersPageable(10, 0)).thenReturn(List.of());
+        when(userRepository.countUsers()).thenReturn(0L);
+
+        var result = userService.getUsersPageable(0, 10);
+
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isZero();
+        assertThat(result.totalPages()).isZero();
     }
 
     @Test
@@ -212,9 +256,7 @@ class UserServiceImplTest {
         when(userRepository.getAccountToken(token)).thenReturn(null);
 
         // WHEN & THEN
-        assertThatThrownBy(() -> userService.verifyAccount(token))
-                .isInstanceOf(ApiException.class)
-                .hasMessageContaining("Lien invalide");
+        assertThatThrownBy(() -> userService.verifyAccount(token)).isInstanceOf(ApiException.class).hasMessageContaining("Lien invalide");
 
         verify(userRepository, never()).updateAccountSettings(any());
     }
@@ -315,26 +357,20 @@ class UserServiceImplTest {
     @Test
     @DisplayName("uploadPhoto doit mettre à jour l'image et ajouter un timestamp")
     void uploadPhoto_ShouldUpdateUrlAndReturnUser() throws IOException {
-        try (MockedStatic<ServletUriComponentsBuilder> mockedBuilder = mockStatic(ServletUriComponentsBuilder.class)) {
-            var mockUriBuilder = mock(ServletUriComponentsBuilder.class);
-            mockedBuilder.when(ServletUriComponentsBuilder::fromCurrentContextPath).thenReturn(mockUriBuilder);
-            when(mockUriBuilder.path(anyString())).thenReturn(mockUriBuilder);
-            when(mockUriBuilder.toUriString()).thenReturn("http://localhost/images/photo.png");
+        String uuid = "uuid-123";
+        MultipartFile mockFile = mock(MultipartFile.class);
+        User mockUser = new User();
+        mockUser.setImageUrl("http://localhost:8080/api/users/image/old.png");
 
-            String uuid = "uuid-123";
-            MultipartFile mockFile = mock(MultipartFile.class);
-            User mockUser = new User();
-            mockUser.setImageUrl("old-url/image.png");
+        when(userRepository.getUserByUuid(uuid)).thenReturn(mockUser);
+        when(mockFile.getOriginalFilename()).thenReturn("new-photo.png");
+        when(mockFile.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
 
-            when(userRepository.getUserByUuid(uuid)).thenReturn(mockUser);
-            when(mockFile.getOriginalFilename()).thenReturn("new-photo.png");
-            when(mockFile.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
+        User result = userService.uploadPhoto(uuid, mockFile);
 
-            User result = userService.uploadPhoto(uuid, mockFile);
-
-            assertThat(result.getImageUrl()).contains("?timestamp=");
-            verify(userRepository).updateImageUrl(eq(uuid), anyString());
-        }
+        assertThat(result.getImageUrl()).contains("?timestamp=");
+        assertThat(result.getImageUrl()).contains("http://localhost:8080/api/users/image/");
+        verify(userRepository).updateImageUrl(eq(uuid), anyString());
     }
 
     @Test
@@ -380,8 +416,6 @@ class UserServiceImplTest {
         // On vérifie qu'on n'appelle rien sur le repository puisque le code fait "return null"
         verifyNoInteractions(userRepository);
     }
-
-
 
     @Test
     @DisplayName("updatePassword doit lever une exception si la confirmation est différente du nouveau mot de passe")
@@ -717,55 +751,45 @@ class UserServiceImplTest {
 
         assertThatThrownBy(() -> userService.uploadPhoto(uuid, mockFile))
                 .isInstanceOf(ApiException.class)
-                .hasMessageContaining("Impossible de sauvegardé l'image");
+                .hasMessageContaining("Impossible de sauvegarder l'image");
     }
 
     @Test
     @DisplayName("uploadPhoto doit créer le répertoire s'il n'existe pas")
     void uploadPhoto_ShouldCreateDirectory_WhenNotExists() throws IOException {
-        // Sous-dossier qui n'existe pas encore
         Path subDir = tempDir.resolve("new-upload-dir");
         ReflectionTestUtils.setField(userService, "photoDirectory", subDir.toString() + "/");
 
-        try (MockedStatic<ServletUriComponentsBuilder> uriMock = mockStatic(ServletUriComponentsBuilder.class)) {
-            setupUriMock(uriMock);
+        User user = new User();
+        user.setImageUrl("http://localhost:8080/api/users/image/img.png");
+        when(userRepository.getUserByUuid(anyString())).thenReturn(user);
 
-            User user = new User();
-            user.setImageUrl("http://api.com/img.png");
-            when(userRepository.getUserByUuid(anyString())).thenReturn(user);
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("test.png");
+        when(file.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
 
-            MultipartFile file = mock(MultipartFile.class);
-            when(file.getOriginalFilename()).thenReturn("test.png");
-            when(file.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
+        userService.uploadPhoto("uuid", file);
 
-            userService.uploadPhoto("uuid", file);
-
-            assertThat(Files.exists(subDir)).isTrue();
-        }
+        assertThat(Files.exists(subDir)).isTrue();
     }
 
     @Test
     @DisplayName("uploadPhoto doit supprimer l'ancienne image si elle existe")
     void uploadPhoto_ShouldDeleteOldImage_WhenExists() throws IOException {
-        // Créer une vraie ancienne image dans tempDir
         Path oldImage = tempDir.resolve("old-image.png");
         Files.write(oldImage, "old-content".getBytes());
 
-        try (MockedStatic<ServletUriComponentsBuilder> uriMock = mockStatic(ServletUriComponentsBuilder.class)) {
-            setupUriMock(uriMock);
+        User user = new User();
+        user.setImageUrl("http://localhost:8080/api/users/image/old-image.png");
+        when(userRepository.getUserByUuid(anyString())).thenReturn(user);
 
-            User user = new User();
-            user.setImageUrl("http://api.com/old-image.png"); // dernier segment = "old-image.png"
-            when(userRepository.getUserByUuid(anyString())).thenReturn(user);
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("new.png");
+        when(file.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
 
-            MultipartFile file = mock(MultipartFile.class);
-            when(file.getOriginalFilename()).thenReturn("new.png");
-            when(file.getInputStream()).thenReturn(new java.io.ByteArrayInputStream(new byte[0]));
+        userService.uploadPhoto("uuid", file);
 
-            userService.uploadPhoto("uuid", file);
-
-            assertThat(Files.exists(oldImage)).isFalse();
-        }
+        assertThat(Files.exists(oldImage)).isFalse();
     }
 
     // Petite méthode utilitaire pour alléger les tests
