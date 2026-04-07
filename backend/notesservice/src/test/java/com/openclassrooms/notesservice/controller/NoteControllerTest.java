@@ -317,7 +317,8 @@ class NoteControllerTest {
                     .build();
 
             when(authentication.getName()).thenReturn(PRACTITIONER_UUID);
-            when(noteService.updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq(PRACTITIONER_UUID)))
+            when(authentication.getAuthorities()).thenReturn((java.util.Collection) java.util.List.of());
+            when(noteService.updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq(PRACTITIONER_UUID), eq(false)))
                     .thenReturn(Mono.just(updatedResponse));
 
             MvcResult asyncResult = mockMvc.perform(put("/api/notes/{noteUuid}", NOTE_UUID)
@@ -333,7 +334,7 @@ class NoteControllerTest {
                     .andExpect(jsonPath("$.data.note.content", is("Updated content with new observations")))
                     .andExpect(jsonPath("$.message", is("Note mise à jour avec succès")));
 
-            verify(noteService).updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq(PRACTITIONER_UUID));
+            verify(noteService).updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq(PRACTITIONER_UUID), eq(false));
         }
 
         @Test
@@ -345,7 +346,7 @@ class NoteControllerTest {
                     .build();
 
             when(authentication.getName()).thenReturn("other-practitioner");
-            when(noteService.updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq("other-practitioner")))
+            when(noteService.updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq("other-practitioner"),eq(false)))
                     .thenReturn(Mono.error(new ApiException("Vous n'êtes pas autorisé à modifier cette note")));
 
             MvcResult asyncResult = mockMvc.perform(put("/api/notes/{noteUuid}", NOTE_UUID)
@@ -356,7 +357,7 @@ class NoteControllerTest {
                     .andReturn();
 
             // Vérifier que le service a été appelé
-            verify(noteService).updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq("other-practitioner"));
+            verify(noteService).updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq("other-practitioner"),eq(false));
 
             // Vérifier que l'erreur async est présente (ApiException)
             Object asyncResultValue = asyncResult.getAsyncResult();
@@ -364,6 +365,33 @@ class NoteControllerTest {
             assertThat(((ApiException) asyncResultValue).getMessage())
                     .contains("Vous n'êtes pas autorisé");
         }
+    }
+
+    @Test
+    @DisplayName("Should allow SUPER_ADMIN to update any note")
+    void updateNote_asSuperAdmin_returns200() throws Exception {
+        NoteRequest updateRequest = NoteRequest.builder()
+                .patientUuid(PATIENT_UUID)
+                .content("Admin override")
+                .build();
+
+        when(authentication.getName()).thenReturn("admin-uuid");
+        when(authentication.getAuthorities()).thenReturn((java.util.Collection)
+                java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("SUPER_ADMIN")));
+        when(noteService.updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq("admin-uuid"), eq(true)))
+                .thenReturn(Mono.just(noteResponse));
+
+        MvcResult asyncResult = mockMvc.perform(put("/api/notes/{noteUuid}", NOTE_UUID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest))
+                        .principal(authentication))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(asyncResult))
+                .andExpect(status().isOk());
+
+        verify(noteService).updateNote(eq(NOTE_UUID), any(NoteRequest.class), eq("admin-uuid"), eq(true));
     }
 
     // DELETE NOTE TESTS

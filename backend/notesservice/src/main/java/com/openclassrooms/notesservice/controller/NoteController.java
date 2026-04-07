@@ -177,11 +177,15 @@ public class NoteController {
     })
     @PutMapping("/{noteUuid}")
     @PreAuthorize(ALL_STAFF)
-    public Mono<ResponseEntity<Response>> updateNote(@Parameter(description = "UUID de la note") @PathVariable String noteUuid, @Valid @RequestBody NoteRequest request, @Parameter(hidden = true) Authentication authentication, HttpServletRequest httpRequest) {
+    public Mono<ResponseEntity<Response>> updateNote(@PathVariable String noteUuid, @Valid @RequestBody NoteRequest request, Authentication authentication, HttpServletRequest httpRequest) {
 
         String practitionerUuid = authentication.getName();
+        boolean isSuperAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("SUPER_ADMIN") || a.getAuthority().equals("ROLE_ADMIN"));
+
         log.info("Practitioner {} updating note {}", practitionerUuid, noteUuid);
-        return noteService.updateNote(noteUuid, request, practitionerUuid).map(note -> ResponseEntity.ok(getResponse(httpRequest, Map.of("note", note), "Note mise à jour avec succès", OK)));
+        return noteService.updateNote(noteUuid, request, practitionerUuid, isSuperAdmin)
+                .map(note -> ResponseEntity.ok(getResponse(httpRequest, Map.of("note", note), "Note mise à jour avec succès", OK)));
     }
 
     @Operation(summary = "Supprimer une note (soft delete)")

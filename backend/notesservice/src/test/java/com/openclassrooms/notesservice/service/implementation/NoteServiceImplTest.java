@@ -208,8 +208,8 @@ class NoteServiceImplTest {
     class UpdateNoteTests {
 
         @Test
-        @DisplayName("Should update note successfully")
-        void shouldUpdateNote() {
+        @DisplayName("Should update note successfully when author")
+        void shouldUpdateNote_whenAuthor() {
             when(noteRepository.findByNoteUuidAndActiveTrue("note-uuid-123")).thenReturn(Optional.of(note));
             when(noteRepository.save(any(Note.class))).thenReturn(note);
             when(noteMapper.toResponse(any(Note.class))).thenReturn(noteResponse);
@@ -217,7 +217,7 @@ class NoteServiceImplTest {
 
             NoteRequest updateRequest = NoteRequest.builder().content("Nouveau contenu").build();
 
-            StepVerifier.create(noteService.updateNote("note-uuid-123", updateRequest, "pract-uuid-789"))
+            StepVerifier.create(noteService.updateNote("note-uuid-123", updateRequest, "pract-uuid-789", false))
                     .expectNext(noteResponse)
                     .verifyComplete();
 
@@ -225,11 +225,44 @@ class NoteServiceImplTest {
         }
 
         @Test
+        @DisplayName("Should allow SUPER_ADMIN to update any note")
+        void shouldUpdateNote_asSuperAdmin() {
+            when(noteRepository.findByNoteUuidAndActiveTrue("note-uuid-123")).thenReturn(Optional.of(note));
+            when(noteRepository.save(any(Note.class))).thenReturn(note);
+            when(noteMapper.toResponse(any(Note.class))).thenReturn(noteResponse);
+            when(patientServiceClient.getPatientContactInfo(anyString())).thenReturn(reactor.core.publisher.Mono.empty());
+
+            NoteRequest updateRequest = NoteRequest.builder().content("Admin override").build();
+
+            // UUID différent de l'auteur mais isSuperAdmin = true
+            StepVerifier.create(noteService.updateNote("note-uuid-123", updateRequest, "other-uuid", true))
+                    .expectNext(noteResponse)
+                    .verifyComplete();
+
+            verify(noteRepository).save(any(Note.class));
+        }
+
+        @Test
+        @DisplayName("Should fail when not author and not SUPER_ADMIN")
+        void shouldFail_notAuthor() {
+            when(noteRepository.findByNoteUuidAndActiveTrue("note-uuid-123")).thenReturn(Optional.of(note));
+
+            NoteRequest updateRequest = NoteRequest.builder().content("Hijack attempt").build();
+
+            StepVerifier.create(noteService.updateNote("note-uuid-123", updateRequest, "other-uuid", false))
+                    .expectErrorMatches(e -> e instanceof ApiException
+                            && e.getMessage().contains("Non autorisé"))
+                    .verify();
+
+            verify(noteRepository, never()).save(any(Note.class));
+        }
+
+        @Test
         @DisplayName("Should fail when note not found for update")
         void shouldFail_noteNotFound() {
             when(noteRepository.findByNoteUuidAndActiveTrue("unknown")).thenReturn(Optional.empty());
 
-            StepVerifier.create(noteService.updateNote("unknown", noteRequest, "pract-uuid"))
+            StepVerifier.create(noteService.updateNote("unknown", noteRequest, "pract-uuid", false))
                     .expectErrorMatches(e -> e instanceof ApiException)
                     .verify();
         }

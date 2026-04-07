@@ -24,7 +24,7 @@ public interface NoteService {
     Mono<NoteResponse> getNoteByUuid(String noteUuid);
     Flux<NoteResponse> getNotesByPatientUuid(String patientUuid);
     Flux<NoteResponse> getNotesByPractitionerUuid(String practitionerUuid);
-    Mono<NoteResponse> updateNote(String noteUuid, NoteRequest request, String practitionerUuid);
+    Mono<NoteResponse> updateNote(String noteUuid, NoteRequest request, String practitionerUuid, boolean isSuperAdmin);
     Mono<Void> deleteNote(String noteUuid);
     Mono<Long> countNotesByPatientUuid(String patientUuid);
 }

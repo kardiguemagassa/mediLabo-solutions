@@ -60,8 +60,8 @@ spring:
 # APPLICATION CONFIGURATION - FILE STORAGE
 app:
   storage:
-    # Répertoire racine pour le stockage des fichiers uploadés
-    upload-dir: ${FILE_UPLOAD_DIR:./uploads}
+    # Répertoire racine pour le stockage des fichiers uploadés-
+    upload-dir: ${FILE_UPLOAD_DIR:/Users/kara/Downloads/uploads/mediLabo}
     # Taille maximale d'un fichier (en bytes) - 10 MB
     max-file-size: ${MAX_FILE_SIZE_BYTES:10485760}
     # Taille maximale totale de la requête (en bytes) - 50 MB
