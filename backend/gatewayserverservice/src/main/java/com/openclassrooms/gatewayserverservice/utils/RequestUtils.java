@@ -59,7 +59,6 @@ public class RequestUtils {
         return new Response(now().toString(), status.value(), exchange.getRequest().getPath().value(), status, message, "", data);
     }
 
-
     private static HttpStatus determineHttpStatus(Exception exception) {
         if (exception instanceof AccessDeniedException) {
             return FORBIDDEN;
@@ -76,7 +75,6 @@ public class RequestUtils {
             return INTERNAL_SERVER_ERROR;
         }
     }
-
 
     private static Mono<Void> writeResponse(ServerWebExchange exchange, Response response, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);

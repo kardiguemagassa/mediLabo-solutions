@@ -18,6 +18,16 @@ package com.openclassrooms.userservice.query;
 
 public class UserQuery {
 
+    public static final String SELECT_USERS_PAGEABLE_QUERY =
+            """
+            SELECT r.name AS role, r.authority AS authorities,u.qr_code_image_uri, u.member_id, u.account_non_expired, u.account_non_locked,u.created_at, u.email, u.username, u.enabled, u.first_name, u.user_id,u.image_url, u.last_login, u.last_name, u.mfa, u.updated_at,u.user_uuid, u.bio, u.phone, u.address FROM users u JOIN user_roles ur ON ur.user_id = u.user_id JOIN roles r ON r.role_id = ur.role_id ORDER BY u.created_at DESC LIMIT :limit OFFSET :offset
+            """;
+
+    public static final String COUNT_USERS_QUERY =
+            """
+            SELECT COUNT(*) FROM users
+            """;
+
     public static final String SELECT_USER_BY_USER_ID_QUERY =
             """
             SELECT r.name AS role, r.authority AS authorities,  u.qr_code_secret, u.qr_code_image_uri, u.member_id, u.account_non_expired, u.account_non_locked, u.created_at, u.email, u.username, u.enabled, u.first_name, u.user_id, u.image_url, u.last_login, u.last_name, u.mfa, u.updated_at, u.user_uuid, u.bio, u.phone, u.address, c.password, c.updated_at + INTERVAL '90 day' > NOW() AS credentials_non_expired FROM users u JOIN user_roles ur ON ur.user_id = u.user_id JOIN roles r ON r.role_id = ur.role_id JOIN credentials c ON c.user_id = u.user_id WHERE u.user_uuid = :userUuid

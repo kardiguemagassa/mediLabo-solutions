@@ -110,7 +110,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public Mono<NoteResponse> updateNote(String noteUuid, NoteRequest request, String practitionerUuid) {
+    public Mono<NoteResponse> updateNote(String noteUuid, NoteRequest request, String practitionerUuid, boolean isSuperAdmin) {
         log.info("Updating note: {}", noteUuid);
 
         return Mono.fromCallable(() -> noteRepository.findByNoteUuidAndActiveTrue(noteUuid))
@@ -120,6 +120,12 @@ public class NoteServiceImpl implements NoteService {
                         return Mono.error(new ApiException("Note non trouvée: " + noteUuid));
                     }
                     Note existingNote = optional.get();
+
+                    // Seul l'auteur ou un SUPER_ADMIN peut modifier
+                    if (!isSuperAdmin && !existingNote.getPractitionerUuid().equals(practitionerUuid)) {
+                        return Mono.error(new ApiException("Non autorisé à modifier cette note"));
+                    }
+
                     existingNote.setContent(request.getContent());
                     existingNote.setUpdatedAt(LocalDateTime.now());
 

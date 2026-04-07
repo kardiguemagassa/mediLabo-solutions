@@ -8,6 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,9 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Testcontainers
 @ActiveProfiles("test")
-@DisplayName("Message Repository Integration Tests")
 class MessageRepositoryIT {
 
     @Autowired
@@ -31,10 +36,23 @@ class MessageRepositoryIT {
     @Autowired
     private ConversationRepository conversationRepository;
 
+    @Autowired
+    private TestEntityManager entityManager;
+
     private String senderUuid;
     private String receiverUuid;
     private String receiverEmail;
     private String conversationId;
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
+
+    @DynamicPropertySource
+    static void props(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
 
     @BeforeEach
     void setUp() {
@@ -42,9 +60,9 @@ class MessageRepositoryIT {
         messageRepository.deleteAll();
         conversationRepository.deleteAll();
 
-        senderUuid = "sender-" + UUID.randomUUID();
-        receiverUuid = "receiver-" + UUID.randomUUID();
-        receiverEmail = "receiver-" + System.currentTimeMillis() + "@email.com";
+        senderUuid = UUID.randomUUID().toString();        // 36 chars
+        receiverUuid = UUID.randomUUID().toString();
+        receiverEmail = "r" + System.currentTimeMillis() + "@email.com";
         conversationId = UUID.randomUUID().toString();
     }
 
@@ -72,10 +90,11 @@ class MessageRepositoryIT {
         messageStatusRepository.save(MessageStatus.builder()
                 .message(saved).userUuid(rUuid).messageStatus("UNREAD").build());
 
+        entityManager.flush();
+        entityManager.clear();
+
         return saved;
     }
-
-    // ── FIND ALL BY USER ──
 
     @Test
     @Order(1)
@@ -98,8 +117,6 @@ class MessageRepositoryIT {
         assertThat(messages).isEmpty();
     }
 
-    // ── FIND BY CONVERSATION ──
-
     @Test
     @Order(3)
     @DisplayName("Should find messages by conversation ID")
@@ -120,8 +137,6 @@ class MessageRepositoryIT {
         assertThat(conversation).isEmpty();
     }
 
-    // ── CONVERSATION EXISTS ──
-
     @Test
     @Order(5)
     @DisplayName("Should return true when conversation exists")
@@ -141,8 +156,6 @@ class MessageRepositoryIT {
         assertThat(exists).isFalse();
     }
 
-    // ── FIND CONVERSATION IDS ──
-
     @Test
     @Order(7)
     @DisplayName("Should find conversation IDs")
@@ -161,8 +174,6 @@ class MessageRepositoryIT {
         List<String> ids = messageRepository.findConversationIds("unknown", "unknown@email.com");
         assertThat(ids).isEmpty();
     }
-
-    // ── MESSAGE STATUS ──
 
     @Test
     @Order(9)
@@ -208,8 +219,6 @@ class MessageRepositoryIT {
         assertThat(messageStatusRepository.countUnread(receiverUuid)).isZero();
     }
 
-    // ── CONVERSATION REPOSITORY ──
-
     @Test
     @Order(13)
     @DisplayName("Should find conversation by UUID")
@@ -238,8 +247,6 @@ class MessageRepositoryIT {
         var conv = conversationRepository.findByConversationUuid("non-existent");
         assertThat(conv).isEmpty();
     }
-
-    // ── STATUS FOR USER (via entity) ──
 
     @Test
     @Order(15)

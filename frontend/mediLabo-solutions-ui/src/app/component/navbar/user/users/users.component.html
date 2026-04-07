@@ -49,7 +49,7 @@
             </div>
         </div>
     } @else if (store?.profile()?.role === 'ADMIN' || store?.profile()?.role === 'SUPER_ADMIN') {
-        @let users = store?.users();
+        @let allUsers = store?.users();
 
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <!-- Statistiques rapides -->
@@ -60,7 +60,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500">Total</p>
-                        <p class="text-xl font-bold text-gray-800">{{users?.length || 0}}</p>
+                        <p class="text-xl font-bold text-gray-800">{{allUsers?.length || 0}}</p>
                     </div>
                 </div>
 
@@ -70,7 +70,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500">Actifs</p>
-                        <p class="text-xl font-bold text-green-600">{{users?.filter(u => u.enabled)?.length || 0}}</p>
+                        <p class="text-xl font-bold text-green-600">{{allUsers?.filter(u => u.enabled)?.length || 0}}</p>
                     </div>
                 </div>
 
@@ -80,7 +80,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500">Inactifs</p>
-                        <p class="text-xl font-bold text-red-600">{{users?.filter(u => !u.enabled)?.length || 0}}</p>
+                        <p class="text-xl font-bold text-red-600">{{allUsers?.filter(u => !u.enabled)?.length || 0}}</p>
                     </div>
                 </div>
 
@@ -90,7 +90,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500">MFA activé</p>
-                        <p class="text-xl font-bold text-purple-600">{{users?.filter(u => u.mfa)?.length || 0}}</p>
+                        <p class="text-xl font-bold text-purple-600">{{allUsers?.filter(u => u.mfa)?.length || 0}}</p>
                     </div>
                 </div>
             </div>
@@ -110,7 +110,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @for (user of users; track user.userUuid) {
+                        @for (user of users(); track user.userUuid) {
                             @if (store?.profile()?.email != user.email) {
                                 <tr class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4">
@@ -190,12 +190,45 @@
                 </table>
             </div>
 
-            <!-- Pied de tableau -->
-            <div class="px-6 py-3 border-t border-gray-200 bg-gray-50">
-                <p class="text-sm text-gray-500">
-                    <span class="font-semibold text-gray-700">{{users?.length || 0}}</span> utilisateur(s) au total
-                </p>
-            </div>
+            <!-- PAGINATION -->
+            @if (totalElements() > 0) {
+                <div class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+                    <div class="flex items-center gap-3">
+                        <p class="text-sm text-gray-500">
+                            Page {{ currentPage() + 1 }} sur {{ totalPages() || 1 }} — {{ totalElements() }} utilisateur(s)
+                        </p>
+                        <select (change)="changePageSize($event)" [value]="pageSize()" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                            <option [value]="5">5 / page</option>
+                            <option [value]="10">10 / page</option>
+                            <option [value]="20">20 / page</option>
+                            <option [value]="50">50 / page</option>
+                        </select>
+                    </div>
+                    @if (totalPages() > 1) {
+                        <div class="flex items-center gap-1">
+                            <button (click)="goToPage(0)" [disabled]="currentPage() === 0" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                ««
+                            </button>
+                            <button (click)="previousPage()" [disabled]="currentPage() === 0" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Précédent
+                            </button>
+                            @for (page of [].constructor(totalPages()); track $index) {
+                                @if ($index < 3 || $index === totalPages() - 1 || ($index >= currentPage() - 1 && $index <= currentPage() + 1)) {
+                                    <button (click)="goToPage($index)" [class]="$index === currentPage() ? 'px-3 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-lg' : 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50'">
+                                        {{ $index + 1 }}
+                                    </button>
+                                }
+                            }
+                            <button (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Suivant
+                            </button>
+                            <button (click)="goToPage(totalPages() - 1)" [disabled]="currentPage() >= totalPages() - 1" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                »»
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
         </div>
     }
 </div>

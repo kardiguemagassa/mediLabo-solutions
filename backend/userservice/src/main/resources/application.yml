@@ -69,7 +69,9 @@ spring:
 
 app:
   photo:
-    directory: ${user.home}/Downloads/uploads/
+    directory: ${PHOTO_UPLOAD_DIR:/Users/kara/Downloads/uploads/mediLabo/profile-photo/}
+  gateway:
+    url: ${GATEWAY_URL:http://localhost:8080}
 
 # CONFIGURATION TECHNIQUE SERVEE
 server:
@@ -79,7 +81,6 @@ server:
   error:
     include-message: always
     include-binding-errors: always
-
 
 # EUREKA CLIENT
 eureka:

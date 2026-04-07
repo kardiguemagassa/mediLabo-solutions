@@ -12,7 +12,8 @@ import java.util.List;
  */
 
 public interface UserRepository {
-    //User getUserByUuid(String userId);
+    List<User> getUsersPageable(int limit, int offset);
+    long countUsers();
     User getUserByEmail(String email);
     User getUserByUuid(String userUuid);
     User getUserById(Long userId);

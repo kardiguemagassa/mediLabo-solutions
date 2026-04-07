@@ -26,6 +26,29 @@ export const AppStore = signalStore(
     withMethods((store, userService = inject(UserService), patientService = inject(PatientService), noteService = inject(NoteService), assessmentService = inject(AssessmentService), toastService = inject(HotToastService), notificationService = inject(NotificationService)) => ({
         
         // USERSERVICE
+        getUsersPageable: rxMethod<IQuery>(pipe(
+                tap(() => patchState(store, { loading: true, error: null })),
+                switchMap((query) => userService.usersPageable$(query).pipe(
+                    tapResponse({
+                        next: (response: IResponse) => {
+                            patchState(store, {
+                                userPage: {
+                                    content: response.data.users,
+                                    currentPage: response.data.currentPage,
+                                    totalPages: response.data.totalPages,
+                                    totalElements: response.data.totalElements,
+                                    size: response.data.size
+                                },
+                                loading: false,
+                                error: null
+                            });
+                        },
+                        error: (error: string) => {
+                            toastService.error(error ?? `Une erreur s'est produite.`);
+                            patchState(store, { loading: false, error });
+                        }
+                    })
+                )))),  
         getProfile: rxMethod<void>(pipe(
             tap(() => patchState(store, { loading: true, error: null })),
             switchMap(() => userService.profile$().pipe(
