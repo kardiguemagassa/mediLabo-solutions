@@ -16,7 +16,6 @@ public interface MessageStatusRepository extends JpaRepository<MessageStatus, Lo
 
     @Transactional
     @Modifying
-    @Query("UPDATE MessageStatus ms SET ms.messageStatus = :status, ms.readAt = CURRENT_TIMESTAMP " +
-            "WHERE ms.userUuid = :userUuid AND ms.message.messageId = :messageId")
+    @Query("UPDATE MessageStatus ms SET ms.messageStatus = :status, ms.readAt = CURRENT_TIMESTAMP " + "WHERE ms.userUuid = :userUuid AND ms.message.messageId = :messageId")
     int updateStatus(@Param("userUuid") String userUuid, @Param("messageId") Long messageId, @Param("status") String status);
 }

@@ -33,7 +33,6 @@ public class Message {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
-    // Sender (dénormalisé)
     @Column(name = "sender_uuid", nullable = false, length = 40)
     private String senderUuid;
 
@@ -49,7 +48,6 @@ public class Message {
     @Column(name = "sender_role", length = 20)
     private String senderRole;
 
-    // Receiver (dénormalisé)
     @Column(name = "receiver_uuid", nullable = false, length = 40)
     private String receiverUuid;
 

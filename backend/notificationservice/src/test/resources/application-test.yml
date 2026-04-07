@@ -1,10 +1,12 @@
 spring:
   datasource:
   # url/username/password gérés par @DynamicPropertySource
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
   sql:
     init:
       mode: never
-      schema-locations: classpath:schema.sql
   cloud:
     discovery:
       enabled: false
