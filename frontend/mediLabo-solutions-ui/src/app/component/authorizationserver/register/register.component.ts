@@ -21,8 +21,8 @@ export class RegisterComponent {
   private userService = inject(UserService);
   private toastService = inject(HotToastService);
 
-  @ViewChild('passwordField') passwordField!: ElementRef<HTMLInputElement>;
-  showPassword = false;
+  // @ViewChild('passwordField') passwordField!: ElementRef<HTMLInputElement>;
+   showPassword = signal(false);
 
   ngOnInit() : void {
     if (this.userService.isAuthenticated() && !this.userService.isTokenExpired()) {
@@ -30,7 +30,7 @@ export class RegisterComponent {
       return;
     }
   }
-
+ 
   closeMessage = () => this.state.set({ loading: false, message: undefined, error: undefined });
 
   register = (form: NgForm) => {
@@ -50,7 +50,7 @@ export class RegisterComponent {
   };
 
   togglePassword(input: HTMLInputElement) {
-  this.showPassword = !this.showPassword;
-  input.type = this.showPassword ? 'text' : 'password';
-}
+    input.type = input.type === 'password' ? 'text' : 'password';
+    this.showPassword.update(v => !v);
+  }
 }

@@ -56,6 +56,10 @@ export class VerifypasswordComponent {
       });
     };
 
+  togglePassword(input: HTMLInputElement) {
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
   private verifySubscriber: Observer<any> = {
     next: (response: IResponse) => {
       this.state.update(state => ({ ...state, loading: false, mode: 'reset', userUuid: response.data.user.userUuid, message: `${response.message} pour ${response.data.user.email}`, error: undefined }));

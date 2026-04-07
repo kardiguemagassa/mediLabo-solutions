@@ -9,6 +9,7 @@ import { IResponse } from '../interface/response';
 import { IAuthentication } from '../interface/IAuthentication';
 import { IUser } from '../interface/user';
 import { UpdatePassword } from '../interface/credentials';
+import { IQuery } from '../interface/query';
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,18 @@ export class UserService {
   private http = inject(HttpClient);
 
   constructor() { }
+
+  usersPageable$ = (query: IQuery) =>
+    <Observable<IResponse>>(
+        this.http
+            .get<IResponse>(`${server}/api/users/page`, {
+                params: {
+                    page: query.page.toString(),
+                    size: query.size.toString()
+                }
+            })
+            .pipe(tap(console.log), catchError(this.handleError))
+    );
 
   register$ = (user: any) => <Observable<IResponse>>
     this.http.post<IResponse>
