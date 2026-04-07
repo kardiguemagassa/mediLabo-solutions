@@ -51,6 +51,7 @@ public class ResourceServerConfig {
             "/api/users/verify/account/**",
             "/api/users/verify/password/**",
             "/api/users/resetpassword/**",
+            "/api/users/image/**",
             "/.well-known/**",
            "/fallback/**" // pour que le Circuit Breaker réponde toujours
     };

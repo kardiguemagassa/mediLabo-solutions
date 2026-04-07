@@ -30,7 +30,7 @@ public class OpenApiConfig {
                                         .bearerFormat("JWT")
                                         .description("Entrez le token JWT obtenu via le service d'authentification pour tester les routes protégées."))
 
-                        // 2. Réponses d'erreurs standardisées pour le Gateway (Fallback, Security)
+                        // Réponses d'erreurs standardisées pour le Gateway (Fallback, Security)
                         .addResponses("Unauthorized", new ApiResponse().description("Authentification requise ou jeton invalide"))
                         .addResponses("Forbidden", new ApiResponse().description("Accès interdit - Permissions insuffisantes"))
                         .addResponses("ServiceUnavailable", new ApiResponse().description("Le service cible est momentanément indisponible (Circuit Breaker)")))
