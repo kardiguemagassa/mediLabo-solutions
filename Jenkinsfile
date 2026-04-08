@@ -145,6 +145,7 @@ pipeline {
             steps {
                 sh """
                     find ${WORKSPACE}/.m2/repository -name "*.lastUpdated" -delete 2>/dev/null || true
+                    rm -rf ${WORKSPACE}/.m2/repository/org/owasp/dependency-check-data/ 2>/dev/null || true
                 """
                 checkout scm
                 script {
@@ -725,10 +726,11 @@ def runOwaspCheck(Map config, Map svc) {
                             mvn org.owasp:dependency-check-maven:check -s \$MAVEN_SETTINGS \
                                 -DfailBuildOnCVSS=7 \
                                 -DsuppressFailureOnError=false \
-                                -Dformat=HTML,XML \
+                                -Dformat=HTML \
                                 -DretireJsAnalyzerEnabled=false \
                                 -DnodeAnalyzerEnabled=false \
                                 -DossindexAnalyzerEnabled=false \
+                                -DassemblyAnalyzerEnabled=false \
                                 -B -q || true
                         """
                     }
