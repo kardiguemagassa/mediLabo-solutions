@@ -73,7 +73,8 @@ def config = [
             'discovery':  'http://localhost:8761/actuator/health',
             'patient':    'http://localhost:8081/actuator/health',
             'notes':      'http://localhost:8082/actuator/health',
-            'assessment': 'http://localhost:8083/actuator/health'
+            'assessment': 'http://localhost:8083/actuator/health',
+            'user':       'http://localhost:8085/actuator/health'
         ],
         rollbackOnFailure: true,
         maxRetries:        18,
@@ -87,7 +88,8 @@ def heavyServices = [
     [name: 'discoveryserverservice',     path: 'backend/discoveryserverservice',     port: '8761'],
     [name: 'gatewayserverservice',       path: 'backend/gatewayserverservice',       port: '8080'],
     [name: 'authorizationserverservice', path: 'backend/authorizationserverservice', port: '9001'],
-    [name: 'notificationservice',        path: 'backend/notificationservice',        port: '8084']
+    [name: 'notificationservice',        path: 'backend/notificationservice',        port: '8084'],
+    [name: 'userservice',                path: 'backend/userservice',                port: '8085']
 ]
 
 def lightServices = [
