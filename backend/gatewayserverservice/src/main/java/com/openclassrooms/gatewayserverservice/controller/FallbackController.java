@@ -57,7 +57,7 @@ public class FallbackController {
 
     @Operation(summary = "Fallback Users", description = "Réponse de secours pour User-Service")
     @ApiResponses(value = { @ApiResponse(responseCode = "503", content = @Content(schema = @Schema(implementation = Response.class))) })
-    @RequestMapping(value = "/user")
+    @RequestMapping(value = "/users")
     public Mono<ResponseEntity<Response>> userFallback(ServerWebExchange exchange) {
         return buildFallbackResponse(exchange, "Le service de user est indisponible pour le moment.");
     }
