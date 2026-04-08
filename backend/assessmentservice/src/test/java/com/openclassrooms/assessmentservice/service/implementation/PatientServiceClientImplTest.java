@@ -296,33 +296,33 @@ class PatientServiceClientImplTest {
     @Test
     @DisplayName("Should handle response with missing fields")
     void getPatientByUuid_MissingFields() {
-        // GIVEN - JSON avec seulement l'UUID
-        String mockJsonResponse =
-                """
-                {
-                    "status": "OK",
-                    "data": {
-                        "patient": {
-                            "patientUuid": "uuid-123"
-                        }
+
+        String mockJsonResponse = """
+            {
+                "status": "OK",
+                "data": {
+                    "patient": {
+                        "patientUuid": "uuid-123"
                     }
                 }
-                """;
+            }
+            """;
 
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody(mockJsonResponse));
 
-        // WHEN - Le patient peut être créé avec des champs null
-        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN)
-                .onErrorResume(e -> Mono.empty())
-                .block();
+        // WHEN
+        PatientResponseDTO result = patientClient.getPatientByUuid("uuid-123", TEST_TOKEN).block();
 
         // THEN
         assertThat(result).isNotNull();
         assertThat(result.getPatientUuid()).isEqualTo("uuid-123");
-        // Le nom complet pourrait être "Inconnu" si c'est la valeur par défaut
+        assertThat(result.getFullName()).isEqualTo("Inconnu");
+        assertThat(result.getGender()).isNull();
+        assertThat(result.getDateOfBirth()).isNull();
+        assertThat(result.getUserInfo()).isNull();
     }
 
     @Test

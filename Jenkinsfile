@@ -60,7 +60,7 @@ def config = [
         lightTest:     15,
         sonarAnalysis: 10,
         qualityGate:   3,
-        owasp:         20,
+        owasp:         45,
         dockerBuild:   15,
         healthCheck:   5,
         deploy:        10,
