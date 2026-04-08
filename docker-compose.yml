@@ -23,7 +23,7 @@ x-common-java: &common-java
     resources:
       limits:
         memory: 768M
-        cpus: '0.5'
+        cpus: '2'
       reservations:   
         memory: 256M
 
@@ -54,7 +54,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
 
   authorization-server:
     <<: *common-java
@@ -87,7 +87,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 180s
 
   gateway-server:
     <<: *common-java
@@ -116,7 +116,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
 
   user-service:
     <<: *common-java
@@ -128,16 +128,17 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SERVER_PORT: ${USER_SERVICE_PORT:-8085}
-      GATEWAY_URL: http://gateway:8080
+      GATEWAY_URL: http://localhost:8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_AUTHORIZATION:-medilabo_authorization}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_HOST: discovery-server
       JWKS_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}/oauth2/jwks
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      APP_PHOTO_DIRECTORY: /app/uploads/
+      PHOTO_UPLOAD_DIR: /app/uploads/
     volumes:
-      - user_uploads:/app/uploads
+      # - user_uploads:/app/uploads # volume Docker pour persistance
+      - /Users/kara/Downloads/uploads/mediLabo:/app/uploads # chemin local pour développement (remplace le volume Docker)
     ports:
       - "${USER_SERVICE_PORT:-8085}:${USER_SERVICE_PORT:-8085}"
     networks:
@@ -154,7 +155,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
 
   patient-service:
     <<: *common-java
@@ -191,7 +192,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
 
   notes-service:
     <<: *common-java
@@ -215,8 +216,10 @@ services:
       AUTH_SERVER_ISSUER_URI: http://authorization-server:${AUTHORIZATION_SERVER_PORT:-9001}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       NOTES_SERVICE_HOST: notes-service
+      FILE_UPLOAD_DIR: /app/uploads/
     volumes:
-      - notes_uploads:/app/uploads
+      #- notes_uploads:/app/uploads  # volume Docker pour persistance
+      - /Users/kara/Downloads/uploads/mediLabo:/app/uploads # chemin local pour développement (remplace le volume Docker)
     ports:
       - "${NOTES_SERVICE_PORT:-8082}:${NOTES_SERVICE_PORT:-8082}"
     networks:
@@ -231,7 +234,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
 
   assessment-service:
     <<: *common-java
@@ -262,7 +265,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
 
   notification-service:
     <<: *common-java
@@ -274,6 +277,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SERVER_PORT: ${NOTIFICATION_SERVICE_PORT:-8084}
+      USER_SERVICE_URL: http://user-service:8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_NOTIFICATION:-medilabo_notification}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
@@ -297,7 +301,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
 
   frontend:
     build:
@@ -326,7 +330,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 180s
     restart: unless-stopped
 
 # RÉSEAUX
