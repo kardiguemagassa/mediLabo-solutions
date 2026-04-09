@@ -120,6 +120,7 @@ pipeline {
         DOCKER_REGISTRY              = "${config.dockerRegistry}"
         TESTCONTAINERS_RYUK_DISABLED = "true"
         TESTCONTAINERS_HOST_OVERRIDE = "host.docker.internal"
+        NVD_API_KEY                  = credentials('nvd-api-key') 
 
         // ── CACHE MAVEN
         MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository -Xmx512m"
@@ -323,34 +324,48 @@ pipeline {
             }
             steps {
                 script {
-                    def sonarStages = [:]
-                    backendServices.each { service ->
-                        def svc = service
-                        sonarStages["Sonar ${svc.name}"] = {
-                            dir(svc.path) {
-                                if (fileExists('pom.xml')) {
-                                    withSonarQubeEnv(config.sonar.installationName) {
-                                        configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                                            timeout(time: config.timeouts.sonarAnalysis, unit: 'MINUTES') {
-                                                sh """
-                                                    mvn sonar:sonar -s \$MAVEN_SETTINGS -B -q \
-                                                        -Dsonar.projectKey=medilabo-${svc.name} \
-                                                        -Dsonar.projectName="${svc.name}" \
-                                                        -Dsonar.projectVersion=${env.SEMVER} \
-                                                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-                                                        -Dsonar.junit.reportPaths=target/surefire-reports \
-                                                        -Dsonar.java.source=21
-                                                """
+                    echo "🔍 Running SonarQube analysis for ${backendServices.size()} services (batches of 2)..."
+                    
+                    // Grouper par lots de 2 services maximum
+                    def batches = backendServices.collate(2)
+                    int batchNumber = 1
+                    
+                    batches.each { batch ->
+                        echo "📊 Processing SonarQube batch ${batchNumber}/${batches.size()}..."
+                        def batchStages = [:]
+                        
+                        batch.each { service ->
+                            def svc = service
+                            batchStages["Sonar ${svc.name}"] = {
+                                dir(svc.path) {
+                                    if (fileExists('pom.xml')) {
+                                        withSonarQubeEnv(config.sonar.installationName) {
+                                            configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
+                                                timeout(time: config.timeouts.sonarAnalysis, unit: 'MINUTES') {
+                                                    sh """
+                                                        mvn sonar:sonar -s \$MAVEN_SETTINGS -B \
+                                                            -Dsonar.projectKey=medilabo-${svc.name} \
+                                                            -Dsonar.projectName="${svc.name}" \
+                                                            -Dsonar.projectVersion=${env.SEMVER} \
+                                                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                                                            -Dsonar.junit.reportPaths=target/surefire-reports \
+                                                            -Dsonar.java.source=21
+                                                    """
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                        parallel batchStages
+                        batchNumber++
                     }
-                    parallel sonarStages
+                    
+                    echo "🎉 All ${backendServices.size()} services analysed by SonarQube"
                 }
             }
+            
         }
 
         // STAGE 7 — QUALITY GATE
@@ -384,7 +399,7 @@ pipeline {
             }
         }
 
-        // STAGE 8 — SECURITY (OWASP sur TOUS les services)
+        // STAGE 8 — SECURITY (OWASP sur TOUS les services) ==> MODE SÉQUENTIEL pour éviter les conflits de DB
         stage('Security') {
             when {
                 allOf {
@@ -396,32 +411,34 @@ pipeline {
                     }
                 }
             }
-            parallel {
-                stage('OWASP Dependency Check') {
-                    steps {
-                        script {
-                            backendServices.each { svc ->
-                                runOwaspCheck(config, svc)
-                            }
-                        }
+            steps {
+                script {
+                    echo "🔒 Running OWASP Dependency Checks (SEQUENTIAL to avoid DB lock)..."
+                    
+                    // Exécution SÉQUENTIELLE des OWASP checks
+                    backendServices.each { svc ->
+                        runOwaspCheck(config, svc)
                     }
-                    post {
-                        always {
-                            script {
-                                backendServices.each { svc ->
-                                    archiveOwaspReports(svc)
+                    
+                    echo "🔒 Running Maven Security Audit..."
+                    
+                    // Maven Security Audit (peut rester en séquentiel)
+                    backendServices.each { svc ->
+                        dir(svc.path) {
+                            if (fileExists('pom.xml')) {
+                                configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
+                                    sh "mvn versions:display-dependency-updates -s \$MAVEN_SETTINGS -B -e -q || true"
                                 }
                             }
                         }
                     }
                 }
-                stage('Maven Security Audit') {
-                    steps {
-                        script {
-                            backendServices.each { svc ->
-                                mavenCmd(svc.path, config,
-                                    "versions:display-dependency-updates", "-q || true")
-                            }
+            }
+            post {
+                always {
+                    script {
+                        backendServices.each { svc ->
+                            archiveOwaspReports(svc)
                         }
                     }
                 }
@@ -738,15 +755,19 @@ def runOwaspCheck(Map config, Map svc) {
                 configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
                     timeout(time: config.timeouts.owasp, unit: 'MINUTES') {
                         sh """
+                            # Nettoyer la base de données OWASP pour éviter les locks
+                            rm -rf ${WORKSPACE}/.m2/repository/org/owasp/dependency-check-data/ 2>/dev/null || true
+                            
                             mvn org.owasp:dependency-check-maven:check -s \$MAVEN_SETTINGS \
                                 -DfailBuildOnCVSS=7 \
-                                -DsuppressFailureOnError=false \
+                                -DsuppressFailureOnError=true \
                                 -Dformat=HTML \
                                 -DretireJsAnalyzerEnabled=false \
                                 -DnodeAnalyzerEnabled=false \
                                 -DossindexAnalyzerEnabled=false \
                                 -DassemblyAnalyzerEnabled=false \
-                                -B -q || true
+                                -DnvdApiKey=\${NVD_API_KEY} \
+                                -B -q
                         """
                     }
                 }
