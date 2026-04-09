@@ -120,7 +120,6 @@ pipeline {
         DOCKER_REGISTRY              = "${config.dockerRegistry}"
         TESTCONTAINERS_RYUK_DISABLED = "true"
         TESTCONTAINERS_HOST_OVERRIDE = "host.docker.internal"
-        NVD_API_KEY                  = credentials('nvd-api-key') 
 
         // ── CACHE MAVEN
         MAVEN_OPTS = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository -Xmx512m"
@@ -766,7 +765,6 @@ def runOwaspCheck(Map config, Map svc) {
                                 -DnodeAnalyzerEnabled=false \
                                 -DossindexAnalyzerEnabled=false \
                                 -DassemblyAnalyzerEnabled=false \
-                                -DnvdApiKey=\${NVD_API_KEY} \
                                 -B -q
                         """
                     }
