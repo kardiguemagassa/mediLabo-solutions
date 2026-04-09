@@ -58,7 +58,7 @@ def config = [
         build:         10,
         heavyTest:     30,
         lightTest:     15,
-        sonarAnalysis: 10,
+        sonarAnalysis: 25,
         qualityGate:   3,
         owasp:         45,
         dockerBuild:   15,
