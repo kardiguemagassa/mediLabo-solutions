@@ -548,19 +548,34 @@ pipeline {
                     def profile = (env.BRANCH_NAME == 'main') ? 'prod' : 'staging'
                     echo "🚀 Deploying ${env.SEMVER} to ${profile.toUpperCase()}..."
 
-                    sh """
-                        docker compose -f ${config.deploy.composeFile} config > /tmp/compose-backup.yml 2>/dev/null || true
-                    """
+                    // Provision .env depuis Jenkins credentials (Secret file)
+                    withCredentials([file(credentialsId: 'medilabo-env-staging', variable: 'ENV_FILE')]) {
+                        sh 'cp "$ENV_FILE" .env'
+                    }
+
+                    // Re-login Docker registry (le push a fait logout)
+                    withCredentials([usernamePassword(
+                        credentialsId: config.nexus.credentialsId,
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh "echo \$DOCKER_PASS | docker login ${DOCKER_REGISTRY} -u \$DOCKER_USER --password-stdin"
+                    }
+
+                    // sh """
+                    //     docker compose -f ${config.deploy.composeFile} config > /tmp/compose-backup.yml 2>/dev/null || true
+                    // """
 
                     timeout(time: config.timeouts.deploy, unit: 'MINUTES') {
                         sh """
                             export SPRING_PROFILES_ACTIVE=${profile}
                             export CONTAINER_TAG=${env.CONTAINER_TAG}
-                            docker compose -f ${config.deploy.composeFile} pull --quiet || true
+                            export DOCKER_REGISTRY=${DOCKER_REGISTRY}
                             docker compose -f ${config.deploy.composeFile} up -d --force-recreate --remove-orphans
                         """
                     }
 
+                    sh "docker logout ${DOCKER_REGISTRY} || true"
                     echo "✅ Stack deployed — version: ${env.SEMVER}, profile: ${profile}"
                 }
             }

@@ -35,7 +35,8 @@ services:
     build:
       context: ./backend/discoveryserverservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/discoveryserverservice:${IMAGE_TAG:-latest}
+    #image: ${DOCKER_REGISTRY:-medilabo}/discoveryserverservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/discoveryserverservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-discovery
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -61,7 +62,8 @@ services:
     build:
       context: ./backend/authorizationserverservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/authorizationserverservice:${IMAGE_TAG:-latest}
+    #image: ${DOCKER_REGISTRY:-medilabo}/authorizationserverservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/authorizationserverservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-authorization
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -94,7 +96,8 @@ services:
     build:
       context: ./backend/gatewayserverservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/gatewayserverservice:${IMAGE_TAG:-latest}
+    #image: ${DOCKER_REGISTRY:-medilabo}/gatewayserverservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/gatewayserverservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-gateway
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -123,7 +126,7 @@ services:
     build:
       context: ./backend/userservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/userservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/userservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-user
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -162,7 +165,7 @@ services:
     build:
       context: ./backend/patientservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/patientservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/patientservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-patient
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -199,7 +202,7 @@ services:
     build:
       context: ./backend/notesservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/notesservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/notesservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-notes
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -241,7 +244,7 @@ services:
     build:
       context: ./backend/assessmentservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/assessmentservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/assessmentservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-assessment
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -272,7 +275,7 @@ services:
     build:
       context: ./backend/notificationservice
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/notificationservice:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/notificationservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-notification
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -307,7 +310,7 @@ services:
     build:
       context: ./frontend/mediLabo-solutions-ui
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY:-medilabo}/frontend:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/medilabo-frontend:${CONTAINER_TAG:-latest}
     container_name: medilabo-frontend
     deploy:
       resources:
