@@ -405,7 +405,7 @@ pipeline {
                     expression { currentBuild.currentResult != 'FAILURE' }
                     anyOf {
                         branch 'main'
-                        branch 'develop'
+                        //branch 'develop'
                         changeRequest()
                     }
                 }
@@ -754,9 +754,6 @@ def runOwaspCheck(Map config, Map svc) {
                 configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
                     timeout(time: config.timeouts.owasp, unit: 'MINUTES') {
                         sh """
-                            # Nettoyer la base de données OWASP pour éviter les locks
-                            rm -rf ${WORKSPACE}/.m2/repository/org/owasp/dependency-check-data/ 2>/dev/null || true
-                            
                             mvn org.owasp:dependency-check-maven:check -s \$MAVEN_SETTINGS \
                                 -DfailBuildOnCVSS=7 \
                                 -DsuppressFailureOnError=true \
@@ -765,6 +762,7 @@ def runOwaspCheck(Map config, Map svc) {
                                 -DnodeAnalyzerEnabled=false \
                                 -DossindexAnalyzerEnabled=false \
                                 -DassemblyAnalyzerEnabled=false \
+                                -DdataDirectory=${WORKSPACE}/.owasp-data \
                                 -B -q
                         """
                     }
