@@ -69,12 +69,14 @@ def config = [
     deploy: [
         composeFile:  "docker-compose.yml",
         healthChecks: [
-            'gateway':    'http://localhost:8080/actuator/health',
-            'discovery':  'http://localhost:8761/actuator/health',
-            'patient':    'http://localhost:8081/actuator/health',
-            'notes':      'http://localhost:8082/actuator/health',
-            'assessment': 'http://localhost:8083/actuator/health',
-            'user':       'http://localhost:8085/actuator/health'
+            'gateway':       'http://localhost:8080/actuator/health',
+            'discovery':     'http://localhost:8761/actuator/health',
+            'authorization': 'http://localhost:9001/actuator/health',
+            'notification':  'http://localhost:8084/actuator/health',
+            'patient':       'http://localhost:8081/actuator/health',
+            'notes':         'http://localhost:8082/actuator/health',
+            'assessment':    'http://localhost:8083/actuator/health',
+            'user':          'http://localhost:8085/actuator/health'
         ],
         rollbackOnFailure: true,
         maxRetries:        18,
@@ -323,48 +325,34 @@ pipeline {
             }
             steps {
                 script {
-                    echo "🔍 Running SonarQube analysis for ${backendServices.size()} services (batches of 2)..."
-                    
-                    // Grouper par lots de 2 services maximum
-                    def batches = backendServices.collate(2)
-                    int batchNumber = 1
-                    
-                    batches.each { batch ->
-                        echo "📊 Processing SonarQube batch ${batchNumber}/${batches.size()}..."
-                        def batchStages = [:]
-                        
-                        batch.each { service ->
-                            def svc = service
-                            batchStages["Sonar ${svc.name}"] = {
-                                dir(svc.path) {
-                                    if (fileExists('pom.xml')) {
-                                        withSonarQubeEnv(config.sonar.installationName) {
-                                            configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                                                timeout(time: config.timeouts.sonarAnalysis, unit: 'MINUTES') {
-                                                    sh """
-                                                        mvn sonar:sonar -s \$MAVEN_SETTINGS -B \
-                                                            -Dsonar.projectKey=medilabo-${svc.name} \
-                                                            -Dsonar.projectName="${svc.name}" \
-                                                            -Dsonar.projectVersion=${env.SEMVER} \
-                                                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-                                                            -Dsonar.junit.reportPaths=target/surefire-reports \
-                                                            -Dsonar.java.source=21
-                                                    """
-                                                }
+                    def sonarStages = [:]
+                    backendServices.each { service ->
+                        def svc = service
+                        sonarStages["Sonar ${svc.name}"] = {
+                            dir(svc.path) {
+                                if (fileExists('pom.xml')) {
+                                    withSonarQubeEnv(config.sonar.installationName) {
+                                        configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
+                                            timeout(time: config.timeouts.sonarAnalysis, unit: 'MINUTES') {
+                                                sh """
+                                                    mvn sonar:sonar -s \$MAVEN_SETTINGS -B -q \
+                                                        -Dsonar.projectKey=medilabo-${svc.name} \
+                                                        -Dsonar.projectName="${svc.name}" \
+                                                        -Dsonar.projectVersion=${env.SEMVER} \
+                                                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                                                        -Dsonar.junit.reportPaths=target/surefire-reports \
+                                                        -Dsonar.java.source=21
+                                                """
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                        parallel batchStages
-                        batchNumber++
                     }
-                    
-                    echo "🎉 All ${backendServices.size()} services analysed by SonarQube"
+                    parallel sonarStages
                 }
             }
-            
         }
 
         // STAGE 7 — QUALITY GATE
@@ -398,7 +386,7 @@ pipeline {
             }
         }
 
-        // STAGE 8 — SECURITY (OWASP sur TOUS les services) ==> MODE SÉQUENTIEL pour éviter les conflits de DB
+        // STAGE 8 — SECURITY (OWASP sur TOUS les services)
         stage('Security') {
             when {
                 allOf {
@@ -410,34 +398,32 @@ pipeline {
                     }
                 }
             }
-            steps {
-                script {
-                    echo "🔒 Running OWASP Dependency Checks (SEQUENTIAL to avoid DB lock)..."
-                    
-                    // Exécution SÉQUENTIELLE des OWASP checks
-                    backendServices.each { svc ->
-                        runOwaspCheck(config, svc)
+            parallel {
+                stage('OWASP Dependency Check') {
+                    steps {
+                        script {
+                            backendServices.each { svc ->
+                                runOwaspCheck(config, svc)
+                            }
+                        }
                     }
-                    
-                    echo "🔒 Running Maven Security Audit..."
-                    
-                    // Maven Security Audit (peut rester en séquentiel)
-                    backendServices.each { svc ->
-                        dir(svc.path) {
-                            if (fileExists('pom.xml')) {
-                                configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                                    sh "mvn versions:display-dependency-updates -s \$MAVEN_SETTINGS -B -e -q || true"
+                    post {
+                        always {
+                            script {
+                                backendServices.each { svc ->
+                                    archiveOwaspReports(svc)
                                 }
                             }
                         }
                     }
                 }
-            }
-            post {
-                always {
-                    script {
-                        backendServices.each { svc ->
-                            archiveOwaspReports(svc)
+                stage('Maven Security Audit') {
+                    steps {
+                        script {
+                            backendServices.each { svc ->
+                                mavenCmd(svc.path, config,
+                                    "versions:display-dependency-updates", "-q || true")
+                            }
                         }
                     }
                 }
