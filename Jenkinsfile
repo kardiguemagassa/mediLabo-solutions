@@ -315,7 +315,7 @@ pipeline {
             }
         }
 
-        // STAGE 6 — SONARQUBE (parallélisé)
+        // STAGE 6 — SONARQUBE SÉQUENTIEL 
         stage('Backend - SonarQube') {
             when {
                 allOf {
@@ -325,32 +325,34 @@ pipeline {
             }
             steps {
                 script {
-                    def sonarStages = [:]
+                    echo "🔍 Running SonarQube analysis for ${backendServices.size()} services (SEQUENTIAL mode)..."
+                    
                     backendServices.each { service ->
                         def svc = service
-                        sonarStages["Sonar ${svc.name}"] = {
-                            dir(svc.path) {
-                                if (fileExists('pom.xml')) {
-                                    withSonarQubeEnv(config.sonar.installationName) {
-                                        configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
-                                            timeout(time: config.timeouts.sonarAnalysis, unit: 'MINUTES') {
-                                                sh """
-                                                    mvn sonar:sonar -s \$MAVEN_SETTINGS -B -q \
-                                                        -Dsonar.projectKey=medilabo-${svc.name} \
-                                                        -Dsonar.projectName="${svc.name}" \
-                                                        -Dsonar.projectVersion=${env.SEMVER} \
-                                                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-                                                        -Dsonar.junit.reportPaths=target/surefire-reports \
-                                                        -Dsonar.java.source=21
-                                                """
-                                            }
+                        dir(svc.path) {
+                            if (fileExists('pom.xml')) {
+                                echo "📊 Analyzing ${svc.name}..."
+                                withSonarQubeEnv(config.sonar.installationName) {
+                                    configFileProvider([configFile(fileId: config.nexus.configFileId, variable: 'MAVEN_SETTINGS')]) {
+                                        timeout(time: config.timeouts.sonarAnalysis, unit: 'MINUTES') {
+                                            sh """
+                                                mvn sonar:sonar -s \$MAVEN_SETTINGS -B \
+                                                    -Dsonar.projectKey=medilabo-${svc.name} \
+                                                    -Dsonar.projectName="${svc.name}" \
+                                                    -Dsonar.projectVersion=${env.SEMVER} \
+                                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                                                    -Dsonar.junit.reportPaths=target/surefire-reports \
+                                                    -Dsonar.java.source=21
+                                            """
                                         }
                                     }
                                 }
+                                echo "✅ ${svc.name} analysed"
                             }
                         }
                     }
-                    parallel sonarStages
+                    
+                    echo "🎉 All services analysed by SonarQube"
                 }
             }
         }
@@ -533,6 +535,50 @@ pipeline {
 
                         sh "docker logout ${DOCKER_REGISTRY}"
                     }
+                }
+            }
+        }
+
+        // STAGE 12.5 — PRE-DEPLOY (Setup RSA Keys)
+        stage('Pre-Deploy - Setup') {
+            when {
+                allOf {
+                    expression { currentBuild.currentResult == 'SUCCESS' }
+                    expression { return env.IS_DEPLOYABLE == 'true' }
+                }
+            }
+            steps {
+                script {
+                    echo "🔐 Setting up RSA keys for Authorization Server..."
+                    
+                    // Récupérer le .env
+                    withCredentials([file(credentialsId: 'medilabo-env-staging', variable: 'ENV_FILE')]) {
+                        sh 'cp "$ENV_FILE" .env'
+                    }
+                    
+                    // Récupérer les clés RSA
+                    withCredentials([
+                        file(credentialsId: 'medilabo-private-key', variable: 'PRIVATE_KEY'),
+                        file(credentialsId: 'medilabo-public-key', variable: 'PUBLIC_KEY')
+                    ]) {
+                        sh """
+                            # Créer le dossier des clés dans le backend
+                            mkdir -p backend/authorizationserverservice/src/main/resources/keys
+                            
+                            # Copier les clés
+                            cp \$PRIVATE_KEY backend/authorizationserverservice/src/main/resources/keys/private.key
+                            cp \$PUBLIC_KEY backend/authorizationserverservice/src/main/resources/keys/public.key
+                            
+                            # Vérifier les permissions
+                            chmod 600 backend/authorizationserverservice/src/main/resources/keys/private.key
+                            chmod 644 backend/authorizationserverservice/src/main/resources/keys/public.key
+                            
+                            # Vérifier que les clés sont présentes
+                            ls -la backend/authorizationserverservice/src/main/resources/keys/
+                        """
+                    }
+                    
+                    echo "✅ RSA keys configured successfully"
                 }
             }
         }
