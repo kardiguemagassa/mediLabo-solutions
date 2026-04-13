@@ -35,7 +35,6 @@ services:
     build:
       context: ./backend/discoveryserverservice
       dockerfile: Dockerfile
-    #image: ${DOCKER_REGISTRY:-medilabo}/discoveryserverservice:${IMAGE_TAG:-latest}
     image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/discoveryserverservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-discovery
     environment:
@@ -62,7 +61,6 @@ services:
     build:
       context: ./backend/authorizationserverservice
       dockerfile: Dockerfile
-    #image: ${DOCKER_REGISTRY:-medilabo}/authorizationserverservice:${IMAGE_TAG:-latest}
     image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/authorizationserverservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-authorization
     environment:
@@ -76,6 +74,7 @@ services:
       RSA_PUBLIC_KEY_PATH: /app/src/main/resources/keys/public.key
     volumes:
        - ./backend/authorizationserverservice/src/main/resources/keys:/app/src/main/resources/keys:ro
+       #- ./.keys:/app/src/main/resources/keys:ro
     ports:
       - "${AUTHORIZATION_SERVER_PORT:-9001}:${AUTHORIZATION_SERVER_PORT:-9001}"
     networks:
@@ -96,7 +95,6 @@ services:
     build:
       context: ./backend/gatewayserverservice
       dockerfile: Dockerfile
-    #image: ${DOCKER_REGISTRY:-medilabo}/gatewayserverservice:${IMAGE_TAG:-latest}
     image: ${DOCKER_REGISTRY:-localhost:8186}/medilabo/gatewayserverservice:${CONTAINER_TAG:-latest}
     container_name: medilabo-gateway
     environment:
@@ -130,6 +128,8 @@ services:
     container_name: medilabo-user
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      EUREKA_INSTANCE_HOSTNAME: user-service
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
       SERVER_PORT: ${USER_SERVICE_PORT:-8085}
       GATEWAY_URL: http://localhost:8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_AUTHORIZATION:-medilabo_authorization}
