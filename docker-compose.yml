@@ -70,11 +70,6 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_HOST: discovery-server
-      RSA_PRIVATE_KEY_PATH: /app/src/main/resources/keys/private.key
-      RSA_PUBLIC_KEY_PATH: /app/src/main/resources/keys/public.key
-    volumes:
-       - ./backend/authorizationserverservice/src/main/resources/keys:/app/src/main/resources/keys:ro
-       #- ./.keys:/app/src/main/resources/keys:ro
     ports:
       - "${AUTHORIZATION_SERVER_PORT:-9001}:${AUTHORIZATION_SERVER_PORT:-9001}"
     networks:
