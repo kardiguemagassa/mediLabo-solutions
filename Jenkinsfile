@@ -604,6 +604,10 @@ pipeline {
                             export SPRING_PROFILES_ACTIVE=${profile}
                             export CONTAINER_TAG=${env.CONTAINER_TAG}
                             export DOCKER_REGISTRY=${DOCKER_REGISTRY}
+                            
+                            # Nettoyer les containers orphelins (lancés manuellement hors compose)
+                            docker rm -f \$(docker ps -aq --filter "name=medilabo-") 2>/dev/null || true
+                            
                             docker compose -f ${config.deploy.composeFile} up -d --force-recreate --remove-orphans
                         """
                     }
