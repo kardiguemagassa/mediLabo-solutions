@@ -69,14 +69,14 @@ def config = [
     deploy: [
         composeFile:  "docker-compose.yml",
         healthChecks: [
-            'gateway':       'http://localhost:8080/actuator/health',
-            'discovery':     'http://localhost:8761/actuator/health',
-            'authorization': 'http://localhost:9001/actuator/health',
-            'notification':  'http://localhost:8084/actuator/health',
-            'patient':       'http://localhost:8081/actuator/health',
-            'notes':         'http://localhost:8082/actuator/health',
-            'assessment':    'http://localhost:8083/actuator/health',
-            'user':          'http://localhost:8085/actuator/health'
+            'gateway':       'http://host.docker.internal:8080/actuator/health',
+            'discovery':     'http://host.docker.internal:8761/actuator/health',
+            'authorization': 'http://host.docker.internal:9001/actuator/health',
+            'notification':  'http://host.docker.internal:8084/actuator/health',
+            'patient':       'http://host.docker.internal:8081/actuator/health',
+            'notes':         'http://host.docker.internal:8082/actuator/health',
+            'assessment':    'http://host.docker.internal:8083/actuator/health',
+            'user':          'http://host.docker.internal:8085/actuator/health'
         ],
         rollbackOnFailure: true,
         maxRetries:        18,
@@ -594,10 +594,6 @@ pipeline {
                     )]) {
                         sh "echo \$DOCKER_PASS | docker login ${DOCKER_REGISTRY} -u \$DOCKER_USER --password-stdin"
                     }
-
-                    // sh """
-                    //     docker compose -f ${config.deploy.composeFile} config > /tmp/compose-backup.yml 2>/dev/null || true
-                    // """
 
                     timeout(time: config.timeouts.deploy, unit: 'MINUTES') {
                         sh """
