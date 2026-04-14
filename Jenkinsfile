@@ -395,7 +395,7 @@ pipeline {
                     expression { currentBuild.currentResult != 'FAILURE' }
                     anyOf {
                         branch 'main'
-                        //branch 'develop'
+                        branch 'develop'
                         changeRequest()
                     }
                 }
