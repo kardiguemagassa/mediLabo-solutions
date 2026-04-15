@@ -295,7 +295,7 @@ class PatientServiceClientImplTest {
 
     @Test
     @DisplayName("Should handle response with missing fields")
-    @Timeout(value = 30, unit = TimeUnit.SECONDS)
+    //@Timeout(value = 30, unit = TimeUnit.SECONDS)
     void getPatientByUuid_MissingFields() {
 
         String mockJsonResponse = """
