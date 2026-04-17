@@ -121,6 +121,7 @@ nb-configuration.xml
 .Spotlight-V100
 .Trashes
 
+<<<<<<< HEAD
 # Windows
 Thumbs.db
 ehthumbs.db
@@ -194,3 +195,11 @@ uploads/
 database/authdata/data.sql
 uploads/
 uploads/
+=======
+# Env / Secrets
+.env
+.env.*
+.keys
+*.key
+*.pem
+>>>>>>> origin/main
