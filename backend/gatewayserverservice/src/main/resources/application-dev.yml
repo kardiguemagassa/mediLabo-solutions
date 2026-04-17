@@ -1,0 +1,33 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Development Profile                          ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    # Permet de voir instantanément quel service est lancé dans le dashboard Eureka
+    instance-id: ${spring.application.name}:${server.port}:${random.value}
+
+# LOGGING - TRÈS VERBEUX POUR LE DÉVELOPPEMENT
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    # On garde reactor.netty en INFO car DEBUG est vraiment trop dense
+    reactor.netty: INFO
+    # Utile pour débugger les problèmes de Load Balancing en local
+    org.springframework.cloud.loadbalancer: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+
+# OPTIONNEL: Si tu veux que Swagger en local soit plus rapide à charger
+springdoc:
+  swagger-ui:
+    enabled: true
+    # Désactive le cache en dev pour voir tes changements d'API immédiatement
+    cache.disabled: true

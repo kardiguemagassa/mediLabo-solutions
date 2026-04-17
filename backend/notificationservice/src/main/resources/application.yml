@@ -1,0 +1,185 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              NOTIFICATION SERVICE - Main Configuration                     ║
+# ║                                                                            ║
+# ║  🔒 SECURITY: No secrets in this file                                      ║
+# ║  All sensitive values come from environment variables                      ║
+# ║                                                                            ║
+# ║  📋 Required environment variables:                                        ║
+# ║     - POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USERNAME, POSTGRES_PASSWORD   ║
+# ║     - POSTGRES_DB_NOTIFICATION                                             ║
+# ║     - EUREKA_HOST, EUREKA_USERNAME, EUREKA_PASSWORD                        ║
+# ║     - KAFKA_SERVER_URL                                                     ║
+# ║     - EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, EMAIL_PASSWORD               ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+
+spring:
+  application:
+    name: notificationservice
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # DATABASE CONFIGURATION (JDBC)
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB_NOTIFICATION:medilabo_notification}
+    username: ${POSTGRES_USERNAME:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    hikari:
+      connection-test-query: SELECT 1
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    database: POSTGRESQL
+    open-in-view: false
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate  # le schéma existe déjà
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  # KAFKA CONFIGURATION
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    template:
+      default-topic: MEDILABO_NOTIFICATIONS
+    consumer:
+      group-id: notification-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.value.default.type: com.openclassrooms.notificationservice.domain.Notification
+        spring.json.type.mapping: Notification:com.openclassrooms.notificationservice.domain.Notification
+        #spring.json.trusted.packages: com.openclassrooms.notificationservice.domain
+        spring.json.trusted.packages: "*"
+
+  # EMAIL CONFIGURATION
+  mail:
+    host: ${EMAIL_HOST:smtp.gmail.com}
+    port: ${EMAIL_PORT:587}
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    verify:
+      host: ${VERIFY_EMAIL_HOST:http://localhost:4200}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # THYMELEAF
+  thymeleaf:
+    suffix: .html
+    cache: false
+
+  # OAuth2 Resource Server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
+
+server:
+  port: ${NOTIFICATION_SERVICE_PORT:8084}
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME:admin}:${EUREKA_PASSWORD:admin}@${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+
+# RESILIENCE4J CONFIGURATION
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServerService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+  retry:
+    instances:
+      authServerService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+  timelimiter:
+    instances:
+      authServerService:
+        timeoutDuration: 5s
+        cancelRunningFuture: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
+
+# SERVICES CONFIGURATION     AUTH_SERVER_URL
+#services:
+  #authorization-server:
+    #url: ${AUTH_SERVER_URL:http://localhost:9001}
+    #timeout: 5000
+
+services:
+  user-service:
+    url: ${USER_SERVICE_URL:http://localhost:8085}
+    timeout: 5000
+
+
+# SWAGGER URL GATEWAY
+springdoc:
+  api-docs:
+    path: /api/notifications/v3/api-docs
+
+
+# ACTUATOR - HEALTH & METRICS
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# LOGGING CONFIGURATION
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.openclassrooms: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.springframework.kafka: ${LOG_LEVEL_APP:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
+    io.github.resilience4j: ${LOG_LEVEL_APP:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

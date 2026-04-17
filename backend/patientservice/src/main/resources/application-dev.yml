@@ -1,0 +1,28 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              PATIENT SERVICE - Development Profile                         ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+# LOGGING - VERBOSE FOR DEBUGGING
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

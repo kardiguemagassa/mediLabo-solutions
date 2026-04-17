@@ -1,0 +1,41 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              NOTES SERVICE - Production Profile                            ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  data:
+    mongodb:
+      # On désactive la création automatique pour de meilleures performances au démarrage
+      auto-index-creation: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # URL interne au réseau Docker pour récupérer les clés publiques
+          jwk-set-uri: ${JWKS_URI:http://authorization-server:9001/oauth2/jwks}
+
+eureka:
+  instance:
+    # 1. Plus fiable dans un réseau Docker Bridge/Overlay
+    prefer-ip-address: false
+    hostname: notes-service
+    # 2. Permet de différencier plusieurs instances du même service
+    instance-id: ${spring.application.name}:${random.uuid}
+    # 3. On réduit les délais pour que le Gateway détecte plus vite si un service tombe
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    # On réduit le bruit des drivers pour ne garder que l'essentiel
+    org.springframework.security: WARN
+    org.mongodb.driver: WARN

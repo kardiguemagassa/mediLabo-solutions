@@ -1,0 +1,40 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              PATIENT SERVICE - Test Profile                                ║
+# ║                                                                            ║
+# ║  🧪 Unit & Integration tests                                               ║
+# ║  Uses Testcontainers (PostgreSQL)                     ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    # Note : Les propriétés url, username, password seront injectées
+    # dynamiquement par Testcontainers dans ton code Java (@DynamicPropertySource)
+
+  jpa:
+    database: POSTGRESQL
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+
+# PORT ALÉATOIRE POUR ÉVITER LES CONFLITS LORS DES TESTS PARALLÈLES
+server:
+  port: 0
+
+eureka:
+  client:
+    enabled: false
+
+# LOGGING - WARN POUR LE RESTE, DEBUG POUR TON CODE
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG
+    org.testcontainers: INFO

@@ -1,0 +1,38 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Production Profile                           ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+# CONFIGURATION DE SÉCURITÉ SPÉCIFIQUE DOCKER
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Ici, on force l'URL interne à Docker
+          jwk-set-uri: ${JWKS_URI:http://authorization-server:9001/oauth2/jwks}
+
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    # On utilise le nom du service défini dans Docker Compose
+    hostname: ${GATEWAY_HOST:medilabo-gateway}
+    # Indispensable en Docker pour une communication stable
+    prefer-ip-address: true
+    # Un ID unique pour éviter les collisions si tu lances plusieurs instances
+    instance-id: ${spring.application.name}:${server.port}:${random.value}
+    # Pour un affichage propre dans le dashboard Eureka
+    display-name: ${spring.application.name}
+
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    org.springframework.cloud.gateway: WARN
+    org.springframework.security: WARN
+    reactor.netty: WARN
+    # Optionnel : utile pour voir les erreurs de routage sans polluer les logs
+    org.springframework.cloud.loadbalancer: WARN

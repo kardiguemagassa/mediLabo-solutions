@@ -1,42 +1,44 @@
-# ════════════════════════════════════════════════════════════
-# Authorization Server Service - Development Profile
-# ════════════════════════════════════════════════════════════
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              AUTHORIZATION SERVER - Development Profile                    ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
 
 spring:
-  # ─── Database Configuration ───
-  datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DATABASE:openclassrooms_medical_microservice}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
   jpa:
-    hibernate:
-      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
-# ─── Security Configuration ───
-security:
-  admin:
-    username: ${ADMIN_USERNAME}
-    password: ${ADMIN_PASSWORD}
-    roles: ${ADMIN_ROLES:ADMIN,EUREKA_CLIENT}
+# EUREKA INSTANCE LOCAL DEVELOPMENT
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
 
-# ─── RSA Keys for JWT ───
-keys:
-  private-path: ${PRIVATE_KEY_PATH:.keys/private.key}
-  public-path: ${PUBLIC_KEY_PATH:.keys/public.key}
+# SERVER CONFIGURATION
+server:
+  port: ${AUTHORIZATION_SERVER_PORT:9001}
+  shutdown: graceful
+  forward-headers-strategy: framework
+  error:
+    include-message: always
+    include-binding-errors: always
 
-# ─── UI Application URL (CORS) ───
 ui:
   app:
     url: ${UI_APP_URL:http://localhost:4200}
 
-# ─── Debug Logging ───
+jwks:
+  uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
+
+# LOGGING - VERBOSE FOR DEBUGGING
 logging:
   level:
     com.openclassrooms: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

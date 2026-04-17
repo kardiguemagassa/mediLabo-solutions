@@ -1,0 +1,35 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              DISCOVERY SERVER - Production Profile                         ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  jpa:
+    show-sql: false
+
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    # On utilise l'IP pour plus de robustesse dans le cluster Docker
+    hostname: ${EUREKA_HOST:medilabo-discovery}
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    display-name: ${spring.application.name}
+  server:
+    # Vital en prod : évite de vider l'annuaire en cas de pépin réseau passager
+    enable-self-preservation: true
+    # Temps d'attente avant d'accepter des requêtes si l'annuaire est vide
+    wait-time-in-ms-when-sync-empty: 5000
+    # Nettoyage des instances expirées toutes les 60s (standard)
+    eviction-interval-timer-in-ms: 60000
+
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    org.springframework.security: WARN

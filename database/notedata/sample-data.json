@@ -1,0 +1,32 @@
+[
+  {
+    "noteUuid": "a1b2c3d4-e5f6-7890-note-example001",
+    "patientUuid": "PATIENT_UUID_ICI",
+    "practitionerUuid": "PRACTITIONER_UUID_ICI",
+    "content": "Patient présente des symptômes de diabète de type 2. Taux de glucose à jeun: 7.2 mmol/L. Hémoglobine A1C: 6.8%. Recommandation: modification du régime alimentaire et augmentation de l'activité physique. Suivi dans 3 mois.",
+    "createdBy": "Dr. Jean Dupont",
+    "createdAt": "2026-01-05T10:30:00Z",
+    "updatedAt": "2026-01-05T10:30:00Z",
+    "active": true
+  },
+  {
+    "noteUuid": "b2c3d4e5-f6a7-8901-note-example002",
+    "patientUuid": "PATIENT_UUID_ICI",
+    "practitionerUuid": "PRACTITIONER_UUID_ICI",
+    "content": "Consultation de suivi. Patient montre une amélioration significative. Poids: -3.5 kg. Glucose à jeun: 6.1 mmol/L. Patient suit bien les recommandations diététiques. Continue le traitement actuel. Prochain rendez-vous dans 2 mois.",
+    "createdBy": "Dr. Marie Martin",
+    "createdAt": "2026-01-08T14:15:00Z",
+    "updatedAt": "2026-01-08T14:15:00Z",
+    "active": true
+  },
+  {
+    "noteUuid": "c3d4e5f6-a7b8-9012-note-example003",
+    "patientUuid": "PATIENT_UUID_ICI",
+    "practitionerUuid": "PRACTITIONER_UUID_ICI",
+    "content": "Patient se plaint de vertiges occasionnels. Tension artérielle: 145/92 mmHg. Légèrement élevée. Recommandation: réduction du sel dans l'alimentation. Surveiller la tension à domicile. Retour si symptômes persistent.",
+    "createdBy": "Dr. Jean Dupont",
+    "createdAt": "2026-01-09T09:45:00Z",
+    "updatedAt": "2026-01-09T09:45:00Z",
+    "active": true
+  }
+]

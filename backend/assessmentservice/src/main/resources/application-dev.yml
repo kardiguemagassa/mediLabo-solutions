@@ -1,0 +1,30 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              ASSESSMENT SERVICE - Development Profile                      ║
+# ║                                                                            ║
+# ║  🔧 Local development settings                                             ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME:admin}:${EUREKA_PASSWORD:admin}@${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+  instance:
+    #instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+logging:
+  level:
+    com.openclassrooms: DEBUG
+    io.github.resilience4j: DEBUG
+    org.springframework.security: DEBUG

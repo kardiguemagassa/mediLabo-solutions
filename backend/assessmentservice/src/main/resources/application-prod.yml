@@ -1,0 +1,33 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              ASSESSMENT SERVICE - Production Profile                       ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  # SECURITY - surchargé pour Docker
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://authorization-server:9001/oauth2/jwks}
+
+eureka:
+  instance:
+    prefer-ip-address: false
+    hostname: assessment-service
+    instance-id: ${spring.application.name}:${random.uuid}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# URLs Feign pour Docker - noms de services (pas container_name !)
+services:
+  patient:
+    url: http://patient-service:8081    # nom du service docker-compose
+  notes:
+    url: http://notes-service:8082      # nom du service docker-compose

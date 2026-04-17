@@ -1,0 +1,433 @@
+<div class="pt-20 pb-12 px-4">
+  <div class="container mx-auto">
+    <!-- Header avec bouton retour et nom de l'utilisateur -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+      <div class="flex items-center gap-4">
+        <a (click)="goBack()" class="p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors cursor-pointer">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-800">{{store?.user()?.firstName}} {{store?.user()?.lastName}}</h1>
+      </div>
+    </div>
+
+    <!-- Vérification des droits d'accès -->
+    @if(store?.profile()?.role === 'USER') {
+      <div class="bg-white rounded-2xl card-shadow p-6 border border-gray-100">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0">
+            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-800">Accès refusé</h3>
+            <p class="text-sm text-gray-600 mt-1">Vous n'avez pas accès à cette page.</p>
+          </div>
+        </div>
+      </div>
+    } @else {
+      @if (!store?.loading() && store?.user()) {
+        @let user = store?.user();
+        @let profile = store?.profile();
+        
+        <div class="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-3 gap-6">
+          <!-- Sidebar - Carte utilisateur -->
+          <aside class="space-y-4">
+            <div class="bg-white rounded-2xl card-shadow p-6 border border-gray-100">
+              <div class="flex flex-row items-center justify-between gap-4 flex-wrap">
+                <div class="flex flex-row items-center gap-4">
+                  <img [src]="user.imageUrl" [alt]="user.firstName" class="w-20 h-20 rounded-xl object-cover" loading="lazy">
+                  <div>
+                    <p class="text-xl font-bold text-gray-800">{{user.firstName}} {{user.lastName}}</p>
+                    <p class="text-sm text-gray-500">{{user.email}}</p>
+                  </div>
+                </div>
+                <span class="px-2 py-1 text-xs font-bold text-white bg-teal-500 rounded-lg">{{user.role}}</span>
+              </div>
+
+              <div class="border-t border-gray-100 my-4"></div>
+
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-500 font-medium">ID Membre</span>
+                  <span class="text-gray-700">{{user.memberId}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500 font-medium">Téléphone</span>
+                  <span class="text-gray-700">{{user.phone}}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500 font-medium">Dernière connexion</span>
+                  <span class="text-gray-700">{{user.lastLogin | date:'dd MMMM yyyy, HH:mm'}}</span>
+                </div>
+              </div>
+
+              <div class="mt-4 flex flex-wrap gap-2">
+                @if (user.enabled) {
+                  <span class="px-2 py-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                    </svg>
+                    Activé
+                  </span>
+                } @else {
+                  <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </svg>
+                    Désactivé
+                  </span>
+                }
+                @if (user.mfa) {
+                  <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    2FA activée
+                  </span>
+                }
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main Content -->
+          <main class="xl:col-span-2 lg:col-span-2 space-y-6">
+            <!-- Formulaire Profil -->
+            <section id="profile" class="bg-white rounded-2xl card-shadow p-6 border border-gray-100">
+              <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-800">Profil</h2>
+                @if(mode() === 'view' && (profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN')) {
+                  <button (click)="switchMode()" class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                    </svg>
+                  </button>
+                }
+              </div>
+
+              <form #form="ngForm" (ngSubmit)="updateUser(form)" class="mt-6 space-y-4">
+                <!-- Prénom et Nom -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                      Prénom <span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <input type="text" [ngModel]="user.firstName" name="firstName"
+                           [disabled]="mode() === 'view'"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:border-none"
+                           placeholder="Prénom" required>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">
+                      Nom <span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <input type="text" [ngModel]="user.lastName" name="lastName"
+                           [disabled]="mode() === 'view'"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:border-none"
+                           placeholder="Nom" required>
+                  </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-2">
+                    Email <span class="text-red-500 ml-1">*</span>
+                  </label>
+                  <input type="email" [ngModel]="user.email" name="email"
+                         [disabled]="mode() === 'view'"
+                         class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:border-none"
+                         placeholder="Email" required>
+                </div>
+
+                <!-- Adresse -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-2">Adresse</label>
+                  <input type="text" [ngModel]="user.address" name="address"
+                         [disabled]="mode() === 'view'"
+                         class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:border-none"
+                         placeholder="Adresse">
+                </div>
+
+                <!-- Bio -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-2">Bio</label>
+                  <textarea [ngModel]="user.bio" name="bio"
+                            [disabled]="mode() === 'view'"
+                            rows="3" placeholder="Bio"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 transition-all resize-none disabled:bg-gray-100 disabled:border-none"></textarea>
+                </div>
+
+                <!-- Téléphone -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-2">Téléphone</label>
+                  <input type="tel" [ngModel]="user.phone" name="phone"
+                         [disabled]="mode() === 'view'"
+                         class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:border-none"
+                         placeholder="Téléphone">
+                </div>
+
+                <!-- Dates -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Créé le</label>
+                    <input type="text" [ngModel]="user.createdAt | date:'medium'" readonly name="createdAt"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 bg-gray-50">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Mis à jour le</label>
+                    <input type="text" [ngModel]="user.updatedAt | date:'medium'" readonly name="updatedAt"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 bg-gray-50">
+                  </div>
+                </div>
+
+                <!-- ID Membre et Dernière connexion -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">ID Membre</label>
+                    <input type="text" [ngModel]="user.memberId" readonly name="memberId"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 bg-gray-50">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Dernière connexion</label>
+                    <input type="text" [ngModel]="user.lastLogin | date:'medium'" readonly name="lastLogin"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 bg-gray-50">
+                  </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="flex justify-end gap-3 pt-4">
+                  @if(mode() === 'edit') {
+                    <button (click)="switchMode()" type="button"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                      Annuler
+                    </button>
+                    <button [disabled]="form.invalid" type="submit"
+                            class="px-4 py-2 text-sm font-medium text-white medical-gradient btn-shadow rounded-xl transition-all disabled:bg-gray-300">
+                      Mettre à jour le profil
+                    </button>
+                  }
+                </div>
+              </form>
+            </section>
+
+            <!-- ══════ Section Paramètres ══════ -->
+            <section id="settings" class="bg-white rounded-2xl card-shadow p-6 border border-gray-100">
+              <h2 class="text-lg font-semibold text-gray-800 pb-4 mb-4 border-b border-gray-100">Paramètres</h2>
+
+              <!-- Compte verrouillé -->
+              <div class="border-b border-gray-200 pb-8 mb-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Compte verrouillé</h3>
+                <ul class="grid w-full gap-6 md:grid-cols-2">
+                  <li class="cursor-pointer" (click)="toggleAccountLocked()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[user.accountNonLocked ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Déverrouillé</div>
+                        <div class="w-full text-sm">Le compte est déverrouillé</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                      </svg>
+                    </div>
+                  </li>
+                  <li class="cursor-pointer" (click)="toggleAccountLocked()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[!user.accountNonLocked ? 'border-red-600 bg-red-100 text-red-600' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Verrouillé</div>
+                        <div class="w-full text-sm">Le compte est verrouillé</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                      </svg>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Compte expiré -->
+              <div class="border-b border-gray-200 pb-8 mb-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Compte expiré</h3>
+                <ul class="grid w-full gap-6 md:grid-cols-2">
+                  <li class="cursor-pointer" (click)="toggleAccountExpired()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[user.accountNonExpired ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Non expiré</div>
+                        <div class="w-full text-sm">Le compte n'est pas expiré</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                      </svg>
+                    </div>
+                  </li>
+                  <li class="cursor-pointer" (click)="toggleAccountExpired()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[!user.accountNonExpired ? 'border-red-600 bg-red-100 text-red-600' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Expiré</div>
+                        <div class="w-full text-sm">Le compte est expiré</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                      </svg>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Statut du compte -->
+              <div class="border-b border-gray-200 pb-8 mb-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Compte désactivé</h3>
+                <ul class="grid w-full gap-6 md:grid-cols-2">
+                  <li class="cursor-pointer" (click)="toggleAccountEnabled()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[user.enabled ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Activé</div>
+                        <div class="w-full text-sm">Le compte est activé</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                    </div>
+                  </li>
+                  <li class="cursor-pointer" (click)="toggleAccountEnabled()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[!user.enabled ? 'border-red-600 bg-red-100 text-red-600' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Désactivé</div>
+                        <div class="w-full text-sm">Le compte est désactivé</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Authentification 2FA -->
+              <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Authentification à deux facteurs (2FA)</h3>
+                <ul class="grid w-full gap-6 md:grid-cols-2">
+                  <li class="cursor-pointer" (click)="toggleMfa()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[user.mfa ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Activée</div>
+                        <div class="w-full text-sm">La 2FA est activée</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                      </svg>
+                    </div>
+                  </li>
+                  <li class="cursor-pointer" (click)="toggleMfa()">
+                    <div class="inline-flex items-center justify-between w-full p-4 border rounded-xl"
+                         [ngClass]="[!user.mfa ? 'border-gray-400 bg-gray-50 text-gray-600' : 'border-gray-200 bg-white text-gray-500']">
+                      <div class="block">
+                        <div class="w-full text-lg font-semibold">Désactivée</div>
+                        <div class="w-full text-sm">La 2FA est désactivée</div>
+                      </div>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286ZM12 15.75h.007v.008H12v-.008Z" />
+                      </svg>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            <!-- ══════ Section Gestion des accès ══════ -->
+            <section id="access" class="bg-white rounded-2xl card-shadow p-6 border border-gray-100">
+              <h2 class="text-lg font-semibold text-gray-800 pb-4 border-b border-gray-100">Gérer les accès</h2>
+
+              <div class="flex flex-col md:flex-row items-start gap-3 mt-4">
+                <div class="block w-full md:w-1/2">
+                  <label for="role" class="flex items-center mb-2 text-sm font-medium text-gray-600 w-full">
+                    Rôle
+                    <svg width="7" height="7" class="ml-1" viewBox="0 0 7 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3.11222 6.04545L3.20668 3.94744L1.43679 5.08594L0.894886 4.14134L2.77415 3.18182L0.894886 2.2223L1.43679 1.2777L3.20668 2.41619L3.11222 0.318182H4.19105L4.09659 2.41619L5.86648 1.2777L6.40838 2.2223L4.52912 3.18182L6.40838 4.14134L5.86648 5.08594L4.09659 3.94744L4.19105 6.04545H3.11222Z" fill="#EF4444"/>
+                    </svg>
+                  </label>
+                  <select [ngModel]="user.role"
+                          (change)="onRoleChange($event)"
+                          [disabled]="!(profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN')"
+                          name="role"
+                          class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:border-teal-500 transition-all disabled:bg-gray-100 disabled:border-none">
+                    @for (role of ['USER', 'PRACTITIONER', 'HEAD_PRACTITIONER', 'ADMIN', 'SUPER_ADMIN']; track role) {
+                      <option [value]="role" [selected]="user.role === role">{{role}}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <p class="text-sm text-gray-600 mb-2">Accès utilisateur</p>
+                @for (permission of user.authorities?.split(','); track permission) {
+                  <div class="mt-2 p-3 border border-gray-200 rounded-lg">
+                    <div class="flex items-center">
+                      <h3 class="text-sm font-bold uppercase px-2 py-1 rounded"
+                          [ngClass]="{
+                            'bg-cyan-300': permission.includes('create'),
+                            'bg-yellow-400': permission.includes('update'),
+                            'bg-sky-500 text-white': permission.includes('read'),
+                            'bg-red-500 text-white': permission.includes('delete')
+                          }">
+                        {{permission}}
+                      </h3>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1">
+                      {{'Accès ' + (permission.split(':')[1] || '') + ' ' + (permission.split(':')[0] || '')}}
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <p class="mt-4 text-sm text-gray-500">
+                La gestion des accès est généralement fournie dans le cadre d'une solution de gestion des identités et des accès (IAM). Alors que la gestion des accès elle-même fournit des outils d'authentification pour accorder ou refuser l'accès utilisateur, les solutions IAM incluent également des méthodes pour gérer l'identité des utilisateurs.
+              </p>
+            </section>
+          </main>
+        </div>
+      } @else {
+        <!-- Loading Skeleton -->
+        @if (store?.loading()) {
+          <div class="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-3 gap-6">
+            <aside class="space-y-4">
+              <div class="animate-pulse bg-white rounded-2xl p-6 border border-gray-100">
+                <div class="flex items-center gap-4 mb-4">
+                  <div class="w-20 h-20 bg-gray-200 rounded-xl"></div>
+                  <div class="flex-1 space-y-2">
+                    <div class="h-5 bg-gray-200 rounded-full w-32"></div>
+                    <div class="h-4 bg-gray-200 rounded-full w-40"></div>
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <div class="h-4 bg-gray-200 rounded-full w-full"></div>
+                  <div class="h-4 bg-gray-200 rounded-full w-full"></div>
+                  <div class="h-4 bg-gray-200 rounded-full w-2/3"></div>
+                </div>
+              </div>
+            </aside>
+            <main class="xl:col-span-2 lg:col-span-2">
+              <div class="animate-pulse bg-white rounded-2xl p-6 border border-gray-100">
+                <div class="h-6 bg-gray-200 rounded-full w-48 mb-6"></div>
+                <div class="space-y-4">
+                  <div class="h-10 bg-gray-200 rounded-lg w-full"></div>
+                  <div class="h-10 bg-gray-200 rounded-lg w-full"></div>
+                  <div class="h-10 bg-gray-200 rounded-lg w-3/4"></div>
+                </div>
+              </div>
+            </main>
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

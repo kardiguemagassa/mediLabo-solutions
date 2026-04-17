@@ -1,0 +1,28 @@
+package com.openclassrooms.notificationservice.handler;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+import static com.openclassrooms.notificationservice.utils.RequestUtils.handleErrorResponse;
+
+
+/**
+ * @author Kardigué MAGASSA
+ * @version 1.0
+ * @since 2026-02-09
+ */
+
+@Component
+public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
+        handleErrorResponse(request, response, exception);
+    }
+}

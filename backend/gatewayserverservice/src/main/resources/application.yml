@@ -1,0 +1,257 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Main Configuration                           ║
+# ║                                                                            ║
+# ║  🔒 SECURITY: No secrets in this file                                      ║
+# ║  All sensitive values come from environment variables                      ║
+# ║                                                                            ║
+# ║  📋 Required environment variables:                                        ║
+# ║     - EUREKA_HOST, EUREKA_USERNAME, EUREKA_PASSWORD                        ║
+# ║     - JWKS_URI                                                             ║
+# ║     - UI_APP_URL                                                           ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  application:
+    name: gatewayserverservice
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+
+  # SPRINGDOC
+
+  # CLOUD GATEWAY CONFIGURATION
+  cloud:
+    gateway:
+
+      # CONFIGURATION GLOBALE DES TIMEOUTS
+      httpclient:
+        connect-timeout: 2000 # 2 secondes pour établir la connexion
+        response-timeout: 5s   # 5 secondes pour recevoir la réponse
+        pool:
+          max-connections: 500
+          max-idle-time: 20s
+
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+
+      # ROUTES CONFIGURATION
+      routes:
+        # AUTHORIZATION SERVER - OAUTH2 + LOGIN PAGE
+        - id: authorization-server
+          uri: lb://AUTHORIZATIONSERVERSERVICE
+          predicates:
+            - Path=/authorization/**
+          metadata:
+            response-timeout: 15000
+            connect-timeout: 30000
+          filters:
+              - StripPrefix=1
+
+        # USER SERVICE - all other user endpoints
+        - id: user-service
+          uri: lb://USERSERVICE
+          predicates:
+            - Path=/api/users/**
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 10000
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/users
+
+        # PATIENT SERVICE
+        - id: patient-service
+          uri: lb://PATIENTSERVICE
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: patientServiceCircuitBreaker
+                fallbackUri: forward:/fallback/patients
+
+        # NOTES SERVICE
+        - id: notes-service
+          uri: lb://NOTESSERVICE
+          predicates:
+            - Path=/api/notes/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notesServiceCircuitBreaker
+                fallbackUri: forward:/fallback/notes
+          metadata:
+            # ploads
+            connect-timeout: 5000
+            response-timeout: 30000
+
+        # ASSESSMENT SERVICE
+        - id: assessment-service
+          uri: lb://ASSESSMENTSERVICE
+          metadata:
+            response-timeout: 15000 # 15s pour celui-ci car il calcule beaucoup
+            connect-timeout: 3000
+          predicates:
+            - Path=/api/assessments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: assessmentServiceCircuitBreaker
+                fallbackUri: forward:/fallback/assessments
+
+        # NOTIFICATION SERVICE
+        - id: notification-service
+          uri: lb://NOTIFICATIONSERVICE
+          predicates:
+            - Path=/api/notifications/**
+          metadata:
+            response-timeout: 15000   # 15s
+            connect-timeout: 30000
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/notifications
+            - name: Retry
+              args:
+                retries: 3
+                series: SERVER_ERROR
+                statuses: SERVICE_UNAVAILABLE, BAD_GATEWAY, GATEWAY_TIMEOUT
+                backoff:
+                  firstBackoff: 1s
+                  maxBackoff: 5s
+                  factor: 2
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+              - ${UI_APP_URL}
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowed-headers:
+              - "*"
+            allow-credentials: true
+            max-age: 3600
+
+  # OAUTH2 RESOURCE SERVER JWT VALIDATION
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
+
+# SERVER CONFIGURATION
+server:
+  port: ${GATEWAY_PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# EUREKA CLIENT
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
+
+# RESILIENCE
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+    instances:
+      patientServiceCircuitBreaker:
+        baseConfig: default
+      notesServiceCircuitBreaker:
+        baseConfig: default
+      userServiceCircuitBreaker:
+        baseConfig: default
+
+# UPLOAD
+servlet:
+  multipart:
+    enabled: true
+    max-file-size: 50MB
+    max-request-size: 50MB
+
+# ACTUATOR - HEALTH & METRICS
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    gateway:
+      enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+
+spring doc:
+  api-docs:
+    path: /gateway/v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      # Pour Auth-Service, l'URL doit correspondre à ce que le microservice attend
+      # Si Auth-Service n'a pas de préfixe interne, c'est juste /authorization/v3/api-docs
+      - name: Auth-Service
+        url: /authorization/v3/api-docs
+
+      - name: User-Service
+        url: /api/users/v3/api-docs
+
+      - name: Patient-Service
+        url: /api/patients/v3/api-docs
+
+      - name: Notes-Service
+        url: /api/notes/v3/api-docs
+
+      - name: Notification-Service
+        url: /api/notifications/v3/api-docs
+
+      - name: Assessment-Service
+        url: /api/assessments/v3/api-docs
+
+# LOGGING CONFIGURATION
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.openclassrooms: ${LOG_LEVEL_APP:INFO}
+    org.springframework.cloud.gateway: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    reactor.netty: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

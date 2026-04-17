@@ -1,0 +1,29 @@
+spring:
+  data:
+    mongodb:
+      # Nullify all individual properties inherited from parent
+      # This prevents the binding error with password placeholder
+      host: ~
+      port: ~
+      database: ~
+      username: ~
+      password: ~
+      authentication-database: ~
+      # Use URI only (will be overridden by @DynamicPropertySource in tests)
+      uri: mongodb://localhost:27017/testdb
+      auto-index-creation: true
+
+server:
+  port: 0
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG
+    org.mongodb.driver: WARN

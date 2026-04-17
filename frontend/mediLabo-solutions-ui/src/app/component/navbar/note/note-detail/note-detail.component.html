@@ -1,0 +1,284 @@
+@if (store.loading() && !note()) {
+    <div class="flex justify-center items-center py-24">
+        <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin fill-teal-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+            <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+        </svg>
+    </div>
+} @else if (note()) {
+    <div class="space-y-6">
+
+        <!--  SECTION EN-TÊTE  -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a [routerLink]="permissionService.isStaff() ? '/notes' : '/'" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Note médicale</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">Créée le {{note()!.createdAt | date:'dd MMM yyyy à HH:mm'}}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient + Praticien -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <img [src]="note()!.patientImageUrl"
+                         [alt]="note()!.patientName"
+                         class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
+                         onerror="this.src=`https://cdn-icons-png.flaticon.com/512/149/149071.png`">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">{{note()!.patientName}}</p>
+                        <p class="text-xs text-gray-500">par {{note()!.practitionerName}}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    @if (note()!.updatedAt !== note()!.createdAt) {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                            Modifiée le {{note()!.updatedAt | date:'dd MMM yyyy à HH:mm'}}
+                        </span>
+                    }
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
+                        {{note()!.fileCount ?? 0}} fichier(s)
+                    </span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                        {{note()!.commentCount ?? 0}} commentaire(s)
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION CONTENU  -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <h2 class="text-base font-semibold text-gray-900">Contenu de la note</h2>
+                @if (!isEditing() && permissionService.isStaff()) {
+                    <button (click)="startEditing()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Modifier
+                    </button>
+                }
+            </div>
+            <div class="p-5">
+                @if (isEditing()) {
+                    <textarea [value]="editContent()" (input)="editContent.set($any($event.target).value)" rows="8" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-3"></textarea>
+                    <div class="flex items-center justify-end gap-2 mt-3">
+                        <button (click)="cancelEditing()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
+                        <button (click)="saveNote()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700">Enregistrer</button>
+                    </div>
+                } @else {
+                    <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{note()!.content}}</p>
+                }
+            </div>
+        </div>
+
+        <!-- SECTION FICHIERS  -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="p-5 border-b border-gray-100">
+                <h2 class="text-base font-semibold text-gray-900">Fichiers joints</h2>
+            </div>
+            <div class="p-5">
+                <!-- Fichiers existants -->
+                @if (note()!.files && note()!.files!.length > 0) {
+                    <div class="space-y-2 mb-4">
+                        @for (file of note()!.files; track file.fileUuid) {
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                                <div (click)="openPreview(file, $event)" class="flex items-center gap-3 min-w-0 cursor-pointer flex-1">
+                                    <div class="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5" [ngClass]="getFileIcon(file.name)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 truncate">{{file.name}}</p>
+                                        <p class="text-xs text-gray-500">{{file.formattedSize}} — Cliquer pour aperçu</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    <button (click)="openPreview(file, $event)" class="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all" title="Aperçu">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                    <button (click)="downloadFile(file.fileUuid, file.name, $event)" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Télécharger">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    </button>
+                                    @if (permissionService.isStaff()) {
+                                        <button (click)="deleteFile(file.fileUuid, $event)" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <p class="text-sm text-gray-400 mb-4">Aucun fichier joint</p>
+                }
+
+                <!-- Zone d'upload — staff uniquement -->
+                @if (permissionService.isStaff()) {
+                    <div class="flex items-center justify-center w-full">
+                        <label for="file-upload" class="flex flex-col items-center justify-center w-full h-28 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                <p class="text-sm text-gray-500"><span class="font-semibold">Cliquez pour ajouter des fichiers</span></p>
+                                <p class="text-xs text-gray-400 mt-1">PDF, DOC, images (MAX. 10 Mo)</p>
+                            </div>
+                            <input (change)="onFileChange($event)" id="file-upload" type="file" class="hidden" multiple />
+                        </label>
+                    </div>
+                }
+
+                <!-- Fichiers en attente avec preview -->
+                @if (pendingFiles().length > 0) {
+                    <div class="mt-4 space-y-3">
+                        <p class="text-sm font-medium text-gray-700">Fichiers à envoyer :</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @for (file of pendingFiles(); track file.name) {
+                                <div class="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                                    @if (file.previewUrl && isImage(file.type)) {
+                                        <div class="h-36 overflow-hidden bg-gray-100">
+                                            <img [src]="file.previewUrl" [alt]="file.name" class="w-full h-full object-cover" />
+                                        </div>
+                                    } @else if (file.previewUrl && file.type === 'application/pdf') {
+                                        <div class="h-36 overflow-hidden bg-gray-100">
+                                            <iframe [src]="getSafeUrl(file.previewUrl)" class="w-full h-full border-0"></iframe>
+                                        </div>
+                                    } @else {
+                                        <div class="h-36 flex flex-col items-center justify-center bg-gray-100">
+                                            <svg class="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            <p class="text-xs text-gray-400">Aperçu non disponible</p>
+                                        </div>
+                                    }
+                                    <div class="flex items-center justify-between p-2.5">
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-medium text-gray-900 truncate">{{file.name}}</p>
+                                            <p class="text-xs text-gray-500">{{file.size}}</p>
+                                        </div>
+                                        <button (click)="removePendingFile(file)" class="p-1 text-gray-400 hover:text-red-600 rounded transition-all flex-shrink-0" title="Retirer">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <button (click)="uploadFiles()" class="w-full px-4 py-2.5 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+                            Envoyer {{pendingFiles().length}} fichier(s)
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- SECTION COMMENTAIRES  -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="p-5 border-b border-gray-100">
+                <h2 class="text-base font-semibold text-gray-900">Commentaires</h2>
+            </div>
+            <div class="p-5">
+                @if (note()!.comments && note()!.comments!.length > 0) {
+                    <div class="space-y-4 mb-6">
+                        @for (comment of note()!.comments; track comment.commentUuid) {
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-teal-700 to-teal-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">
+                                    {{comment.authorName?.charAt(0) || 'U'}}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-sm font-medium text-gray-900">{{comment.authorName || 'Utilisateur'}}</p>
+                                        <span class="text-xs text-gray-400">{{comment.createdAt | date:'dd MMM yyyy à HH:mm'}}</span>
+                                    </div>
+                                    @if (editingCommentUuid() === comment.commentUuid) {
+                                        <textarea [value]="editCommentContent()" (input)="editCommentContent.set($any($event.target).value)" rows="3" class="w-full mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5"></textarea>
+                                        <div class="flex items-center gap-2 mt-2">
+                                            <button (click)="cancelEditComment()" class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
+                                            <button (click)="saveComment(comment.commentUuid)" class="px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700">Enregistrer</button>
+                                        </div>
+                                    } @else {
+                                        <p class="text-sm text-gray-600 mt-1 leading-relaxed">{{comment.content}}</p>
+                                        @if (permissionService.isStaff()) {
+                                            <div class="flex items-center gap-1 mt-1.5">
+                                                <button (click)="startEditComment(comment.commentUuid, comment.content)" class="p-1 text-gray-400 hover:text-teal-600 rounded transition-all" title="Modifier">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                </button>
+                                                <button (click)="deleteComment(comment.commentUuid)" class="p-1 text-gray-400 hover:text-red-600 rounded transition-all" title="Supprimer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <p class="text-sm text-gray-400 mb-4">Aucun commentaire pour le moment</p>
+                }
+
+                <!-- Formulaire nouveau commentaire -->
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold flex-shrink-0 mt-0.5">
+                        {{store.profile()?.firstName?.charAt(0) || '?'}}
+                    </div>
+                    <div class="flex-1">
+                        <textarea [value]="newComment()" (input)="newComment.set($any($event.target).value)" rows="3" placeholder="Ajouter un commentaire..." class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5"></textarea>
+                        <div class="flex justify-end mt-2">
+                            <button (click)="addComment()" [disabled]="!newComment().trim()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
+                                Commenter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+} @else {
+    <div class="flex flex-col items-center justify-center py-24">
+        <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <p class="text-gray-500 font-medium">Note introuvable</p>
+        <a [routerLink]="permissionService.isStaff() ? '/notes' : '/'" class="mt-3 text-sm text-teal-600 hover:text-teal-700 font-medium">
+            {{permissionService.isStaff() ? 'Retour aux notes' : 'Retour au tableau de bord'}}
+        </a>
+    </div>
+}
+
+<!-- MODAL PREVIEW FICHIER  -->
+@if (previewFile()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+        <div (click)="closePreview()" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <div class="relative z-10 w-full max-w-5xl max-h-[90vh] mx-4 flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <svg class="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="text-sm font-medium text-gray-900 truncate">{{previewFile()!.fileName}}</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <button (click)="downloadFile(previewFile()!.fileUuid, previewFile()!.fileName)" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Télécharger
+                    </button>
+                    <button (click)="closePreview()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4">
+                @if (previewLoading()) {
+                    <div class="flex flex-col items-center gap-3">
+                        <svg aria-hidden="true" class="w-10 h-10 text-gray-200 animate-spin fill-teal-600" viewBox="0 0 100 101" fill="none">
+                            <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                            <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                        </svg>
+                        <p class="text-sm text-gray-500">Chargement de l'aperçu...</p>
+                    </div>
+                } @else if (previewFile()!.url) {
+                    @if (isImageFile(previewFile()!.fileType)) {
+                        <img [src]="previewFile()!.url" [alt]="previewFile()!.fileName" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-sm" />
+                    } @else {
+                        <iframe [src]="previewFile()!.url" class="w-full h-[75vh] rounded-lg shadow-sm bg-white border-0"></iframe>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}

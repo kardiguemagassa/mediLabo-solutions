@@ -1,0 +1,150 @@
+<nav class="medical-gradient fixed w-full top-0 left-0 z-50 shadow-lg">
+    <div class="container h-16 mx-auto px-4">
+        <div class="relative h-full flex items-center justify-between">
+            <!-- Mobile menu button -->
+            <div class="absolute inset-y-0 left-0 flex items-center lg:hidden">
+                <button (click)="toggleNav()" type="button" class="burger-btn relative inline-flex items-center justify-center rounded-md p-2 text-white/80 hover:bg-white/15 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                    @if (!isNavOpen()) {
+                        <svg class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    } @else {
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    }
+                </button>
+            </div>
+
+            <!-- Logo -->
+            <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                <div [routerLink]="['/dashboard']" class="flex-shrink-0 items-center hidden cursor-pointer lg:flex lg:items-center lg:gap-3">
+                    <div class="p-2 bg-white/15 rounded-xl backdrop-blur-sm">
+                        <img class="h-6 w-6" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+                    </div>
+                    <span class="text-white font-semibold text-lg">MediLabo</span>
+                </div>
+
+                <!-- Desktop Navigation (permission-based) -->
+                <div class="hidden lg:ml-6 lg:flex lg:items-center lg:gap-1">
+                    <a routerLink="/dashboard" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Tableau de bord</a>
+
+                    @if (permissionService.canViewUsers()) {
+                        <a routerLink="/users" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Utilisateurs</a>
+                    }
+                    @if (permissionService.canViewPatients()) {
+                        <a routerLink="/patients" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Patients</a>
+                    }
+                    @if (permissionService.canViewNotes()) {
+                        <a routerLink="/notes" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Notes</a>
+                    }
+                    @if (permissionService.canViewAssessments()) {
+                        <a routerLink="/assessments" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200">Évaluations</a>
+                    }
+
+                    <a routerLink="/messages" routerLinkActive="bg-white/20" class="px-4 py-2 text-white font-medium text-sm rounded-xl hover:bg-white/15 transition-all duration-200 flex items-center gap-2 relative group">
+                        Messages
+                        <span class="inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-xs font-bold text-teal-800 bg-yellow-400 rounded-full">{{store?.unreadMessageCount() || 0}}</span>
+                        <span class="absolute invisible opacity-0 bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-max z-20 py-2 px-3 text-xs font-medium text-gray-800 bg-yellow-400 rounded-md transition-all group-hover:opacity-100 duration-500 delay-500 group-hover:visible">Vous avez {{store?.unreadMessageCount() || 0}} message(s) non lu(s)</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- User Menu -->
+            <div class="relative flex items-center usermenu">
+                <button (click)="toggleMenu()" type="button" class="flex items-center text-sm pe-1 font-medium text-white rounded-full focus:ring-1 focus:ring-white ml-3">
+                    <img [src]="store?.profile() ? store?.profile()?.imageUrl : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+                         [alt]="'Photo de ' + store?.profile()?.firstName"
+                         class="w-8 h-8 me-2 rounded-full object-cover ring-2 ring-white/30"
+                         onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                    {{store?.profile()?.firstName}} {{store?.profile()?.lastName}}
+                    <svg class="w-2.5 h-2.5 ms-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <!-- Dropdown menu -->
+                <div [ngClass]="[isMenuOpen() ? 'transition ease-out duration-300 transform visible opacity-100 scale-100' : 'invisible transition ease-in duration-75 transform opacity-0 scale-95']"
+                     class="top-10 right-0 absolute z-50 text-gray-700 bg-white divide-y divide-gray-100 rounded-lg shadow min-w-max">
+                    <div class="px-4 py-3 text-sm text-gray-700">
+                        <div class="text-xs font-medium">Connecté en tant que :</div>
+                        <div class="font-medium text-md">{{store?.profile()?.email}}</div>
+                    </div>
+                    <ul class="p-2 text-sm text-gray-700">
+                        <li routerLink="/profile" (click)="toggleMenu()" class="mb-3 pl-4 flex justify-start items-center cursor-pointer rounded-md hover:bg-gray-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
+                            <div class="block px-4 py-2">Profil</div>
+                        </li>
+                        <li routerLink="/profile" fragment="password" (click)="toggleMenu()" class="mb-3 pl-4 flex justify-start items-center cursor-pointer rounded-md hover:bg-gray-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                            </svg>
+                            <div class="block px-4 py-2">Mot de passe</div>
+                        </li>
+                        <li routerLink="/profile" fragment="settings" (click)="toggleMenu()" class="mb-3 pl-4 flex justify-start items-center cursor-pointer rounded-md hover:bg-gray-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 0 15 0m-15 0a7.5 7.5 0 1 1 15 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077 1.41-.513m14.095-5.13 1.41-.513M5.106 17.785l1.15-.964m11.49-9.642 1.149-.964M7.501 19.795l.75-1.3m7.5-12.99.75-1.3m-6.063 16.658.26-1.477m2.605-14.772.26-1.477m0 17.726-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205 12 12m6.894 5.785-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495" />
+                            </svg>
+                            <div class="block px-4 py-2">Paramètres</div>
+                        </li>
+                        <div class="mt-3 mb-3 border-t border-gray-200"></div>
+                        <li (click)="logOut()" class="pl-4 flex justify-start items-center cursor-pointer rounded-md hover:bg-gray-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
+                            </svg>
+                            <div class="block px-4 py-2">Déconnexion</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu (permission-based) -->
+        <div [ngClass]="[isNavOpen() ? 'transition ease-out duration-300 transform visible opacity-100 scale-100' : 'invisible transition ease-in duration-75 transform opacity-0 scale-95']" class="lg:hidden mt-2 rounded-xl bg-teal-800 shadow-lg navmenu">
+            <div class="space-y-1 pb-3 pt-2 px-2">
+                <a routerLink="/dashboard" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Tableau de bord</a>
+
+                @if (permissionService.canViewUsers()) {
+                    <a routerLink="/users" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Utilisateurs</a>
+                }
+                @if (permissionService.canViewPatients()) {
+                    <a routerLink="/patients" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Patients</a>
+                }
+                @if (permissionService.canViewNotes()) {
+                    <a routerLink="/notes" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Notes</a>
+                }
+                @if (permissionService.canViewAssessments()) {
+                    <a routerLink="/assessments" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200">Évaluations</a>
+                }
+
+                <a routerLink="/messages" routerLinkActive="bg-white/20" (click)="toggleNav()" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/15 transition-all duration-200 flex items-center justify-between">
+                    Messages
+                    <span class="inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-xs font-bold text-teal-800 bg-yellow-400 rounded-full">{{store?.unreadMessageCount() || 0}}</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="pt-20 pb-12 px-4 min-h-screen">
+    <div class="container mx-auto">
+        <router-outlet />
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-gray-200">
+    <div class="container mx-auto px-4 py-4">
+        <div class="flex flex-wrap items-center justify-center gap-6 md:justify-between">
+            <p class="text-sm text-gray-500">© 2026 <a href="#" class="font-semibold text-teal-600 hover:text-teal-700">MediLabo</a></p>
+            <ul class="flex items-center gap-4">
+                <li><a href="#" class="text-sm text-gray-500 hover:text-teal-600">À propos</a></li>
+                <li><a href="#" class="text-sm text-gray-500 hover:text-teal-600">Confidentialité</a></li>
+                <li><a href="#" class="text-sm text-gray-500 hover:text-teal-600">Support</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>

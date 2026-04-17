@@ -1,0 +1,36 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              PATIENT SERVICE - Production Profile                          ║
+# ║                                                                            ║
+# ║  🐳 Docker / Production settings                                           ║
+# ║  🔒 No secrets - all credentials from environment variables                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  jpa:
+    show-sql: false
+    hibernate:
+      # En production, on évite 'update' pour ne pas modifier le schéma par erreur
+      # On préfère 'none' ou 'validate' si on utilise des scripts de migration (Flyway/Liquibase)
+      ddl-auto: validate
+
+# EUREKA INSTANCE DOCKER PRODUCTION
+eureka:
+  instance:
+    # Plus robuste dans Docker Compose pour éviter les problèmes de résolution DNS
+    prefer-ip-address: false
+    hostname: patient-service
+    non-secure-port: 8081
+    # Utiliser random.uuid permet de lancer plusieurs instances du service sans conflit d'ID
+    instance-id: ${spring.application.name}:${random.uuid}
+    # Délais plus courts pour une détection de panne plus rapide par la Gateway
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# LOGGING PRODUCTION LEVEL
+logging:
+  level:
+    root: INFO
+    com.openclassrooms: INFO
+    org.springframework.security: WARN
+    # On réduit le bruit d'Hibernate en prod
+    org.hibernate.SQL: WARN

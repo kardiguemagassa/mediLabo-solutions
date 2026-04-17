@@ -1,0 +1,144 @@
+
+<div class="pt-28 pb-12 px-4">
+    <div class="max-w-md mx-auto">
+      
+      <div class="text-center mb-8">
+        <div class="inline-flex p-4 rounded-2xl medical-gradient shadow-lg mb-6">
+          <img class="h-6 w-6" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Créer un nouveau compte</h2>
+        <p class="text-gray-500">Rejoignez MediLabo pour accéder à vos services de santé</p>
+      </div>
+
+      <div class="bg-white rounded-2xl card-shadow p-8 border border-gray-100">
+        @if (state()?.message) {
+            <div class="flex items-start gap-3 p-4 mb-6 bg-green-50 border border-green-100 rounded-xl">
+            <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <p class="flex-1 text-sm font-medium text-green-600">{{state()?.message}}</p>
+            <button (click)="closeMessage()" type="button" class="p-1 hover:bg-green-100 rounded-lg transition-colors">
+              <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        }
+
+        @if (state()?.error) {
+          <div class="flex items-start gap-3 p-4 mb-6 bg-red-50 border border-red-100 rounded-xl">
+            <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <p class="flex-1 text-sm font-medium text-red-600">{{state()?.error}}</p>
+            <button (click)="closeMessage()" type="button" class="p-1 hover:bg-red-100 rounded-lg transition-colors">
+              <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        }
+
+        <form #form="ngForm" (ngSubmit)="register(form)" class="space-y-5">
+          <div>
+            <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+            <div class="relative">
+              <input type="text" ngModel #firstName="ngModel" name="firstName" id="firstName" placeholder="Votre prénom" required
+                class="w-full px-4 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
+            </div>
+            @if(firstName.touched && firstName.dirty && firstName.invalid) {
+              <div class="mt-2 text-sm text-red-500">Le prénom est requis</div>
+            }
+          </div>
+          <div>
+            <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+            <div class="relative">
+              <input type="text" ngModel #lastName="ngModel" name="lastName" id="lastName" placeholder="Votre nom" required
+                class="w-full px-4 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
+            </div>
+            @if(lastName.touched && lastName.dirty && lastName.invalid) {
+              <div class="mt-2 text-sm text-red-500">Le nom est requis</div>
+            }
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Adresse email</label>
+            <div class="relative">
+              <input type="email" ngModel #email="ngModel" name="email" id="email" placeholder="votre@email.com" required email
+                class="w-full px-4 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
+            </div>
+            @if(email.touched && email.dirty && email.invalid && email.errors['required']) {
+              <div class="mt-2 text-sm text-red-500">L'email est requis</div>
+            }
+            @if(email.touched && email.dirty && email.invalid && email.errors['email']) {
+              <div class="mt-2 text-sm text-red-500">Le format de l'email est invalide</div>
+            }
+          </div>
+          <div>
+            <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Nom d'utilisateur</label>
+            <div class="relative">
+              <input type="text" ngModel #username="ngModel" name="username" id="username" placeholder="Nom d'utilisateur" required pattern="^[a-zA-Z0-9]+$" minlength="4"
+                class="w-full px-4 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
+            </div>
+            @if (username.touched && username.dirty && username.invalid && username.errors['required'])   {
+              <div class="mt-2 text-sm text-red-500">Le nom d'utilisateur est requis</div>
+            }
+            @if (username.touched && username.dirty && username.invalid && username.errors['pattern']) {
+              <div class="mt-2 text-sm text-red-500">Le nom d'utilisateur doit contenir au moins 4 caractères alphanumériques</div>
+            }
+          </div>
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+            <div class="relative">
+              <input type="password" #passwordField ngModel #password="ngModel" name="password" id="password" placeholder="••••••••" required minlength="6"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
+              <button type="button" (click)="togglePassword(passwordField)"  class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                @if (showPassword()) {
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                }@else{
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                }
+              </button>
+            </div>
+            @if (password.touched && password.dirty && password.invalid && password.errors['required']) {
+              <div class="mt-2 text-sm text-red-500">Le mot de passe est requis</div>
+            }
+            @if (password.touched && password.dirty && password.invalid && password.errors['minlength']) {
+              <div class="mt-2 text-sm text-red-500">Le mot de passe doit contenir au moins 6 caractères</div>
+            }
+          </div>
+
+          <button type="submit" [disabled]="form.invalid || state()?.loading" class="w-full py-3 px-6 rounded-xl text-white font-semibold medical-gradient btn-shadow transition-all duration-200 flex items-center justify-center gap-2">
+            Créer mon compte
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </form>
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-200"></div>
+          </div>
+          <div class="relative flex justify-center text-xs uppercase">
+            <span class="bg-white px-3 text-gray-400">ou</span>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a href="http://localhost:9001/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=http://localhost:4200&code_challenge_method=S256&code_challenge=yLTPU5_n1a3ZtxFMoiguWiMYwpp7tm0vCZHXVnPStFk" class="flex-1 py-2.5 px-5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm text-center transition-all duration-200 flex items-center justify-center gap-2">
+            Se connecter
+          </a>
+          <a [routerLink]="['/']" class="flex-1 py-2.5 px-5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm text-center transition-all duration-200 flex items-center justify-center gap-2">
+            Retour à l'accueil
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <p class="text-center text-xs text-gray-400 mt-8">
+        En créant un compte, vous acceptez nos
+        <a href="/terms" class="text-teal-600 hover:underline">conditions d'utilisation</a>
+        et notre
+        <a href="/privacy" class="text-teal-600 hover:underline">politique de confidentialité</a>.
+      </p>
+    </div>
+</div>

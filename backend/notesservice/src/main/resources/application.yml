@@ -1,0 +1,213 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              NOTES SERVICE - Main Configuration                            ║
+# ║                                                                            ║
+# ║  🔒 SECURITY: No secrets in this file                                      ║
+# ║  All sensitive values come from environment variables                      ║
+# ║                                                                            ║
+# ║  📋 Required environment variables:                                        ║
+# ║     - MONGO_HOST, MONGO_PORT, MONGO_DATABASE                               ║
+# ║     - MONGO_USERNAME, MONGO_PASSWORD (if auth enabled)                     ║
+# ║     - EUREKA_HOST, EUREKA_USERNAME, EUREKA_PASSWORD                        ║
+# ║     - KAFKA_BOOTSTRAP_SERVERS (for notifications)                          ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+
+# SPRING CONFIGURATION
+spring:
+  application:
+    name: notesservice
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # DATABASE CONFIGURATION - MongoDB
+  data:
+    mongodb:
+      host: ${MONGO_HOST}
+      port: ${MONGO_PORT:27017}
+      database: ${MONGO_DATABASE}
+      username: ${MONGO_USERNAME:}
+      password: ${MONGO_PASSWORD:}
+      authentication-database: ${MONGO_AUTH_DATABASE:admin}
+      # Les index sont gérés manuellement via le script init-mongo-v2.js
+      auto-index-creation: false
+
+
+  # SECURITY - JWT CONFIGURATION (OAUTH2 RESOURCE SERVER)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://localhost:9001/oauth2/jwks}
+
+  # FILE UPLOAD -  MULTIPART CONFIGURATION
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:50MB}
+      file-size-threshold: 2KB
+
+  # KAFKA CONFIGURATION - POUR LES NOTIFICATIONS
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+# APPLICATION CONFIGURATION - FILE STORAGE
+app:
+  storage:
+    # Répertoire racine pour le stockage des fichiers uploadés-
+    upload-dir: ${FILE_UPLOAD_DIR:/Users/kara/Downloads/uploads/mediLabo}
+    # Taille maximale d'un fichier (en bytes) - 10 MB
+    max-file-size: ${MAX_FILE_SIZE_BYTES:10485760}
+    # Taille maximale totale de la requête (en bytes) - 50 MB
+    max-request-size: ${MAX_REQUEST_SIZE_BYTES:52428800}
+    # URL de base pour le téléchargement des fichiers
+    base-download-url: /api/notes
+    # Extensions de fichiers autorisées
+    allowed-extensions:
+      - pdf
+      - doc
+      - docx
+      - xls
+      - xlsx
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - txt
+      - csv
+    # TYPES MIME AUTORISÉS
+    allowed-content-types:
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - application/vnd.ms-excel
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      - image/jpeg
+      - image/png
+      - image/gif
+      - text/plain
+      - text/csv
+
+
+# SERVER CONFIGURATION
+server:
+  port: ${NOTES_SERVICE_PORT:8082}
+  shutdown: graceful
+  error:
+    include-message: always
+    include-binding-errors: always
+
+
+# EUREKA CLIENT - SERVICE DISCOVERY
+eureka:
+  client:
+    register-with-eureka: ${EUREKA_ENABLED:true}
+    fetch-registry: ${EUREKA_ENABLED:true}
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT:8761}/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.uuid}
+
+
+# INTER-SERVICES COMMUNICATION - WEBClIENT CONFIGURATION
+services:
+  patient-service:
+    url: ${PATIENT_SERVICE_URL:http://localhost:8081}
+    timeout: ${PATIENT_SERVICE_TIMEOUT:5000}
+  authorization-server:
+    url: ${AUTH_SERVER_URL:http://localhost:9001}
+    timeout: ${AUTH_SERVER_TIMEOUT:5000}
+
+
+# RESILIENCE4J - CIRCUIT BREAKER, RETRY, TIME-LIMITER
+resilience4j:
+  # Circuit Breaker - Protection contre les pannes en cascade
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+    instances:
+      patientService:
+        # Ignore les exceptions métier (ne déclenche pas le circuit breaker)
+        ignoreExceptions:
+          - com.openclassrooms.notesservice.exception.ApiException
+        registerHealthIndicator: true
+        # Seuil de durée pour considérer un appel comme "lent"
+        slowCallDurationThreshold: 2s
+        # Pourcentage d'appels lents pour ouvrir le circuit
+        slowCallRateThreshold: 50
+        # Taille de la fenêtre glissante (nombre d'appels)
+        slidingWindowSize: 10
+        # Nombre minimum d'appels avant d'évaluer le taux d'échec
+        minimumNumberOfCalls: 5
+        # Nombre d'appels autorisés en état half-open
+        permittedNumberOfCallsInHalfOpenState: 3
+        # Transition automatique de open vers half-open
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        # Durée d'attente avant de passer en half-open
+        waitDurationInOpenState: 30s
+        # Pourcentage d'échecs pour ouvrir le circuit
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+  # RETRY - TENTATIVES AUTOMATIQUE EN CAS D'ÉCHEC
+  retry:
+    instances:
+      patientService:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+  # TIME-LIMITER - TIMEOUT SUR LES APPELS ASYCHRONES
+  timelimiter:
+    instances:
+      patientService:
+        timeoutDuration: 5s
+        cancelRunningFuture: true
+
+
+# SWAGGER URL GATEWAY
+springdoc:
+  api-docs:
+    path: /api/notes/v3/api-docs
+
+
+# ACTUATOR - HEALTH, METRICS & MONITORING
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers,retry,timelimiters
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+
+# LOGGING CONFIGURATION
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.openclassrooms: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.springframework.data.mongodb: ${LOG_LEVEL_MONGO:WARN}
+    io.github.resilience4j: ${LOG_LEVEL_RESILIENCE:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

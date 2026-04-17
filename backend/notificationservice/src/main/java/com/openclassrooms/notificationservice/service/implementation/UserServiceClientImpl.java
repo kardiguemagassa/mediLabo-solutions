@@ -1,0 +1,82 @@
+package com.openclassrooms.notificationservice.service.implementation;
+
+import com.openclassrooms.notificationservice.domain.Response;
+import com.openclassrooms.notificationservice.dto.UserRequestDTO;
+import com.openclassrooms.notificationservice.exception.ApiException;
+import com.openclassrooms.notificationservice.service.UserServiceClient;
+import com.openclassrooms.notificationservice.utils.RequestUtils;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import java.time.Duration;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class UserServiceClientImpl implements UserServiceClient {
+
+    private final WebClient authServerWebClient;
+    private static final String CIRCUIT_BREAKER_NAME = "userService";
+    private static final Duration TIMEOUT = Duration.ofSeconds(3);
+
+    @Override
+    @Retry(name = CIRCUIT_BREAKER_NAME)
+    @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getUserByUuidFallback")
+    public Mono<UserRequestDTO> getUserByUuid(String userUuid) {
+        log.debug("Fetching user by UUID: {}", userUuid);
+
+        return authServerWebClient.get()
+                .uri("/api/users/{uuid}", userUuid)
+                .retrieve()
+                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
+                .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))
+                .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
+                .bodyToMono(Response.class)
+                .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
+                .map(response -> RequestUtils.convertResponse(response, UserRequestDTO.class, "user"))
+                .timeout(TIMEOUT)
+                .onErrorResume(e -> {
+                    log.error("Erreur lors de la récupération de l'utilisateur {}: {}", userUuid, e.getMessage());
+                    return Mono.empty();
+                });
+    }
+
+    @Override
+    @Retry(name = CIRCUIT_BREAKER_NAME)
+    @CircuitBreaker(name = CIRCUIT_BREAKER_NAME, fallbackMethod = "getUserByEmailFallback")
+    public Mono<UserRequestDTO> getUserByEmail(String email) {
+        log.debug("Fetching user by email: {}", email);
+
+        return authServerWebClient.get()
+                .uri("/api/users/user/{email}", email)
+                .retrieve()
+                .onStatus(status -> status.equals(HttpStatus.NOT_FOUND), response -> Mono.empty())
+                .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.error(new ApiException("Erreur client lors de la récupération de l'utilisateur")))
+                .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new ApiException("Erreur serveur Authorization Server")))
+                .bodyToMono(Response.class)
+                .filter(response -> response != null && response.data() != null && response.data().containsKey("user"))
+                .map(response -> RequestUtils.convertResponse(response, UserRequestDTO.class, "user"))
+                .timeout(TIMEOUT)
+                .onErrorResume(e -> {
+                    log.error("Erreur lors de la récupération de l'email {}: {}", email, e.getMessage());
+                    return Mono.empty();
+                });
+    }
+
+    public Mono<UserRequestDTO> getUserByUuidFallback(String userUuid, Throwable t) {
+        log.error("Fallback getUserByUuid - UUID: {}, Cause: {}", userUuid, t.getMessage());
+        return Mono.empty();
+    }
+
+    public Mono<UserRequestDTO> getUserByEmailFallback(String email, Throwable t) {
+        log.error("Fallback getUserByEmail - Email: {}, Cause: {}", email, t.getMessage());
+        return Mono.empty();
+    }
+}

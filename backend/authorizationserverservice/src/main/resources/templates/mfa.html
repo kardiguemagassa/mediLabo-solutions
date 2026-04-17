@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="MediLabo - Vérification MFA">
+    <title>MediLabo | Vérification MFA</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        medical: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .medical-gradient {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+        }
+        .medical-pattern {
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(13, 148, 136, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(45, 212, 191, 0.05) 0%, transparent 30%);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 25px -5px rgba(13, 148, 136, 0.12), 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+        }
+        .input-focus:focus {
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        }
+        .btn-shadow {
+            box-shadow: 0 4px 15px -3px rgba(13, 148, 136, 0.4);
+        }
+        .btn-shadow:hover {
+            box-shadow: 0 6px 20px -3px rgba(13, 148, 136, 0.5);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased bg-gray-50 medical-pattern min-h-screen">
+<!-- Navigation -->
+<nav class="medical-gradient fixed w-full top-0 left-0 z-50 shadow-lg">
+    <div class="container h-16 mx-auto px-4">
+        <div class="h-full flex items-center justify-between">
+            <!-- Logo -->
+            <a href="http://localhost:4200" class="flex items-center gap-3 group">
+                <div class="p-2 bg-white/15 rounded-xl backdrop-blur-sm group-hover:bg-white/25 transition-all duration-200">
+                    <img class="h-6 w-6" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="MediLabo">
+                </div>
+                <span class="text-white font-semibold text-lg hidden sm:block">MediLabo</span>
+            </a>
+            <!-- Navigation Links -->
+            <div class="flex items-center gap-2">
+                <a href="http://localhost:9001/oauth2/authorize?response_type=code&client_id=client&scope=openid&redirect_uri=http://localhost:4200&code_challenge_method=S256&code_challenge=yLTPU5_n1a3ZtxFMoiguWiMYwpp7tm0vCZHXVnPStFk" class="flex items-center gap-1.5 px-4 py-2 bg-white/20 hover:bg-white/30 text-white font-medium text-sm rounded-xl transition-all duration-200">
+                    Connexion
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="http://localhost:4200/register" class="hidden sm:flex items-center gap-1.5 px-4 py-2 text-white/90 hover:text-white hover:bg-white/15 font-medium text-sm rounded-xl transition-all duration-200">
+                    Créer un compte
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="http://localhost:4200/resetpassword" class="hidden md:flex items-center gap-1.5 px-4 py-2 text-white/90 hover:text-white hover:bg-white/15 font-medium text-sm rounded-xl transition-all duration-200">
+                    Mot de passe oublié
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="pt-28 pb-12 px-4">
+    <div class="max-w-md mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex p-4 rounded-2xl medical-gradient shadow-lg mb-6">
+                <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Vérification en deux étapes</h2>
+            <p class="text-gray-500" th:text="${email != null ? 'Code envoyé à ' + email : 'Entrez le code de vérification'}">Entrez le code de vérification</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-white rounded-2xl card-shadow p-8 border border-gray-100">
+            <!-- Error Alert -->
+            <div th:if="${session.SPRING_SECURITY_LAST_EXCEPTION != null}" class="flex items-start gap-3 p-4 mb-6 bg-red-50 border border-red-100 rounded-xl" id="alert">
+                <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <p class="flex-1 text-sm font-medium text-red-600" th:text="${session.SPRING_SECURITY_LAST_EXCEPTION.message}">Code incorrect. Veuillez réessayer.</p>
+                <button type="button" data-dismiss-target="#alert" class="p-1 hover:bg-red-100 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form method="post" th:action="@{/mfa}" class="space-y-5">
+                <div>
+                    <label for="code" class="block text-sm font-medium text-gray-700 mb-2">Code de vérification</label>
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                        </svg>
+                        <input type="text" name="code" id="code" placeholder="123456" required
+                               maxlength="6" pattern="[0-9]{6}"
+                               class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-center text-xl tracking-widest placeholder-gray-400 focus:outline-none focus:border-teal-500 input-focus transition-all duration-200">
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500 text-center">Entrez le code à 6 chiffres</p>
+                </div>
+
+                <button type="submit" class="w-full py-3 px-6 rounded-xl text-white font-semibold medical-gradient btn-shadow transition-all duration-200 flex items-center justify-center gap-2">
+                    Vérifier le code
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+            </form>
+
+            <!-- Resend Code -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-500 mb-2">Vous n'avez pas reçu le code ?</p>
+                <button type="button" class="text-teal-600 hover:text-teal-700 font-medium text-sm transition-colors">
+                    Renvoyer le code
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-200"></div>
+                </div>
+                <div class="relative flex justify-center text-xs uppercase">
+                    <span class="bg-white px-3 text-gray-400">ou</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="http://localhost:4200/register" class="flex-1 py-2.5 px-5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm text-center transition-all duration-200 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    Créer un compte
+                </a>
+                <a href="http://localhost:4200" class="flex-1 py-2.5 px-5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm text-center transition-all duration-200 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+import { Component, DestroyRef, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { StorageService } from '../../../service/storage.service';
+import { UserService } from '../../../service/user.service';
+import { FormsModule, NgForm } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HotToastService } from '@ngxpert/hot-toast';
+
+
+@Component({
+  selector: 'app-register',
+  imports: [RouterLink, FormsModule],
+  templateUrl: './register.component.html',
+  styleUrl: './register.component.scss'
+})
+export class RegisterComponent {
+  state = signal<{loading: boolean, message: string, error: string | any}>({ loading: false, message: undefined, error: undefined});
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  private storage = inject(StorageService);
+  private userService = inject(UserService);
+  private toastService = inject(HotToastService);
+
+  // @ViewChild('passwordField') passwordField!: ElementRef<HTMLInputElement>;
+   showPassword = signal(false);
+
+  ngOnInit() : void {
+    if (this.userService.isAuthenticated() && !this.userService.isTokenExpired()) {
+      this.storage.getRedirectUrl() ? this.router.navigate([this.storage.getRedirectUrl()]) : this.router.navigate(['/dashboard']);
+      return;
+    }
+  }
+ 
+  closeMessage = () => this.state.set({ loading: false, message: undefined, error: undefined });
+
+  register = (form: NgForm) => {
+    console.log('Données envoyées :', form.value);
+    this.state.set({loading: true, message: undefined, error: undefined});
+    this.userService.register$(form.value).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (response) => {
+        this.state.set({loading: false, message: response.message, error: undefined});
+        this.toastService.success(response.message);
+      },
+      error: (error: string) => {
+        this.state.set({loading: false, message: undefined, error});
+        this.toastService.error(error);
+      },
+      complete: () => form.reset()
+    });
+  };
+
+  togglePassword(input: HTMLInputElement) {
+    input.type = input.type === 'password' ? 'text' : 'password';
+    this.showPassword.update(v => !v);
+  }
+}

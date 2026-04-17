@@ -1,0 +1,32 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              ASSESSMENT SERVICE - Test Profile                             ║
+# ║                                                                            ║
+# ║  🧪 Unit & Integration tests                                               ║
+# ║  Uses H2 in-memory database - no external dependencies                     ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  config:
+    activate:
+      on-profile: test
+
+# SERVER RANDOM PORT TO AVOID CONFLICTS
+server:
+  port: 0
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+services:
+  patient:
+    url: http://localhost:${wiremock.server.port:8080}
+  notes:
+    url: http://localhost:${wiremock.server.port:8080}
+
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG

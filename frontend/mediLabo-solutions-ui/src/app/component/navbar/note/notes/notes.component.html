@@ -1,0 +1,232 @@
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Notes médicales</h1>
+            <p class="text-sm text-gray-500 mt-1">{{totalNotes()}} note(s) au total</p>
+        </div>
+        <!-- @if (permission.canCreateNote()) { -->
+            <button (click)="toggleCreateForm()" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nouvelle note
+            </button>
+         <!-- } -->
+    </div>
+
+    <!-- Formulaire création note (inline) -->
+    @if (showCreateForm()) {
+        <div class="bg-white rounded-xl border border-teal-200 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-teal-100 bg-teal-50">
+                <h2 class="text-base font-semibold text-teal-800">Nouvelle note médicale</h2>
+                <button (click)="toggleCreateForm()" class="p-1.5 text-teal-600 hover:bg-teal-100 rounded-lg transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4">
+                <!-- Sélection patient -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Patient</label>
+                    <select (change)="onPatientSelected($event)" [value]="selectedPatientUuid()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                        <option value="">Sélectionnez un patient</option>
+                        @for (patient of (store.allPatients() ?? []); track patient.patientUuid) {
+                            <option [value]="patient.patientUuid">{{patient.userInfo?.firstName}} {{patient.userInfo?.lastName}} — {{patient.userInfo?.email}}</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Aperçu patient sélectionné -->
+                @if (selectedPatient()) {
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <img [src]="selectedPatient()!.userInfo?.imageUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{selectedPatient()!.userInfo?.firstName}} {{selectedPatient()!.userInfo?.lastName}}</p>
+                            <p class="text-xs text-gray-500">{{selectedPatient()!.userInfo?.email}} — N° {{selectedPatient()!.medicalRecordNumber}}</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Contenu -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Observations</label>
+                    <textarea [value]="noteContent()" (input)="noteContent.set($any($event.target).value)" rows="5" placeholder="Observations cliniques, résultats d'examen, traitements prescrits..." class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-3"></textarea>
+                    <p class="text-xs text-gray-400 mt-1.5">Mots-clés détectables : Hémoglobine A1C, Microalbumine, Taille, Poids, Fumeur, Fumeuse, Anormal, Cholestérol, Vertiges, Rechute, Réaction, Anticorps</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button (click)="toggleCreateForm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
+                    <button (click)="createNote()" [disabled]="!selectedPatientUuid() || !noteContent().trim()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                        Créer la note
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Total</p>
+                    <p class="text-xl font-bold text-gray-900">{{totalNotes()}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Avec fichiers</p>
+                    <p class="text-xl font-bold text-blue-600">{{notesWithFiles()}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Avec commentaires</p>
+                    <p class="text-xl font-bold text-purple-600">{{notesWithComments()}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">7 derniers jours</p>
+                    <p class="text-xl font-bold text-emerald-600">{{recentNotes()}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+        <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" [value]="searchQuery()" (input)="onSearch($event)" placeholder="Rechercher par contenu, praticien, patient..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500" />
+        </div>
+        @if (searchQuery()) {
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                <p class="text-sm text-gray-500">{{filteredNotes().length}} résultat(s)</p>
+                <button (click)="clearSearch()" class="text-sm text-teal-600 hover:text-teal-700 font-medium">Effacer</button>
+            </div>
+        }
+    </div>
+
+    <!-- Notes List -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        @if (store.loading()) {
+            <div class="flex justify-center items-center py-12">
+                <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin fill-teal-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                </svg>
+            </div>
+        } @else if (paginatedNotes().length === 0) {
+            <div class="flex flex-col items-center justify-center py-12">
+                <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="text-gray-500 font-medium">Aucune note trouvée</p>
+                <p class="text-sm text-gray-400 mt-1">Modifiez votre recherche ou créez une nouvelle note</p>
+            </div>
+        } @else {
+            <div class="divide-y divide-gray-200">
+                @for (note of paginatedNotes(); track note.noteUuid) {
+                    <div class="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex items-start gap-3 min-w-0 flex-1">
+                                <img [src]="note.patientImageUrl" [alt]="note.patientName" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0 mt-0.5" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <p class="text-sm font-semibold text-gray-900">{{note.patientName}}</p>
+                                        <span class="text-xs text-gray-400">•</span>
+                                        <p class="text-xs text-gray-500">par {{note.practitionerName}}</p>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1 leading-relaxed">{{truncate(note.content, 120)}}</p>
+                                    <div class="flex items-center gap-4 mt-2">
+                                        <span class="text-xs text-gray-400">{{note.createdAt | date:'dd MMM yyyy à HH:mm'}}</span>
+                                        @if (note.fileCount > 0) {
+                                            <span class="inline-flex items-center gap-1 text-xs text-blue-600">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                {{note.fileCount}} fichier(s)
+                                            </span>
+                                        }
+                                        @if (note.commentCount > 0) {
+                                            <span class="inline-flex items-center gap-1 text-xs text-purple-600">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                                {{note.commentCount}} commentaire(s)
+                                            </span>
+                                        }
+                                        @if (note.updatedAt !== note.createdAt) {
+                                            <span class="text-xs text-gray-400 italic">modifiée</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <button [routerLink]="['/notes', note.noteUuid]" class="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all" title="Voir la note">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                                <!-- @if (permission.canDeleteNote()) { -->
+                                    <button (click)="deleteNote(note.noteUuid)" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Supprimer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                <!-- } -->
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- PAGINATION BACKEND -->
+            @if (totalPages() > 0) {
+                <div class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+                    <div class="flex items-center gap-3">
+                        <p class="text-sm text-gray-500">
+                            Page {{ currentPage() + 1 }} sur {{ totalPages() }} — {{ totalElements() }} note(s)
+                        </p>
+                        <select (change)="changePageSize($event)" [value]="pageSize()" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                            <option [value]="5">5 / page</option>
+                            <option [value]="10">10 / page</option>
+                            <option [value]="20">20 / page</option>
+                            <option [value]="50">50 / page</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button (click)="goToPage(0)" [disabled]="currentPage() === 0" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            ««
+                        </button>
+                        <button (click)="previousPage()" [disabled]="currentPage() === 0" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Précédent
+                        </button>
+                        @for (page of [].constructor(totalPages()); track $index) {
+                            @if ($index < 3 || $index === totalPages() - 1 || ($index >= currentPage() - 1 && $index <= currentPage() + 1)) {
+                                <button (click)="goToPage($index)" [class]="$index === currentPage() ? 'px-3 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-lg' : 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50'">
+                                    {{ $index + 1 }}
+                                </button>
+                            }
+                        }
+                        <button (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Suivant
+                        </button>
+                        <button (click)="goToPage(totalPages() - 1)" [disabled]="currentPage() >= totalPages() - 1" class="px-2 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            »»
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

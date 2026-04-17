@@ -1,0 +1,38 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║              GATEWAY SERVER - Test Profile                                 ║
+# ║                                                                            ║
+# ║  🧪 Unit & Integration tests                                               ║
+# ║  Eureka disabled, mock JWKS                                                ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # FOR TESTS, USE A LOCAL MOCK OR DISABLE JWT VALIDATION
+          jwk-set-uri: http://localhost:9001/oauth2/jwks
+
+# SERVER RANDOM PORT TO AVOID CONFLICTS
+server:
+  port: 0
+
+# EUREKA DISABLE FOR TEST
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# LOGGING - MINIMAL FOR TESTS
+logging:
+  level:
+    root: WARN
+    com.openclassrooms: DEBUG
+    org.springframework.cloud.gateway: DEBUG
