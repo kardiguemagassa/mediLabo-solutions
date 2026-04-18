@@ -1,5 +1,24 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9999   # broker inexistant = pas de connexion réelle
+    producer:
+      retries: 0
+    properties:
+      max.block.ms: 100
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9999/oauth2/jwks
+
 eureka:
   client:
     enabled: false
     register-with-eureka: false
     fetch-registry: false
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      patientServiceClient:
+        register-health-indicator: false
