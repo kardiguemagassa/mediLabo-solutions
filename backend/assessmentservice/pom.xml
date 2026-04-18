@@ -262,6 +262,20 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire.version}</version>
+				<configuration>
+					<argLine>@{argLine} -Xmx512m</argLine>
+					<forkCount>1</forkCount>
+					<reuseForks>true</reuseForks>
+					<forkedProcessExitTimeoutInSeconds>60</forkedProcessExitTimeoutInSeconds>
+					<systemPropertyVariables>
+						<eureka.client.enabled>false</eureka.client.enabled>
+						<eureka.client.register-with-eureka>false</eureka.client.register-with-eureka>
+						<eureka.client.fetch-registry>false</eureka.client.fetch-registry>
+						<spring.kafka.bootstrap-servers>localhost:9999</spring.kafka.bootstrap-servers>
+						<spring.kafka.producer.retries>0</spring.kafka.producer.retries>
+					</systemPropertyVariables>
+				</configuration>
 			</plugin>
 
 			<!-- FAILSAFE FOR INTEGRATION TESTS -->
