@@ -16,10 +16,17 @@ describe('DashboardComponent', () => {
   let fixture: ComponentFixture<DashboardComponent>;
 
   const mockStore: any = {
-    profile: () => ({ firstName: 'Test', lastName: 'User', email: 'test@test.com' }),
+    profile: () => ({
+      firstName: 'Test',
+      lastName: 'User',
+      email: 'test@test.com',
+    }),
     allPatients: () => [
       { patientUuid: '1', userInfo: { firstName: 'Jean', lastName: 'Dupont' } },
-      { patientUuid: '2', userInfo: { firstName: 'Marie', lastName: 'Martin' } },
+      {
+        patientUuid: '2',
+        userInfo: { firstName: 'Marie', lastName: 'Martin' },
+      },
     ],
     allAssessments: () => [
       { patientUuid: '1', riskLevel: 'EARLY_ONSET' },
@@ -43,15 +50,102 @@ describe('DashboardComponent', () => {
       imports: [DashboardComponent],
       providers: [
         provideRouter([]),
-        { provide: UserService, useValue: { isAuthenticated: () => true, getToken: () => 'tok', getUserRole: () => 'ADMIN', connectedUser: () => ({}), usersPageable$: () => of({}), users$: () => of({}), user$: () => of({}), profile$: () => of({}), update$: () => of({}), updatePassword$: () => of({}), updateImage$: () => of({}), updateRole$: () => of({}), updateRoleByUuid$: () => of({}), toggleAccountLocked$: () => of({}), toggleAccountExpired$: () => of({}), toggleAccountEnabled$: () => of({}), toggleAccountLockedByUuid$: () => of({}), toggleAccountExpiredByUuid$: () => of({}), toggleAccountEnabledByUuid$: () => of({}), enableMfa$: () => of({}), disableMfa$: () => of({}), enableMfaByUuid$: () => of({}), disableMfaByUuid$: () => of({}) } },
-        { provide: StorageService, useValue: { getToken: () => 'tok', setToken: jasmine.createSpy(), clear: jasmine.createSpy(), getRedirectUrl: () => null, setRedirectUrl: jasmine.createSpy() } },
-        { provide: PatientService, useValue: { allPatientsPageable$: () => of({}), allPatients$: () => of({}), patient$: () => of({}), createPatient$: () => of({}), updatePatient$: () => of({}), deletePatient$: () => of({}), restorePatient$: () => of({}), patientByUserUuid$: () => of({}), patientByEmail$: () => of({}), myPatientRecord$: () => of({}) } },
-        { provide: NoteService, useValue: { allNotesPageable$: () => of({}), allNotes$: () => of({}), note$: () => of({}), notesByPatient$: () => of({}), createNote$: () => of({}), updateNote$: () => of({}), deleteNote$: () => of({}), myMedicalNotes$: () => of({}), addComment$: () => of({}), updateComment$: () => of({}), deleteComment$: () => of({}), uploadFile$: () => of({}), deleteFile$: () => of({}) } },
-        { provide: AssessmentService, useValue: { allAssessments$: () => of({}), assessPatient$: () => of({}) } },
-        { provide: NotificationService, useValue: { messages$: () => of({}), sendMessage$: () => of({}), conversation$: () => of({}), replyToMessage$: () => of({}) } },
+        {
+          provide: UserService,
+          useValue: {
+            isAuthenticated: () => true,
+            getToken: () => 'tok',
+            getUserRole: () => 'ADMIN',
+            connectedUser: () => ({}),
+            usersPageable$: () => of({}),
+            users$: () => of({}),
+            user$: () => of({}),
+            profile$: () => of({}),
+            update$: () => of({}),
+            updatePassword$: () => of({}),
+            updateImage$: () => of({}),
+            updateRole$: () => of({}),
+            updateRoleByUuid$: () => of({}),
+            toggleAccountLocked$: () => of({}),
+            toggleAccountExpired$: () => of({}),
+            toggleAccountEnabled$: () => of({}),
+            toggleAccountLockedByUuid$: () => of({}),
+            toggleAccountExpiredByUuid$: () => of({}),
+            toggleAccountEnabledByUuid$: () => of({}),
+            enableMfa$: () => of({}),
+            disableMfa$: () => of({}),
+            enableMfaByUuid$: () => of({}),
+            disableMfaByUuid$: () => of({}),
+          },
+        },
+        {
+          provide: StorageService,
+          useValue: {
+            getToken: () => 'tok',
+            setToken: jasmine.createSpy(),
+            clear: jasmine.createSpy(),
+            getRedirectUrl: () => null,
+            setRedirectUrl: jasmine.createSpy(),
+          },
+        },
+        {
+          provide: PatientService,
+          useValue: {
+            allPatientsPageable$: () => of({}),
+            allPatients$: () => of({}),
+            patient$: () => of({}),
+            createPatient$: () => of({}),
+            updatePatient$: () => of({}),
+            deletePatient$: () => of({}),
+            restorePatient$: () => of({}),
+            patientByUserUuid$: () => of({}),
+            patientByEmail$: () => of({}),
+            myPatientRecord$: () => of({}),
+          },
+        },
+        {
+          provide: NoteService,
+          useValue: {
+            allNotesPageable$: () => of({}),
+            allNotes$: () => of({}),
+            note$: () => of({}),
+            notesByPatient$: () => of({}),
+            createNote$: () => of({}),
+            updateNote$: () => of({}),
+            deleteNote$: () => of({}),
+            myMedicalNotes$: () => of({}),
+            addComment$: () => of({}),
+            updateComment$: () => of({}),
+            deleteComment$: () => of({}),
+            uploadFile$: () => of({}),
+            deleteFile$: () => of({}),
+          },
+        },
+        {
+          provide: AssessmentService,
+          useValue: {
+            allAssessments$: () => of({}),
+            assessPatient$: () => of({}),
+          },
+        },
+        {
+          provide: NotificationService,
+          useValue: {
+            messages$: () => of({}),
+            sendMessage$: () => of({}),
+            conversation$: () => of({}),
+            replyToMessage$: () => of({}),
+          },
+        },
         { provide: PermissionService, useValue: mockPermissionService },
-        { provide: HotToastService, useValue: { success: jasmine.createSpy(), error: jasmine.createSpy() } },
-      ]
+        {
+          provide: HotToastService,
+          useValue: {
+            success: jasmine.createSpy(),
+            error: jasmine.createSpy(),
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);
@@ -159,14 +253,16 @@ describe('DashboardComponent', () => {
   });
 
   it('should test columnChartOptions formatter with positive value', () => {
-    const formatter = (component.columnChartOptions as any).dataLabels?.formatter;
+    const formatter = (component.columnChartOptions as any).dataLabels
+      ?.formatter;
     expect(formatter).toBeDefined();
     expect(formatter(3)).toBe('3');
     expect(formatter(0)).toBe('');
   });
 
   it('should test columnChartOptions yaxis formatter', () => {
-    const formatter = (component.columnChartOptions as any).yaxis?.labels?.formatter;
+    const formatter = (component.columnChartOptions as any).yaxis?.labels
+      ?.formatter;
     expect(formatter).toBeDefined();
     expect(formatter(10)).toBe('10');
   });
@@ -174,5 +270,4 @@ describe('DashboardComponent', () => {
   it('should return BORDERLINE risk badge class', () => {
     expect(component.getRiskBadgeClass('BORDERLINE')).toContain('amber');
   });
-  
 });
