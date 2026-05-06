@@ -23,6 +23,7 @@ export class RegisterComponent {
 
   // @ViewChild('passwordField') passwordField!: ElementRef<HTMLInputElement>;
    showPassword = signal(false);
+  form: any;
 
   ngOnInit() : void {
     if (this.userService.isAuthenticated() && !this.userService.isTokenExpired()) {

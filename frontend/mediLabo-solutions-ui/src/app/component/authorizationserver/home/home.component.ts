@@ -19,7 +19,6 @@ import { IAuthentication } from '../../../interface/IAuthentication';
 })
 export class HomeComponent {
 
-  // https://www.npmjs.com/package/angular-oauth2-oidc/v/8.0.2
   loading = signal<boolean>(true);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
